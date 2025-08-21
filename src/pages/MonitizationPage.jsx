@@ -22,10 +22,11 @@ const MonitizationPage = () => {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-green-600 bg-clip-text text-transparent mb-4">
           Monetization Coming Soon!
         </h1>
-        
+
         {/* Subtitle */}
         <p className="text-gray-600 mb-8 leading-relaxed text-lg">
-          We're working on a Monetization feature to help you earn from your content. Stay tuned for more ways to grow! 💸
+          We're working on a Monetization feature to help you earn from your
+          content. Stay tuned for more ways to grow! 💸
         </p>
 
         {/* Enhanced Status Cards */}
@@ -38,7 +39,7 @@ const MonitizationPage = () => {
               </span>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/50 rounded-xl p-4 transform hover:scale-105 transition-transform duration-200">
             <div className="flex items-center justify-center space-x-3">
               <RiWifiOffLine className="w-5 h-5 text-red-600" />
@@ -47,7 +48,7 @@ const MonitizationPage = () => {
               </span>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200/50 rounded-xl p-4 transform hover:scale-105 transition-transform duration-200">
             <div className="flex items-center justify-center space-x-3">
               <BiRocket className="w-5 h-5 text-blue-600" />
@@ -62,14 +63,19 @@ const MonitizationPage = () => {
         <div className="bg-gradient-to-r from-yellow-100 via-green-100 to-blue-100 rounded-xl p-5 mb-8 border border-yellow-200/50">
           <div className="flex items-center justify-center mb-2">
             <HiOutlineEmojiHappy className="w-6 h-6 text-yellow-600 mr-2" />
-            <span className="font-bold text-yellow-700 text-lg">Meanwhile...</span>
+            <span className="font-bold text-yellow-700 text-lg">
+              Meanwhile...
+            </span>
           </div>
           <p className="text-yellow-700">
-            Why not check out trending posts and reels? More monetization features are coming soon!
+            Why not check out trending posts and reels? More monetization
+            features are coming soon!
           </p>
           <div className="flex items-center justify-center mt-3 space-x-2">
             <BiHeart className="w-5 h-5 text-green-500 animate-pulse" />
-            <span className="text-sm text-yellow-600 font-medium">Made with love</span>
+            <span className="text-sm text-yellow-600 font-medium">
+              Made with love
+            </span>
             <BiHeart className="w-5 h-5 text-green-500 animate-pulse" />
           </div>
         </div>
@@ -78,7 +84,9 @@ const MonitizationPage = () => {
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="flex items-center justify-center space-x-3 mb-3">
             <BiTime className="w-5 h-5 text-gray-500" />
-            <span className="text-gray-600 font-medium">Development Status</span>
+            <span className="text-gray-600 font-medium">
+              Development Status
+            </span>
           </div>
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
@@ -87,10 +95,18 @@ const MonitizationPage = () => {
           {/* Animated Dots */}
           <div className="flex items-center justify-center space-x-2 mb-3">
             <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full animate-bounce"></div>
-            <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-            <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+            <div
+              className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full animate-bounce"
+              style={{ animationDelay: "0.1s" }}
+            ></div>
+            <div
+              className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full animate-bounce"
+              style={{ animationDelay: "0.2s" }}
+            ></div>
           </div>
-          <p className="text-sm text-gray-500 font-medium">Building something incredible...</p>
+          <p className="text-sm text-gray-500 font-medium">
+            Building something incredible...
+          </p>
           <p className="text-xs text-gray-400 mt-1">0% Complete</p>
         </div>
       </div>
