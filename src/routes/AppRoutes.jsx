@@ -19,6 +19,7 @@ import CreatorStudioPage from "../pages/CreatorStudioPage";
 import AnalyticsPage from "../pages/AnalyticsPage";
 import InsightsPage from "../pages/InsightsPage";
 import AdsManagerPage from "../pages/AdsManagerPage";
+import SettingsPage from "../pages/SettingsPage";
 
 const AppRoutes = () => {
   return (
@@ -45,6 +46,7 @@ const AppRoutes = () => {
         <Route path="/ads" element={<AdsManagerPage />} />
         <Route path="/shop" element={<ShopPage />} />
 
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/account" element={<AccountPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
