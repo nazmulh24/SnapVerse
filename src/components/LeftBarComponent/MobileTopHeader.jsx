@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { MdAutoAwesome, MdAdd, MdFavoriteBorder } from "react-icons/md";
 import MobileNotificationsDropdown from "./MobileNotificationsDropdown";

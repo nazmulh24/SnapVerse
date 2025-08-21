@@ -5,9 +5,8 @@ import {
   MdPeople,
   MdMovieCreation,
   MdMonetizationOn,
-  MdPerson,
   MdExplore,
-  MdNotifications,
+  MdFavorite,
   MdBookmark,
   MdTrendingUp,
   MdEvent,
@@ -34,23 +33,23 @@ export const primaryItems = [
   { icon: MdPeople, label: "Friends", path: "/friends" },
   { icon: MdMovieCreation, label: "Reels", path: "/reels" },
   {
+    icon: MdFavorite,
+    label: "Activity",
+    path: "/activity",
+    badge: "15", // Combined notifications + suggestions
+    responsive: "md-only", // Only show on medium devices
+  },
+  {
     icon: MdMonetizationOn,
     label: "Monetization",
     path: "/monetization",
     isPro: true,
   },
-  { icon: MdPerson, label: "Account", path: "/account" },
 ];
 
 // Professional Features (Collapsible)
 export const discoverItems = [
   { icon: MdExplore, label: "Explore", path: "/explore" },
-  {
-    icon: MdNotifications,
-    label: "Notifications",
-    path: "/notifications",
-    badge: "12",
-  },
   { icon: MdBookmark, label: "Saved", path: "/saved" },
   { icon: MdTrendingUp, label: "Trending", path: "/trending", isPro: true },
   { icon: MdEvent, label: "Events", path: "/events" },

@@ -43,10 +43,10 @@ const SuggestedUsers = ({ suggestions = [] }) => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-500">
+        <h3 className="text-sm font-semibold text-gray-900">
           Suggested for you
         </h3>
-        <button className="text-xs text-gray-900 hover:text-gray-600 font-semibold">
+        <button className="text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors">
           See All
         </button>
       </div>
