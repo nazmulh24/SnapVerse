@@ -131,32 +131,32 @@ const Logo = ({ className = "", onSearch }) => {
 
   return (
     <div
-      className={`p-6 bg-gradient-to-br from-white to-gray-50/30 ${className}`}
+      className={`sm:pt-6 sm:pb-3 sm:px-6 pt-2 pb-2 px-3 bg-gradient-to-br from-white to-gray-50/30 ${className}`}
     >
       {/* Enhanced Logo Section */}
-      <div className="relative mb-6">
-        {/* Background decoration */}
-        <div className="absolute -inset-2 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-2xl blur-xl"></div>
+      <div className="relative sm:mb-12 mb-4">
+        {/* Background decoration - only on desktop */}
+        <div className="absolute -inset-2 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-2xl blur-xl sm:block hidden"></div>
 
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-100/50 shadow-lg shadow-purple-500/10">
+        <div className="relative sm:bg-white/80 sm:backdrop-blur-sm sm:rounded-2xl sm:p-4 sm:border sm:border-gray-100/50 sm:shadow-lg sm:shadow-purple-500/10 p-2">
           <Link
             to="/"
-            className="flex items-center justify-center space-x-3 group hover:scale-105 transition-all duration-300"
+            className="flex items-center sm:justify-center justify-start sm:space-x-3 space-x-2 group sm:hover:scale-105 hover:scale-102 transition-all duration-300"
           >
             {/* Logo Icon */}
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-all duration-300">
-                <MdAutoAwesome className="text-white text-lg group-hover:rotate-12 transition-transform duration-300" />
+            <div className="relative flex-shrink-0">
+              <div className="sm:w-10 sm:h-10 w-8 h-8 bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-all duration-300">
+                <MdAutoAwesome className="text-white sm:text-lg text-sm group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
+              <div className="absolute -top-1 -right-1 sm:w-4 sm:h-4 w-3 h-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
             </div>
 
-            {/* Logo Text */}
-            <div className="flex flex-col">
-              <span className="text-2xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-700 group-hover:to-purple-800 transition-all duration-300">
+            {/* Logo Text - Smaller on mobile */}
+            <div className="flex flex-col flex-shrink-0">
+              <span className="sm:text-2xl text-lg font-black bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:via-pink-700 group-hover:to-purple-800 transition-all duration-300">
                 SnapVerse
               </span>
-              <div className="flex items-center space-x-1 mt-1">
+              <div className="sm:flex hidden items-center space-x-1 mt-1">
                 <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
                 <span className="text-xs font-medium text-gray-500 group-hover:text-gray-600 transition-colors duration-300">
                   Inspire • Connect • Share
@@ -168,31 +168,31 @@ const Logo = ({ className = "", onSearch }) => {
       </div>
 
       {/* Enhanced Search Section */}
-      <div ref={searchRef} className="relative">
+      <div ref={searchRef} className="relative sm:block flex-1 sm:ml-0 ml-4">
         <form onSubmit={handleSearchSubmit} className="relative group">
           <div className="relative">
             {/* Search input with enhanced styling */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:block hidden"></div>
 
-            <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md focus-within:shadow-lg focus-within:border-purple-400 transition-all duration-300">
-              <MdSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg group-focus-within:text-purple-500 transition-colors duration-300" />
+            <div className="relative bg-white border border-gray-200 sm:rounded-full rounded-lg shadow-sm hover:shadow-md focus-within:shadow-lg focus-within:border-purple-400 transition-all duration-300">
+              <MdSearch className="absolute sm:left-4 left-3 top-1/2 transform -translate-y-1/2 text-gray-400 sm:text-lg text-base group-focus-within:text-purple-500 transition-colors duration-300" />
 
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Search amazing content..."
-                className="w-full pl-12 pr-12 py-3.5 bg-transparent rounded-xl focus:outline-none text-sm placeholder-gray-400 font-medium"
+                className="w-full sm:pl-12 sm:pr-12 pl-10 pr-10 sm:py-3.5 py-2.5 bg-transparent sm:rounded-xl rounded-lg focus:outline-none sm:text-sm text-xs placeholder-gray-400 font-medium"
               />
 
               {searchQuery && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all duration-200 group"
+                  className="absolute sm:right-4 right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all duration-200 group"
                   title="Clear search"
                 >
-                  <MdClear className="text-lg group-hover:rotate-90 transition-transform duration-200" />
+                  <MdClear className="sm:text-lg text-base group-hover:rotate-90 transition-transform duration-200" />
                 </button>
               )}
             </div>

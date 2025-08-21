@@ -6,9 +6,10 @@ import {
   MdFavoriteBorder,
   MdAddBox,
   MdPerson,
+  MdSearch,
 } from "react-icons/md";
 
-const NavigationItems = ({ isMobile = false }) => {
+const NavigationItems = ({ isMobile = false, onSearchClick }) => {
   const location = useLocation();
 
   const sidebarItems = [
@@ -25,7 +26,8 @@ const NavigationItems = ({ isMobile = false }) => {
   if (isMobile) {
     return (
       <nav className="flex justify-around items-center py-2">
-        {sidebarItems.slice(0, 5).map((item, index) => (
+        {/* First 4 navigation items */}
+        {sidebarItems.slice(0, 4).map((item, index) => (
           <Link
             key={index}
             to={item.path}
@@ -41,6 +43,15 @@ const NavigationItems = ({ isMobile = false }) => {
             <span className="text-xs mt-1 font-medium">{item.label}</span>
           </Link>
         ))}
+
+        {/* Search button */}
+        <button
+          onClick={onSearchClick}
+          className="flex flex-col items-center p-2 transition-all duration-200 text-gray-600 hover:text-purple-600"
+        >
+          <MdSearch className="text-2xl transition-all duration-200 hover:scale-110" />
+          <span className="text-xs mt-1 font-medium">Search</span>
+        </button>
       </nav>
     );
   }

@@ -1,5 +1,6 @@
 import DesktopSidebar from "../LeftBarComponent/DesktopSidebar";
 import MobileBottomNavigation from "../LeftBarComponent/MobileBottomNavigation";
+import MobileTopHeader from "../LeftBarComponent/MobileTopHeader";
 
 const Sidebar = ({ onWidthChange }) => {
   // Default user data - in a real app, this would come from props or state
@@ -11,6 +12,9 @@ const Sidebar = ({ onWidthChange }) => {
 
   return (
     <>
+      {/* Mobile Top Header */}
+      <MobileTopHeader />
+
       {/* Desktop/Tablet Left Sidebar */}
       <DesktopSidebar user={currentUser} onWidthChange={onWidthChange} />
 
