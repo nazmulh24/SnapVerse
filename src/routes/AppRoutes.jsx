@@ -7,6 +7,7 @@ import MessagesPage from "../pages/MessagesPage";
 import ReelsPage from "../pages/ReelsPage";
 import ExplorePage from "../pages/ExplorePage";
 import EventsPage from "../pages/EventsPage";
+import GroupsPage from "../pages/GroupsPage";
 
 const AppRoutes = () => {
   return (
@@ -19,6 +20,7 @@ const AppRoutes = () => {
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/groups" element={<GroupsPage />} />
         <Route path="/account" element={<AccountPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
