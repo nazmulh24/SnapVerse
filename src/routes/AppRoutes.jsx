@@ -14,6 +14,7 @@ import ConnectionPage from "../pages/ConnectionPage";
 import MonitizationPage from "../pages/MonitizationPage";
 import SavedPage from "../pages/SavedPage";
 import TrendingPage from "../pages/TrendingPage";
+import BusinessPage from "../pages/BusinessPage";
 
 const AppRoutes = () => {
   return (
@@ -32,6 +33,8 @@ const AppRoutes = () => {
         <Route path="/trending" element={<TrendingPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/business" element={<BusinessPage />} />
+
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/account" element={<AccountPage />} />
