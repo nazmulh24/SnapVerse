@@ -134,7 +134,7 @@ const Logo = ({ className = "", onSearch }) => {
       className={`sm:pt-6 sm:pb-3 sm:px-6 pt-2 pb-2 px-3 bg-gradient-to-br from-white to-gray-50/30 ${className}`}
     >
       {/* Enhanced Logo Section */}
-      <div className="relative sm:mb-12 mb-4">
+      <div className="relative sm:mb-10 mb-4">
         {/* Background decoration - only on desktop */}
         <div className="absolute -inset-2 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-2xl blur-xl sm:block hidden"></div>
 

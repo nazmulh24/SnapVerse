@@ -1,22 +1,11 @@
-import { useState } from "react";
+import React from "react";
 import { Link } from "react-router";
 import { MdAutoAwesome, MdAdd, MdFavoriteBorder } from "react-icons/md";
-import MobileNotificationsDropdown from "./MobileNotificationsDropdown";
 
 const MobileTopHeader = () => {
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-
   const handleNewPostClick = () => {
     console.log("New post clicked");
     // Handle new post creation
-  };
-
-  const handleNotificationClick = () => {
-    setIsNotificationsOpen(true);
-  };
-
-  const handleNotificationsClose = () => {
-    setIsNotificationsOpen(false);
   };
 
   return (
@@ -47,25 +36,19 @@ const MobileTopHeader = () => {
             </span>
           </Link>
 
-          {/* Right - Notification Icon */}
-          <button
-            onClick={handleNotificationClick}
+          {/* Right - Activity Icon */}
+          <Link
+            to="/activity?modal=true"
             className="p-2 rounded-full hover:bg-gray-100 text-gray-700 hover:text-purple-600 transition-all duration-200 group relative"
           >
             <MdFavoriteBorder className="text-2xl group-hover:scale-110 transition-transform duration-200" />
-            {/* Notification badge */}
+            {/* Activity badge */}
             <div className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">3</span>
+              <span className="text-white text-xs font-bold">15</span>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
-
-      {/* Mobile Notifications Dropdown */}
-      <MobileNotificationsDropdown
-        isOpen={isNotificationsOpen}
-        onClose={handleNotificationsClose}
-      />
     </>
   );
 };

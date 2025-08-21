@@ -93,7 +93,7 @@ export const navigationSections = [
     key: "discover",
     title: "Discover",
     items: discoverItems,
-    defaultExpanded: true,
+    defaultExpanded: false,
   },
   {
     key: "business",
