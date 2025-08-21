@@ -17,6 +17,7 @@ import TrendingPage from "../pages/TrendingPage";
 import BusinessPage from "../pages/BusinessPage";
 import CreatorStudioPage from "../pages/CreatorStudioPage";
 import AnalyticsPage from "../pages/AnalyticsPage";
+import InsightsPage from "../pages/InsightsPage";
 
 const AppRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="/creator-studio" element={<CreatorStudioPage />} />
 
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/insights" element={<InsightsPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/account" element={<AccountPage />} />
 
