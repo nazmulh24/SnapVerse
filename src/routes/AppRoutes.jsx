@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 import MainLayout from "../components/layouts/MainLayout";
 import Home from "../pages/Home";
 
@@ -8,6 +8,8 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
 
       {/* Protected Routes */}

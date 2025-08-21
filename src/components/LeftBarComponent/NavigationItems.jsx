@@ -1,8 +1,6 @@
-import React from "react";
 import { Link, useLocation } from "react-router";
 import {
   MdHome,
-  MdSearch,
   MdExplore,
   MdMovieCreation,
   MdFavoriteBorder,
@@ -15,7 +13,6 @@ const NavigationItems = ({ isMobile = false }) => {
 
   const sidebarItems = [
     { icon: MdHome, label: "Home", path: "/" },
-    { icon: MdSearch, label: "Search", path: "/search" },
     { icon: MdExplore, label: "Explore", path: "/explore" },
     { icon: MdMovieCreation, label: "Reels", path: "/reels" },
     { icon: MdFavoriteBorder, label: "Messages", path: "/messages" },
