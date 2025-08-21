@@ -1,27 +1,30 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route } from "react-router";
 import MainLayout from "../components/layouts/MainLayout";
 import Home from "../pages/Home";
-import ActivityPage from "../pages/ActivityPage";
-import AccountPage from "../pages/AccountPage";
 import MessagesPage from "../pages/MessagesPage";
-import ReelsPage from "../pages/ReelsPage";
-import ExplorePage from "../pages/ExplorePage";
-import EventsPage from "../pages/EventsPage";
-import GroupsPage from "../pages/GroupsPage";
-import ShopPage from "../pages/ShopPage";
 import CreatePage from "../pages/CreatePage";
 import ConnectionPage from "../pages/ConnectionPage";
+import ReelsPage from "../pages/ReelsPage";
 import MonitizationPage from "../pages/MonitizationPage";
+import ExplorePage from "../pages/ExplorePage";
 import SavedPage from "../pages/SavedPage";
 import TrendingPage from "../pages/TrendingPage";
+import EventsPage from "../pages/EventsPage";
+import GroupsPage from "../pages/GroupsPage";
 import BusinessPage from "../pages/BusinessPage";
 import CreatorStudioPage from "../pages/CreatorStudioPage";
 import AnalyticsPage from "../pages/AnalyticsPage";
 import InsightsPage from "../pages/InsightsPage";
 import AdsManagerPage from "../pages/AdsManagerPage";
+import ShopPage from "../pages/ShopPage";
 import SettingsPage from "../pages/SettingsPage";
 import PrivacyPage from "../pages/PrivacyPage";
 import SecurityPage from "../pages/SecurityPage";
+import HelpCenterPage from "../pages/HelpCenterPage";
+import FeedbackPage from "../pages/FeedbackPage";
+import AboutPage from "../pages/AboutPage";
+import ActivityPage from "../pages/ActivityPage";
+import AccountPage from "../pages/AccountPage";
 
 const AppRoutes = () => {
   return (
@@ -51,9 +54,12 @@ const AppRoutes = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/security" element={<SecurityPage />} />
-        <Route path="/account" element={<AccountPage />} />
+        <Route path="/help" element={<HelpCenterPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/about" element={<AboutPage />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/account" element={<AccountPage />} />
       </Route>
 
       {/* Protected Routes */}
