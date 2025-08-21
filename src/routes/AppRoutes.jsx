@@ -12,6 +12,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
 
         <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/profile" element={<AccountPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

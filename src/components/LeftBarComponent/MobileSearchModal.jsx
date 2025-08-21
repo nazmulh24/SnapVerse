@@ -72,7 +72,8 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
     setSearchQuery("");
     setSearchResults([]);
     onClose();
-    console.log("Clicked on:", result);
+    // TODO: Implement navigation to result
+    void result; // Prevent unused parameter warning
   };
 
   const handleBackdropClick = (e) => {

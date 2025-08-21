@@ -3,18 +3,15 @@ import { Link } from "react-router";
 import { MdAutoAwesome, MdAdd, MdFavoriteBorder } from "react-icons/md";
 
 const MobileTopHeader = () => {
-  const handleNewPostClick = () => {
-    console.log("New post clicked");
-    // Handle new post creation
-  };
-
-  return (
+  const handleNewPost = () => {
+    // TODO: Implement new post functionality
+  };  return (
     <>
       <div className="sm:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="flex items-center justify-between p-3">
           {/* Left - New Post Icon */}
           <button
-            onClick={handleNewPostClick}
+            onClick={handleNewPost}
             className="p-2 rounded-full hover:bg-gray-100 text-gray-700 hover:text-purple-600 transition-all duration-200 group"
           >
             <MdAdd className="text-2xl group-hover:scale-110 transition-transform duration-200" />

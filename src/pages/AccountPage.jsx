@@ -7,6 +7,7 @@ import {
   businessItems,
   moreItems,
 } from "../components/NavigationComponent/navigationData";
+import { handleModalBack, setupAutoModalSwitch } from "../utils/pageUtils";
 
 const AccountPage = () => {
   const navigate = useNavigate();
@@ -14,47 +15,11 @@ const AccountPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const handleBack = () => {
-    // Simple and reliable back navigation
-    const hasModal = searchParams.get("modal") === "true";
-
-    if (hasModal) {
-      // If in modal, go back to home (most reliable)
-      navigate("/");
-    } else {
-      // For regular page, try history back, fallback to home
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate("/");
-      }
-    }
+    handleModalBack(navigate, searchParams);
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      const wasAutoSwitched = sessionStorage.getItem("accountAutoSwitched");
-
-      setIsMobile(mobile);
-
-      const currentModal = searchParams.get("modal") === "true";
-
-      if (mobile && !currentModal) {
-        setSearchParams({ modal: "true" });
-        sessionStorage.setItem("accountAutoSwitched", "true");
-      } else if (!mobile && currentModal && wasAutoSwitched) {
-        setSearchParams({});
-        sessionStorage.removeItem("accountAutoSwitched");
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      sessionStorage.removeItem("accountAutoSwitched");
-    };
+    return setupAutoModalSwitch(setSearchParams, searchParams, "accountAutoSwitched", setIsMobile);
   }, [searchParams, setSearchParams]);
 
   const AccountContent = () => (

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MdArrowBack } from "react-icons/md";
 import RecentActivity from "../components/RightBarComponent/RecentActivity";
 import SuggestedUsers from "../components/RightBarComponent/SuggestedUsers";
+import { handleModalBack, setupAutoModalSwitch } from "../utils/pageUtils";
 
 const ActivityPage = () => {
   const navigate = useNavigate();
@@ -10,47 +11,11 @@ const ActivityPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const handleBack = () => {
-    // Simple and reliable back navigation
-    const hasModal = searchParams.get("modal") === "true";
-
-    if (hasModal) {
-      // If in modal, go back to home (most reliable)
-      navigate("/");
-    } else {
-      // For regular page, try history back, fallback to home
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate("/");
-      }
-    }
+    handleModalBack(navigate, searchParams);
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      const wasAutoSwitched = sessionStorage.getItem("activityAutoSwitched");
-
-      setIsMobile(mobile);
-
-      const currentModal = searchParams.get("modal") === "true";
-
-      if (mobile && !currentModal) {
-        setSearchParams({ modal: "true" });
-        sessionStorage.setItem("activityAutoSwitched", "true");
-      } else if (!mobile && currentModal && wasAutoSwitched) {
-        setSearchParams({});
-        sessionStorage.removeItem("activityAutoSwitched");
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      sessionStorage.removeItem("activityAutoSwitched");
-    };
+    return setupAutoModalSwitch(setSearchParams, searchParams, "activityAutoSwitched", setIsMobile);
   }, [searchParams, setSearchParams]);
 
   const ActivityContent = () => (

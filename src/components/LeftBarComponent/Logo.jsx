@@ -119,14 +119,15 @@ const Logo = ({ className = "", onSearch }) => {
     e.preventDefault();
     setShowResults(false);
     // Handle search submission
-    console.log("Search for:", searchQuery);
+    // TODO: Implement search functionality
+    void searchQuery; // Prevent unused variable warning
   };
 
   const handleResultClick = (result) => {
     setShowResults(false);
     setSearchQuery("");
-    console.log("Clicked on:", result);
-    // Handle navigation to user profile or hashtag page
+    // TODO: Implement navigation to user profile or hashtag page
+    void result; // Prevent unused parameter warning
   };
 
   return (
