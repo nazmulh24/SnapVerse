@@ -1,7 +1,7 @@
 import {
   MdHome,
   MdAddBox,
-  MdMessage,
+  MdChatBubble,
   MdPeople,
   MdMovieCreation,
   MdMonetizationOn,
@@ -23,14 +23,16 @@ import {
   MdStorefront,
   MdCampaign,
   MdInsights,
+  MdAccountCircle,
 } from "react-icons/md";
 
 // Main Navigation Items (Always visible)
 export const primaryItems = [
-  { icon: MdHome, label: "Home", path: "/", badge: "2" },
+  { icon: MdHome, label: "Home", path: "/" },
+  { icon: MdChatBubble, label: "Messages", path: "/messages", badge: "5" },
   { icon: MdAddBox, label: "Create", path: "/create" },
-  { icon: MdMessage, label: "Messages", path: "/messages", badge: "5" },
   { icon: MdPeople, label: "Friends", path: "/friends" },
+  { icon: MdAccountCircle, label: "Account", path: "/profile" },
   { icon: MdMovieCreation, label: "Reels", path: "/reels" },
   {
     icon: MdFavorite,
