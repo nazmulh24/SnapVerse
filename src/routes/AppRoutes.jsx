@@ -11,6 +11,7 @@ import GroupsPage from "../pages/GroupsPage";
 import ShopPage from "../pages/ShopPage";
 import CreatePage from "../pages/CreatePage";
 import ConnectionPage from "../pages/ConnectionPage";
+import MonitizationPage from "../pages/MonitizationPage";
 
 const AppRoutes = () => {
   return (
@@ -22,10 +23,12 @@ const AppRoutes = () => {
         <Route path="/create" element={<CreatePage />} />
         <Route path="/connections" element={<ConnectionPage />} />
         <Route path="/reels" element={<ReelsPage />} />
-        <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/monetization" element={<MonitizationPage />} />
+
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/activity" element={<ActivityPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/account" element={<AccountPage />} />
 
