@@ -3,6 +3,7 @@ import MainLayout from "../components/layouts/MainLayout";
 import Home from "../pages/Home";
 import ActivityPage from "../pages/ActivityPage";
 import AccountPage from "../pages/AccountPage";
+import MessagesPage from "../pages/MessagesPage";
 
 const AppRoutes = () => {
   return (
@@ -10,7 +11,7 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-
+        <Route path="/messages" element={<MessagesPage />} />
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/account" element={<AccountPage />} />
 
