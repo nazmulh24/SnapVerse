@@ -33,6 +33,8 @@ const NavigationSection = ({
             let responsiveClasses = "";
             if (item.responsive === "md-only") {
               responsiveClasses = "hidden md:flex lg:hidden";
+            } else if (item.responsive === "sm-only") {
+              responsiveClasses = "hidden"; // Always hidden in sidebar, only show in mobile bottom nav
             }
 
             return (

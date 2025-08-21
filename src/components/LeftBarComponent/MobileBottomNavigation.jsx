@@ -74,11 +74,45 @@ const MobileBottomNavigation = () => {
                 );
               }
 
+              // Hide Account button on md and lg screens
+              if (item.label === "Account") {
+                return (
+                  <Link
+                    key={index}
+                    to={item.path}
+                    className={`flex-col items-center p-3 transition-all duration-200 relative hidden ${
+                      isActive(item.path)
+                        ? "text-purple-600"
+                        : "text-gray-600 hover:text-purple-600"
+                    }`}
+                    style={{ display: window.innerWidth >= 768 ? 'none' : 'flex' }}
+                  >
+                    <item.icon
+                      className={`text-3xl transition-all duration-200 ${
+                        isActive(item.path) ? "scale-110" : "hover:scale-110"
+                      }`}
+                    />
+                    <span className="text-xs mt-1 font-medium">{item.label}</span>
+
+                    {/* Badge */}
+                    {item.badge && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">
+                          {item.badge}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                );
+              }
+
               return (
                 <Link
                   key={index}
                   to={item.path}
                   className={`flex flex-col items-center p-3 transition-all duration-200 relative ${
+                    item.label === "Account" ? "md:hidden lg:hidden" : ""
+                  } ${
                     isActive(item.path)
                       ? "text-purple-600"
                       : "text-gray-600 hover:text-purple-600"

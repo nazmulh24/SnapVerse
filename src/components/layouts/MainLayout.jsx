@@ -32,7 +32,7 @@ const MainLayout = () => {
           marginLeft: isDesktop ? `${leftSidebarWidth}px` : "0px",
         }}
       >
-        <main className="p-4 md:p-6 pb-20 md:pb-6 pt-20 sm:pt-4">
+        <main className="p-4 md:p-4 pb-20 md:pb-6 pt-20 sm:pt-4">
           <Outlet />
         </main>
       </div>
