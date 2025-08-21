@@ -4,6 +4,7 @@ import Home from "../pages/Home";
 import ActivityPage from "../pages/ActivityPage";
 import AccountPage from "../pages/AccountPage";
 import MessagesPage from "../pages/MessagesPage";
+import ReelsPage from "../pages/ReelsPage";
 
 const AppRoutes = () => {
   return (
@@ -12,6 +13,7 @@ const AppRoutes = () => {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/reels" element={<ReelsPage />} />
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/account" element={<AccountPage />} />
 
