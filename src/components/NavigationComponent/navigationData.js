@@ -31,7 +31,7 @@ export const primaryItems = [
   { icon: MdHome, label: "Home", path: "/" },
   { icon: MdChatBubble, label: "Messages", path: "/messages", badge: "5" },
   { icon: MdAddBox, label: "Create", path: "/create" },
-  { icon: MdPeople, label: "Friends", path: "/friends" },
+  { icon: MdPeople, label: "Connections", path: "/connections" },
   {
     icon: MdAccountCircle,
     label: "Account",
