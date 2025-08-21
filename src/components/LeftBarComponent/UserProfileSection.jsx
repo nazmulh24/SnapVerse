@@ -16,12 +16,12 @@ const UserProfileSection = ({ user, onLogout }) => {
     <div className="p-4 border-t border-gray-100">
       <div className="flex items-center justify-between">
         <Link
-          to="/profile"
+          to="/account"
           className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 flex-1"
         >
           <img
             src={user.avatar}
-            alt="Profile"
+            alt="profile"
             className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
           />
           <div className="flex-1">

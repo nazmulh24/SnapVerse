@@ -32,7 +32,12 @@ export const primaryItems = [
   { icon: MdChatBubble, label: "Messages", path: "/messages", badge: "5" },
   { icon: MdAddBox, label: "Create", path: "/create" },
   { icon: MdPeople, label: "Friends", path: "/friends" },
-  { icon: MdAccountCircle, label: "Account", path: "/profile" },
+  {
+    icon: MdAccountCircle,
+    label: "Account",
+    path: "/account",
+    responsive: "sm-only",
+  },
   { icon: MdMovieCreation, label: "Reels", path: "/reels" },
   {
     icon: MdFavorite,

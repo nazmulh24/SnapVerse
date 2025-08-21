@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 import MainLayout from "../components/layouts/MainLayout";
 import Home from "../pages/Home";
 import ActivityPage from "../pages/ActivityPage";
+import AccountPage from "../pages/AccountPage";
 
 const AppRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
 
         <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/account" element={<AccountPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

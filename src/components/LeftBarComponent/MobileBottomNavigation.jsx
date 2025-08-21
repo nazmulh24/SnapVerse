@@ -49,7 +49,7 @@ const MobileBottomNavigation = () => {
     {
       icon: MdAccountCircle,
       label: "Account",
-      path: "/profile",
+      path: "/account",
     },
   ];
 
