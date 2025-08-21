@@ -13,6 +13,7 @@ import CreatePage from "../pages/CreatePage";
 import ConnectionPage from "../pages/ConnectionPage";
 import MonitizationPage from "../pages/MonitizationPage";
 import SavedPage from "../pages/SavedPage";
+import TrendingPage from "../pages/TrendingPage";
 
 const AppRoutes = () => {
   return (
@@ -28,6 +29,7 @@ const AppRoutes = () => {
 
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/saved" element={<SavedPage />} />
+        <Route path="/trending" element={<TrendingPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/groups" element={<GroupsPage />} />
         <Route path="/activity" element={<ActivityPage />} />
