@@ -33,13 +33,15 @@ const NavigationSection = ({
             let responsiveClasses = "";
             if (item.responsive === "md-only") {
               responsiveClasses = "hidden md:flex lg:hidden";
+            } else if (item.responsive === "sm-only") {
+              responsiveClasses = "md:hidden";
             }
 
             return (
-              <li key={index} className={responsiveClasses}>
+              <li key={index}>
                 <Link
                   to={item.path}
-                  className={`flex items-center space-x-4 p-3 rounded-xl transition-all duration-200 group ${
+                  className={`flex items-center space-x-4 p-3 rounded-xl transition-all duration-200 group ${responsiveClasses} ${
                     isActive(item.path)
                       ? "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600"
                       : "hover:bg-gray-100 text-gray-700"

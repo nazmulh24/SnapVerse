@@ -279,12 +279,12 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className="min-h-screen max-w-3xl mx-auto bg-gray-50">
+      <div className="p-3 md:px-1 md:py-2 lg:p-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Account</h1>
+          <h1 className="text-4xl font-bold text-gray-900">Account</h1>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <AccountContent />
         </div>
       </div>

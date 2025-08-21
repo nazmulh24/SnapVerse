@@ -48,7 +48,7 @@ const RecentActivity = ({ activities = [] }) => {
     activities.length > 0 ? activities : defaultActivities;
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-900">Recent Activity</h3>
         <button className="text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors">
@@ -56,7 +56,7 @@ const RecentActivity = ({ activities = [] }) => {
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {displayActivities.slice(0, 5).map((activity) => (
           <div
             key={activity.id}

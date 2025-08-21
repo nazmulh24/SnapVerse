@@ -43,8 +43,8 @@ export const primaryItems = [
     icon: MdFavorite,
     label: "Activity",
     path: "/activity",
-    badge: "15", // Combined notifications + suggestions
-    responsive: "md-only", // Only show on medium devices
+    badge: "15",
+    responsive: "md-only",
   },
   {
     icon: MdMonetizationOn,

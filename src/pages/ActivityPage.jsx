@@ -54,7 +54,7 @@ const ActivityPage = () => {
   }, [searchParams, setSearchParams]);
 
   const ActivityContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <RecentActivity />
       <div className="border-t border-gray-100" />
       <SuggestedUsers />
@@ -84,12 +84,12 @@ const ActivityPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className="min-h-screen max-w-3xl mx-auto bg-gray-50">
+      <div className="p-2 md:p-1 lg:p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Activity</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Activity</h1>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <ActivityContent />
         </div>
       </div>

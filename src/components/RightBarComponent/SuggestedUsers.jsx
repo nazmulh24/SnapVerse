@@ -41,8 +41,8 @@ const SuggestedUsers = ({ suggestions = [] }) => {
     suggestions.length > 0 ? suggestions : defaultSuggestions;
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-900">
           Suggested for you
         </h3>
