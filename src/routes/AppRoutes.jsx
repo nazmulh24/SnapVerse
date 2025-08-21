@@ -21,6 +21,7 @@ import InsightsPage from "../pages/InsightsPage";
 import AdsManagerPage from "../pages/AdsManagerPage";
 import SettingsPage from "../pages/SettingsPage";
 import PrivacyPage from "../pages/PrivacyPage";
+import SecurityPage from "../pages/SecurityPage";
 
 const AppRoutes = () => {
   return (
@@ -49,6 +50,7 @@ const AppRoutes = () => {
 
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/security" element={<SecurityPage />} />
         <Route path="/account" element={<AccountPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
