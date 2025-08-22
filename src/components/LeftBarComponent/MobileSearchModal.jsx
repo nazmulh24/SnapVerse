@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MdSearch, MdClear, MdPerson, MdTag } from "react-icons/md";
 
 // Mock search data - in a real app, this would come from an API
