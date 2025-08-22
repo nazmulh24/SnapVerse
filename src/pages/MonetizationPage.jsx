@@ -1,17 +1,14 @@
 import ComingSoonPage from "../components/shared/ComingSoonPage";
 import { BiDollar } from "react-icons/bi";
 
-const MonitizationPage = () => {
+const MonetizationPage = () => {
   return (
     <ComingSoonPage
       icon={<BiDollar className="w-12 h-12 text-white" />}
       title="Monetization Coming Soon!"
-      subtitle="We're creating tools to help creators earn from their content through multiple revenue streams."
+      subtitle="We're creating tools to help creators earn from their content through multiple revenue streams and partnerships."
       emoji="💰"
-      progress={25}
-      bgColors={{ from: "lime-50", via: "green-50", to: "emerald-50" }}
-      iconColors={{ from: "lime-400", to: "green-500" }}
-      titleColors={{ from: "lime-600", to: "green-600" }}
+      progress={30}
       accentColor="green"
       statusCard={{
         icon: <BiDollar className="w-5 h-5 text-green-600" />,
@@ -21,4 +18,4 @@ const MonitizationPage = () => {
   );
 };
 
-export default MonitizationPage;
+export default MonetizationPage;
