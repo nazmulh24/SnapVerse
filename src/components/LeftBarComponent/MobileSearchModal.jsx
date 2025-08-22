@@ -1,61 +1,45 @@
 import { useState, useEffect, useRef } from "react";
-import { MdSearch, MdClear, MdPerson, MdTag } from "react-icons/md";
+import {
+  MdSearch,
+  MdClear,
+  MdPerson,
+  MdTag,
+  MdTrendingUp,
+  MdHistory,
+  MdArrowBack,
+  MdOutlineEmojiObjects,
+} from "react-icons/md";
 
-// Mock search data - in a real app, this would come from an API
-const mockData = [
-  {
-    id: 1,
-    type: "user",
-    name: "John Doe",
-    username: "@johndoe",
-    avatar: "/user-profile-illustration.png",
-  },
-  {
-    id: 2,
-    type: "user",
-    name: "Jane Smith",
-    username: "@janesmith",
-    avatar: "/user-profile-illustration.png",
-  },
-  {
-    id: 3,
-    type: "user",
-    name: "Mike Johnson",
-    username: "@mikej",
-    avatar: "/user-profile-illustration.png",
-  },
-  { id: 4, type: "hashtag", name: "#photography", posts: "1.2M posts" },
-  { id: 5, type: "hashtag", name: "#travel", posts: "856K posts" },
-  { id: 6, type: "hashtag", name: "#food", posts: "2.1M posts" },
-];
-
-const MobileSearchModal = ({ isOpen, onClose }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
   const searchRef = useRef(null);
+  const [recentSearches, setRecentSearches] = useState([
+    "design",
+    "photography",
+    "travel tips",
+  ]);
+  // eslint-disable-next-line no-unused-vars
+  const [trendingSearches, setTrendingSearches] = useState([
+    { query: "photography", count: "1.2M" },
+    { query: "design", count: "856K" },
+    { query: "technology", count: "2.3M" },
+    { query: "food", count: "4.1M" },
+  ]);
 
-  // Handle search functionality
+  const {
+    searchQuery = "",
+    setSearchQuery = () => {},
+    searchResults = [],
+    isLoading = false,
+    handleResultClick = () => {},
+    handleClearSearch = () => {},
+  } = searchHook || {};
+
+  // Focus on search input when modal opens with improved timing
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-
-    // Simulate search with mock data
-    const filteredResults = mockData.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.username &&
-          item.username.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-
-    setSearchResults(filteredResults.slice(0, 8)); // Show more results in modal
-  }, [searchQuery]);
-
-  // Focus on search input when modal opens
-  useEffect(() => {
-    if (isOpen && searchRef.current) {
-      searchRef.current.focus();
+    if (isOpen) {
+      setTimeout(() => {
+        searchRef.current?.focus();
+      }, 100);
     }
   }, [isOpen]);
 
@@ -63,16 +47,16 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchResults([]);
+  const handleTrendingClick = (query) => {
+    setSearchQuery(query);
   };
 
-  const handleResultClick = (result) => {
-    setSearchQuery("");
-    setSearchResults([]);
-    onClose();
-    console.log("Clicked on:", result);
+  const handleRecentClick = (query) => {
+    setSearchQuery(query);
+  };
+
+  const handleClearRecent = () => {
+    setRecentSearches([]);
   };
 
   const handleBackdropClick = (e) => {
@@ -85,13 +69,20 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg mx-4 w-full max-w-md shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 mt-4 shadow-2xl overflow-hidden animate-slideInDown">
         {/* Search Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
+        <div className="p-3 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-500 hover:text-gray-800 transition-colors rounded-full hover:bg-gray-100"
+            >
+              <MdArrowBack className="text-xl" />
+            </button>
+
             <div className="relative flex-1">
               <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
               <input
@@ -99,8 +90,8 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                placeholder="Search users and hashtags..."
-                className="w-full pl-10 pr-10 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm placeholder-gray-400 font-medium"
+                placeholder="Search SnapVerse..."
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500/30 text-sm placeholder-gray-400"
               />
               {searchQuery && (
                 <button
@@ -111,34 +102,91 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
                 </button>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-purple-600 font-medium text-sm hover:bg-purple-50 rounded-lg transition-colors duration-200"
-            >
-              Cancel
-            </button>
           </div>
         </div>
 
-        {/* Search Results */}
-        <div className="max-h-96 overflow-y-auto">
-          {searchQuery.trim() === "" ? (
-            <div className="p-6 text-center">
-              <MdSearch className="text-gray-400 text-3xl mx-auto mb-3" />
-              <p className="text-gray-600 font-medium">
-                Search for people and hashtags
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Start typing to see results
-              </p>
+        {/* Search Results Area */}
+        <div className="max-h-[70vh] overflow-y-auto">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-10 px-4">
+              <div className="w-10 h-10 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-500 text-sm">Searching SnapVerse...</p>
             </div>
-          ) : searchResults.length > 0 ? (
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !searchQuery && (
+            <div className="p-4">
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Recent Searches
+                    </h3>
+                    <button
+                      onClick={handleClearRecent}
+                      className="text-xs text-purple-600 font-medium hover:text-purple-800 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {recentSearches.map((search, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleRecentClick(search)}
+                        className="flex items-center w-full gap-3 p-2 hover:bg-gray-50 rounded-xl transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <MdHistory className="text-gray-500" />
+                        </div>
+                        <span className="text-sm text-gray-700">{search}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trending Searches */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <MdTrendingUp className="text-purple-500" />
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Trending Now
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {trendingSearches.map((trend, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleTrendingClick(trend.query)}
+                      className="flex flex-col p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-all duration-300 border border-purple-100/30"
+                    >
+                      <span className="text-sm font-medium text-gray-800">
+                        #{trend.query}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-1">
+                        {trend.count} posts
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Search Results */}
+          {!isLoading && searchQuery && searchResults.length > 0 && (
             <div className="p-2">
               {searchResults.map((result) => (
                 <button
                   key={result.id}
                   onClick={() => handleResultClick(result)}
-                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-all duration-200 text-left group"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-purple-50 rounded-xl transition-all duration-200 text-left"
                 >
                   {result.type === "user" ? (
                     <>
@@ -146,53 +194,49 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
                         <img
                           src={result.avatar}
                           alt={result.name}
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-purple-100 group-hover:ring-purple-300 transition-all duration-200"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
                         />
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors duration-200">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm leading-tight">
                           {result.name}
                         </p>
-                        <p className="text-xs text-gray-500 truncate group-hover:text-gray-600 transition-colors duration-200">
+                        <p className="text-xs text-gray-500">
                           {result.username}
                         </p>
-                      </div>
-                      <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors duration-200">
-                        <MdPerson className="text-purple-600 text-sm" />
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-                        <MdTag className="text-white text-lg" />
+                      <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                        <MdTag className="text-white text-sm" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors duration-200">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm leading-tight">
                           {result.name}
                         </p>
-                        <p className="text-xs text-gray-500 truncate group-hover:text-gray-600 transition-colors duration-200">
-                          {result.posts}
-                        </p>
-                      </div>
-                      <div className="px-2 py-1 bg-pink-100 rounded-md text-xs font-medium text-pink-600 group-hover:bg-pink-200 transition-colors duration-200">
-                        Tag
+                        <p className="text-xs text-gray-500">{result.posts}</p>
                       </div>
                     </>
                   )}
                 </button>
               ))}
             </div>
-          ) : (
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                <MdSearch className="text-gray-400 text-2xl" />
+          )}
+
+          {/* No Results */}
+          {!isLoading && searchQuery && searchResults.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+              <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                <MdOutlineEmojiObjects className="text-2xl text-purple-400" />
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">
+              <h3 className="text-gray-800 font-medium mb-2">
                 No results found
-              </p>
-              <p className="text-xs text-gray-500">
-                Try searching with different keywords
+              </h3>
+              <p className="text-gray-500 text-sm max-w-xs">
+                We couldn't find anything for "{searchQuery}". Try using
+                different keywords or check your spelling.
               </p>
             </div>
           )}
