@@ -6,8 +6,15 @@ import UserList from "../components/Connection/UserList";
 const ConnectionsPage = () => {
   const { user } = useAuthContext();
   const [activeTab, setActiveTab] = React.useState("followers");
-  const { counts, followers, following, pending, requestSent, handleAction } =
-    useConnectionsApi(user);
+  const {
+    counts,
+    followers,
+    following,
+    pending,
+    requestSent,
+    handleAction,
+    processingId,
+  } = useConnectionsApi(user);
 
   // Only show Pending Requests tab if user is private
   const tabList = [
@@ -23,7 +30,8 @@ const ConnectionsPage = () => {
     ...(user?.is_private ? { pending: counts.pending_requests_count } : {}),
   };
   // If the logged-in user is not private, never show pending — map to followers instead
-  const displayedTab = !user?.is_private && activeTab === "pending" ? "followers" : activeTab;
+  const displayedTab =
+    !user?.is_private && activeTab === "pending" ? "followers" : activeTab;
 
   const getList = () => {
     switch (displayedTab) {
@@ -79,6 +87,7 @@ const ConnectionsPage = () => {
             requestSent={requestSent}
             activeTab={displayedTab}
             handleAction={handleAction}
+            processingId={processingId}
           />
         )}
       </div>

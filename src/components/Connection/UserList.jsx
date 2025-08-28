@@ -6,6 +6,7 @@ export default function UserList({
   requestSent,
   activeTab,
   handleAction,
+  processingId,
 }) {
   return (
     <ul className="divide-y divide-gray-100">
@@ -14,7 +15,7 @@ export default function UserList({
         return (
           <li
             key={user.id}
-            className="flex items-center gap-5 py-5 group hover:bg-gray-50 rounded-xl transition-colors"
+            className="flex items-center gap-5 py-5 group rounded-xl transition-colors"
           >
             <div className="relative">
               <img
@@ -35,42 +36,62 @@ export default function UserList({
             {activeTab === "followers" &&
               !isFollowing &&
               (requestSent.includes(user.id) ? (
-                <span className="px-5 py-2 rounded-full bg-gray-100 text-gray-500 font-semibold shadow-sm border border-gray-200">
+                <span className="px-5 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold shadow-sm border border-yellow-200">
                   Request Sent
                 </span>
               ) : (
                 <button
-                  className="px-5 py-2 rounded-full bg-purple-100 text-purple-700 font-semibold hover:bg-purple-200 transition-colors shadow-sm"
+                  className={`px-5 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                    processingId === user.id
+                      ? "bg-gray-200 text-gray-500"
+                      : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                  }`}
                   onClick={() => handleAction(user.id, "Follow Back")}
+                  disabled={processingId === user.id}
                 >
-                  Follow Back
+                  {processingId === user.id ? "Processing..." : "Follow Back"}
                 </button>
               ))}
             {activeTab === "following" && (
               <button
-                className="px-5 py-2 rounded-full bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-colors shadow-sm"
+                className={`px-5 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                  processingId === user.id
+                    ? "bg-gray-200 text-gray-500"
+                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                }`}
                 onClick={() => handleAction(user.id, "Unfollow")}
+                disabled={processingId === user.id}
               >
-                Unfollow
+                {processingId === user.id ? "Processing..." : "Unfollow"}
               </button>
             )}
             {activeTab === "pending" && (
               <div className="flex gap-2">
                 <button
-                  className="px-4 py-2 rounded-full bg-green-100 text-green-700 font-semibold hover:bg-green-200 transition-colors shadow-sm"
+                  className={`px-4 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                    processingId === user.id
+                      ? "bg-gray-200 text-gray-500"
+                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                  }`}
                   onClick={() =>
                     handleAction(user.id, "Accept", user.requestId)
                   }
+                  disabled={processingId === user.id}
                 >
-                  Accept
+                  {processingId === user.id ? "Processing..." : "Accept"}
                 </button>
                 <button
-                  className="px-4 py-2 rounded-full bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-colors shadow-sm"
+                  className={`px-4 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                    processingId === user.id
+                      ? "bg-gray-200 text-gray-500"
+                      : "bg-red-100 text-red-600 hover:bg-red-200"
+                  }`}
                   onClick={() =>
                     handleAction(user.id, "Reject", user.requestId)
                   }
+                  disabled={processingId === user.id}
                 >
-                  Reject
+                  {processingId === user.id ? "Processing..." : "Reject"}
                 </button>
               </div>
             )}
