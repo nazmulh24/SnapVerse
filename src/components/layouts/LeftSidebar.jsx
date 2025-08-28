@@ -3,15 +3,12 @@ import MobileNavigation from "../NavigationComponent/MobileNavigation";
 import MobileSearchModal from "../LeftBarComponent/MobileSearchModal";
 import MobileTopHeader from "../LeftBarComponent/MobileTopHeader";
 import { useState } from "react";
+import useAuthContext from "../../hooks/useAuthContext";
 
 const Sidebar = ({ onWidthChange }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const currentUser = {
-    name: "Nazmul Hossain",
-    username: "@nazmul_hossain",
-    avatar: "/user-profile-illustration.png",
-  };
+  const { user, logoutUser } = useAuthContext();
 
   const handleSearchClick = () => {
     setIsSearchOpen(true);
@@ -27,7 +24,11 @@ const Sidebar = ({ onWidthChange }) => {
       <MobileTopHeader />
 
       {/* Desktop/Tablet Left Sidebar */}
-      <DesktopSidebar user={currentUser} onWidthChange={onWidthChange} />
+      <DesktopSidebar
+        user={user}
+        onLogout={logoutUser}
+        onWidthChange={onWidthChange}
+      />
 
       {/* Mobile Bottom Navigation */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">

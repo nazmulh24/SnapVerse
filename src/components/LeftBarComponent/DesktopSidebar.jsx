@@ -3,7 +3,7 @@ import Logo from "./Logo";
 import NavigationItems from "./NavigationItems";
 import UserProfileSection from "./UserProfileSection";
 
-const DesktopSidebar = ({ user = null, onWidthChange }) => {
+const DesktopSidebar = ({ user, onWidthChange }) => {
   const [width, setWidth] = useState(320); // Default width 320px
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -78,7 +78,7 @@ const DesktopSidebar = ({ user = null, onWidthChange }) => {
       <NavigationItems isMobile={false} />
 
       {/* User Profile Section */}
-      <UserProfileSection user={user} />
+      <UserProfileSection user={user}  />
 
       {/* Resize Handle */}
       <div

@@ -26,10 +26,17 @@ import AboutPage from "../pages/AboutPage";
 import ActivityPage from "../pages/ActivityPage";
 import AccountPage from "../pages/AccountPage";
 
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Login/Register as full page */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Main app routes under MainLayout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/messages" element={<MessagesPage />} />
