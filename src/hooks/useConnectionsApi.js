@@ -62,14 +62,66 @@ export default function useConnectionsApi(user) {
     [THREE_DAYS_MS]
   );
 
-  // on mount, populate requestSent from localStorage so Request Sent survives reload
-  useEffect(() => {
+  // small helpers to map API items to our UI shape
+  const mapFollowerItem = (item) => {
+    const u = item.follower;
+    return {
+      id: u.id,
+      is_private: !!u.is_private,
+      name: `${u.first_name} ${u.last_name}`.trim() || u.username,
+      username: u.username,
+      avatar: u.profile_picture || "/user-profile-illustration.png",
+    };
+  };
+
+  const mapFollowingItem = (item) => {
+    const u = item.following;
+    return {
+      id: u.id,
+      is_private: !!u.is_private,
+      name: `${u.first_name} ${u.last_name}`.trim() || u.username,
+      username: u.username,
+      avatar: u.profile_picture || "/user-profile-illustration.png",
+    };
+  };
+
+  const mapPendingItem = (item) => {
+    const u = item.follower;
+    return {
+      id: u.id,
+      requestId: item.id,
+      is_private: !!u.is_private,
+      name: `${u.first_name} ${u.last_name}`.trim() || u.username,
+      username: u.username,
+      avatar: u.profile_picture || "/user-profile-illustration.png",
+    };
+  };
+
+  // prune local saved requests against our current following list and expiry
+  const pruneLocalMapNow = async () => {
     try {
       const map = loadRequestMap();
-      setRequestSent(Object.keys(map).map((k) => Number(k)));
+      // get our following ids to detect accepted requests
+      const fr = await apiClient.get("/follows/following/");
+      const followingIds = (fr.data.results || []).map((it) => it.following.id);
+      const { map: newMap, changed } = pruneRequestMap(map, followingIds, []);
+      if (changed) saveRequestMap(newMap);
+      setRequestSent(Object.keys(newMap).map((k) => Number(k)));
     } catch {
-      // ignore
+      // fall back to raw load
+      try {
+        const map = loadRequestMap();
+        setRequestSent(Object.keys(map).map((k) => Number(k)));
+      } catch {
+        // ignore
+      }
     }
+  };
+
+  // on mount, load and prune local request map so Request Sent appears immediately
+  useEffect(() => {
+    pruneLocalMapNow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -88,19 +140,8 @@ export default function useConnectionsApi(user) {
     const fetchFollowers = async () => {
       try {
         const res = await apiClient.get("/follows/followers/");
-        const mapped = (res.data.results || []).map((item) => {
-          const user = item.follower;
-          return {
-            id: user.id,
-            is_private: !!user.is_private,
-            name:
-              `${user.first_name} ${user.last_name}`.trim() || user.username,
-            username: user.username,
-            avatar: user.profile_picture || "/user-profile-illustration.png",
-          };
-        });
+        const mapped = (res.data.results || []).map(mapFollowerItem);
         setFollowers(mapped);
-        // (no pruning here) keep local requestSent map unchanged when loading followers
       } catch {
         setFollowers([]);
       }
@@ -108,17 +149,7 @@ export default function useConnectionsApi(user) {
     const fetchFollowing = async () => {
       try {
         const res = await apiClient.get("/follows/following/");
-        const mapped = (res.data.results || []).map((item) => {
-          const user = item.following;
-          return {
-            id: user.id,
-            is_private: !!user.is_private,
-            name:
-              `${user.first_name} ${user.last_name}`.trim() || user.username,
-            username: user.username,
-            avatar: user.profile_picture || "/user-profile-illustration.png",
-          };
-        });
+        const mapped = (res.data.results || []).map(mapFollowingItem);
         setFollowing(mapped);
       } catch {
         setFollowing([]);
@@ -127,64 +158,8 @@ export default function useConnectionsApi(user) {
     const fetchPending = async () => {
       try {
         const res = await apiClient.get("/follows/pending_requests/");
-        const mapped = (res.data.results || []).map((item) => {
-          const user = item.follower;
-          // include the pending-request record id (item.id) so accept/reject can act on the request record
-          return {
-            id: user.id,
-            requestId: item.id,
-            is_private: !!user.is_private,
-            name:
-              `${user.first_name} ${user.last_name}`.trim() || user.username,
-            username: user.username,
-            avatar: user.profile_picture || "/user-profile-illustration.png",
-          };
-        });
+        const mapped = (res.data.results || []).map(mapPendingItem);
         setPending(mapped);
-        // synchronize client-side request map: add any missing pending entries and prune expired/accepted
-        try {
-          const map = loadRequestMap();
-          // synchronize client-side request map: prefer server-provided created timestamps
-          // use server's created timestamp if present and we don't already have a timestamp
-          for (const item of res.data.results || []) {
-            const follower = item.follower;
-            const key = String(follower.id);
-            if (!map[key]) {
-              const created =
-                item.created_at ||
-                item.created ||
-                item.timestamp ||
-                item.createdDate ||
-                null;
-              if (created) {
-                const ts = Date.parse(created);
-                if (!Number.isNaN(ts)) map[key] = ts;
-              }
-            }
-          }
-          // consider a request accepted when the target appears in our `following` list
-          const followersIds =
-            (await (async () => {
-              try {
-                const fr = await apiClient.get("/follows/following/");
-                return (fr.data.results || []).map((it) => it.following.id);
-              } catch {
-                return [];
-              }
-            })()) || [];
-          const pendingIds = mapped.map((p) => p.id);
-          const { map: newMap, changed } = pruneRequestMap(
-            map,
-            followersIds,
-            pendingIds
-          );
-          if (changed) {
-            saveRequestMap(newMap);
-          }
-          setRequestSent(Object.keys(newMap).map((k) => Number(k)));
-        } catch {
-          // ignore
-        }
       } catch {
         setPending([]);
       }

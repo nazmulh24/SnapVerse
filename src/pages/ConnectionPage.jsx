@@ -88,6 +88,7 @@ const ConnectionsPage = () => {
             activeTab={displayedTab}
             handleAction={handleAction}
             processingId={processingId}
+            isPrivate={!!user?.is_private}
           />
         )}
       </div>

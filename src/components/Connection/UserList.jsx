@@ -7,6 +7,7 @@ export default function UserList({
   activeTab,
   handleAction,
   processingId,
+  isPrivate,
 }) {
   return (
     <ul className="divide-y divide-gray-100">
@@ -35,7 +36,7 @@ export default function UserList({
             </div>
             {activeTab === "followers" &&
               !isFollowing &&
-              (requestSent.includes(user.id) ? (
+              (isPrivate && requestSent.includes(user.id) ? (
                 <span className="px-5 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold shadow-sm border border-yellow-200">
                   Request Sent
                 </span>
@@ -65,7 +66,7 @@ export default function UserList({
                 {processingId === user.id ? "Processing..." : "Unfollow"}
               </button>
             )}
-            {activeTab === "pending" && (
+            {activeTab === "pending" && isPrivate && (
               <div className="flex gap-2">
                 <button
                   className={`px-4 py-2 rounded-full font-semibold transition-colors shadow-sm ${
