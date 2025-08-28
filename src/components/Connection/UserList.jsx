@@ -58,13 +58,17 @@ export default function UserList({
               <div className="flex gap-2">
                 <button
                   className="px-4 py-2 rounded-full bg-green-100 text-green-700 font-semibold hover:bg-green-200 transition-colors shadow-sm"
-                  onClick={() => handleAction(user.id, "Accept")}
+                  onClick={() =>
+                    handleAction(user.id, "Accept", user.requestId)
+                  }
                 >
                   Accept
                 </button>
                 <button
                   className="px-4 py-2 rounded-full bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-colors shadow-sm"
-                  onClick={() => handleAction(user.id, "Reject")}
+                  onClick={() =>
+                    handleAction(user.id, "Reject", user.requestId)
+                  }
                 >
                   Reject
                 </button>

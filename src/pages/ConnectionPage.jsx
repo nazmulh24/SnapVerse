@@ -22,9 +22,11 @@ const ConnectionsPage = () => {
     following: counts.following_count,
     ...(user?.is_private ? { pending: counts.pending_requests_count } : {}),
   };
+  // If the logged-in user is not private, never show pending — map to followers instead
+  const displayedTab = !user?.is_private && activeTab === "pending" ? "followers" : activeTab;
 
   const getList = () => {
-    switch (activeTab) {
+    switch (displayedTab) {
       case "followers":
         return followers;
       case "following":
@@ -75,7 +77,7 @@ const ConnectionsPage = () => {
             users={getList()}
             following={following}
             requestSent={requestSent}
-            activeTab={activeTab}
+            activeTab={displayedTab}
             handleAction={handleAction}
           />
         )}
