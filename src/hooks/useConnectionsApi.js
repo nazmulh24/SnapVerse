@@ -102,7 +102,10 @@ export default function useConnectionsApi(user) {
     try {
       const map = loadRequestMap();
       // get our following ids to detect accepted requests
-      const fr = await apiClient.get("/follows/following/");
+      const tokensRaw = localStorage.getItem("authTokens");
+      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
+      const headers = access ? { Authorization: `JWT ${access}` } : {};
+      const fr = await apiClient.get("/follows/following/", { headers });
       const followingIds = (fr.data.results || []).map((it) => it.following.id);
       const { map: newMap, changed } = pruneRequestMap(map, followingIds, []);
       if (changed) saveRequestMap(newMap);
@@ -125,11 +128,26 @@ export default function useConnectionsApi(user) {
   }, []);
 
   useEffect(() => {
+    if (!user) return; // Don't fetch if no user is logged in
+
+    const getAuthHeaders = () => {
+      const tokensRaw = localStorage.getItem("authTokens");
+      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
+      return access ? { Authorization: `JWT ${access}` } : {};
+    };
+
     const fetchCounts = async () => {
       try {
-        const res = await apiClient.get("/follows/");
+        const headers = getAuthHeaders();
+        console.log("Fetching counts with headers:", headers);
+        const res = await apiClient.get("/follows/", { headers });
+        console.log("Counts response:", res.data);
         setCounts(res.data);
-      } catch {
+      } catch (error) {
+        console.error(
+          "Failed to fetch counts:",
+          error.response?.data || error.message
+        );
         setCounts({
           followers_count: 0,
           following_count: 0,
@@ -139,28 +157,51 @@ export default function useConnectionsApi(user) {
     };
     const fetchFollowers = async () => {
       try {
-        const res = await apiClient.get("/follows/followers/");
+        const headers = getAuthHeaders();
+        console.log("Fetching followers with headers:", headers);
+        const res = await apiClient.get("/follows/followers/", { headers });
+        console.log("Followers response:", res.data);
         const mapped = (res.data.results || []).map(mapFollowerItem);
         setFollowers(mapped);
-      } catch {
+      } catch (error) {
+        console.error(
+          "Failed to fetch followers:",
+          error.response?.data || error.message
+        );
         setFollowers([]);
       }
     };
     const fetchFollowing = async () => {
       try {
-        const res = await apiClient.get("/follows/following/");
+        const headers = getAuthHeaders();
+        console.log("Fetching following with headers:", headers);
+        const res = await apiClient.get("/follows/following/", { headers });
+        console.log("Following response:", res.data);
         const mapped = (res.data.results || []).map(mapFollowingItem);
         setFollowing(mapped);
-      } catch {
+      } catch (error) {
+        console.error(
+          "Failed to fetch following:",
+          error.response?.data || error.message
+        );
         setFollowing([]);
       }
     };
     const fetchPending = async () => {
       try {
-        const res = await apiClient.get("/follows/pending_requests/");
+        const headers = getAuthHeaders();
+        console.log("Fetching pending with headers:", headers);
+        const res = await apiClient.get("/follows/pending_requests/", {
+          headers,
+        });
+        console.log("Pending response:", res.data);
         const mapped = (res.data.results || []).map(mapPendingItem);
         setPending(mapped);
-      } catch {
+      } catch (error) {
+        console.error(
+          "Failed to fetch pending:",
+          error.response?.data || error.message
+        );
         setPending([]);
       }
     };
@@ -168,10 +209,16 @@ export default function useConnectionsApi(user) {
     fetchFollowers();
     fetchFollowing();
     fetchPending();
-  }, [user, pruneRequestMap]);
+  }, [user]);
 
   // handleAction(userId, action, requestId?) - requestId is the pending-request record id (if available)
   const handleAction = async (userId, action, requestId = null) => {
+    const getAuthHeaders = () => {
+      const tokensRaw = localStorage.getItem("authTokens");
+      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
+      return access ? { Authorization: `JWT ${access}` } : {};
+    };
+
     // determine target user's privacy from cached lists (followers, following, pending)
     const targetUser =
       followers.find((f) => f.id === userId) ||
@@ -204,7 +251,12 @@ export default function useConnectionsApi(user) {
         }
         // small UX delay and prevent double clicks
         await new Promise((r) => setTimeout(r, 2000));
-        await apiClient.post("/follows/follow_user/", { user_id: userId });
+        const headers = getAuthHeaders();
+        await apiClient.post(
+          "/follows/follow_user/",
+          { user_id: userId },
+          { headers }
+        );
 
         // Use target user's privacy to decide whether the follow is immediate or a request
         if (targetIsPrivate) {
@@ -215,10 +267,11 @@ export default function useConnectionsApi(user) {
           setRequestSent(Object.keys(map).map((k) => Number(k)));
         } else {
           // refresh lists for public follow
+          const headers = getAuthHeaders();
           const [countsRes, followersRes, followingRes] = await Promise.all([
-            apiClient.get("/follows/"),
-            apiClient.get("/follows/followers/"),
-            apiClient.get("/follows/following/"),
+            apiClient.get("/follows/", { headers }),
+            apiClient.get("/follows/followers/", { headers }),
+            apiClient.get("/follows/following/", { headers }),
           ]);
           setCounts(countsRes.data);
           const mappedFollowers = (followersRes.data.results || []).map(
@@ -268,12 +321,17 @@ export default function useConnectionsApi(user) {
     if (action === "Unfollow") {
       setProcessingId(userId);
       try {
-        await apiClient.post("/follows/unfollow_user/", { user_id: userId });
+        const headers = getAuthHeaders();
+        await apiClient.post(
+          "/follows/unfollow_user/",
+          { user_id: userId },
+          { headers }
+        );
         // Refresh counts, following and followers to keep UI consistent
         const [countsRes, followingRes, followersRes] = await Promise.all([
-          apiClient.get("/follows/"),
-          apiClient.get("/follows/following/"),
-          apiClient.get("/follows/followers/"),
+          apiClient.get("/follows/", { headers }),
+          apiClient.get("/follows/following/", { headers }),
+          apiClient.get("/follows/followers/", { headers }),
         ]);
         setCounts(countsRes.data);
         const mappedFollowing = (followingRes.data.results || []).map(
@@ -312,6 +370,7 @@ export default function useConnectionsApi(user) {
     if (action === "Accept" || action === "Reject") {
       setProcessingId(userId);
       try {
+        const headers = getAuthHeaders();
         const actionStr = action === "Accept" ? "Approve" : "Reject";
         const payload = requestId
           ? { id: requestId, action: actionStr }
@@ -357,7 +416,7 @@ export default function useConnectionsApi(user) {
         for (const at of attempts) {
           tried.push(at.url);
           try {
-            await apiClient[at.method](at.url, at.data);
+            await apiClient[at.method](at.url, at.data, { headers });
             succeeded = true;
             break;
           } catch (err) {
@@ -376,9 +435,9 @@ export default function useConnectionsApi(user) {
         }
 
         const [countsRes, followersRes, pendingRes] = await Promise.all([
-          apiClient.get("/follows/"),
-          apiClient.get("/follows/followers/"),
-          apiClient.get("/follows/pending_requests/"),
+          apiClient.get("/follows/", { headers }),
+          apiClient.get("/follows/followers/", { headers }),
+          apiClient.get("/follows/pending_requests/", { headers }),
         ]);
         setCounts(countsRes.data);
         const mappedFollowers = (followersRes.data.results || []).map(

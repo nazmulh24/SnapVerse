@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { AiFillStar, AiOutlineWarning } from "react-icons/ai";
 import { HiOutlineEmojiHappy } from "react-icons/hi";
@@ -19,6 +20,57 @@ const ComingSoonPage = ({
     text: "Stay Tuned!",
   },
 }) => {
+  // Color mapping for dynamic classes
+  const colorMap = {
+    "blue-400": "#60a5fa",
+    "green-400": "#4ade80",
+    "purple-400": "#a78bfa",
+    "purple-600": "#9333ea",
+    "red-400": "#f87171",
+    "yellow-400": "#fbbf24",
+    "pink-400": "#f472b6",
+    "indigo-400": "#818cf8",
+    "blue-50": "#eff6ff",
+    "pink-50": "#fdf2f8",
+    "green-50": "#f0fdf4",
+  };
+
+  const progressBarStyle = {
+    background: `linear-gradient(to right, ${
+      colorMap[iconColors.from] || "#60a5fa"
+    }, ${colorMap[iconColors.to] || "#4ade80"})`,
+  };
+
+  const iconContainerStyle = {
+    background: `linear-gradient(to right, ${
+      colorMap[iconColors.from] || "#60a5fa"
+    }, ${colorMap[iconColors.to] || "#4ade80"})`,
+  };
+
+  const titleStyle = {
+    background: `linear-gradient(to right, ${
+      colorMap[titleColors.from] || "#9333ea"
+    }, ${colorMap[titleColors.to] || "#9333ea"})`,
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  };
+
+  const backgroundStyle = {
+    background: `linear-gradient(to bottom right, ${
+      colorMap[bgColors.from] || "#eff6ff"
+    }, ${colorMap[bgColors.via] || "#fdf2f8"}, ${
+      colorMap[bgColors.to] || "#f0fdf4"
+    })`,
+  };
+
+  console.log("ComingSoonPage props:", {
+    progress,
+    iconColors,
+    titleColors,
+    bgColors,
+  });
+
   // Enhanced Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -85,7 +137,8 @@ const ComingSoonPage = ({
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-${bgColors.from} via-${bgColors.via} to-${bgColors.to} flex items-center justify-center p-6`}
+      className="min-h-screen flex items-center justify-center p-6"
+      style={backgroundStyle}
     >
       <motion.div
         initial="hidden"
@@ -139,7 +192,8 @@ const ComingSoonPage = ({
                 rotate: [0, 5, -5, 0],
                 transition: { duration: 0.4, ease: "easeInOut" },
               }}
-              className={`w-24 h-24 mx-auto mb-2 flex items-center justify-center rounded-full bg-gradient-to-r from-${iconColors.from} to-${iconColors.to} shadow-lg transition-transform duration-300`}
+              className="w-24 h-24 mx-auto mb-2 flex items-center justify-center rounded-full shadow-lg transition-transform duration-300"
+              style={iconContainerStyle}
             >
               {icon || <AiFillStar className="w-12 h-12 text-white" />}
             </motion.div>
@@ -187,7 +241,8 @@ const ComingSoonPage = ({
           {/* Title with gradient */}
           <motion.h1
             variants={itemVariants}
-            className={`text-3xl font-bold mb-3 bg-gradient-to-r from-${titleColors.from} to-${titleColors.to} inline-block text-transparent bg-clip-text`}
+            className="text-3xl font-bold mb-3 inline-block"
+            style={titleStyle}
           >
             {title}
           </motion.h1>
@@ -322,7 +377,8 @@ const ComingSoonPage = ({
                   ease: "easeOut",
                   delay: 0.5,
                 }}
-                className={`bg-gradient-to-r from-${iconColors.from} to-${iconColors.to} h-full rounded-full`}
+                className="h-full rounded-full"
+                style={progressBarStyle}
               ></motion.div>
             </motion.div>
             <motion.p
