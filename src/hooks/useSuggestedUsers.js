@@ -8,8 +8,32 @@ export default function useSuggestedUsers() {
   const [showingMore, setShowingMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [requestSent, setRequestSent] = useState([]);
+  const [processingId, setProcessingId] = useState(null);
 
   const { user: currentUser } = useAuthContext(); // Get current user from auth context
+
+  // localStorage for tracking pending follow requests (same as ConnectionPage)
+  const LS_KEY = "snapverse_follow_requests";
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+  const loadRequestMap = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return {};
+      return JSON.parse(raw || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const saveRequestMap = useCallback((map) => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const getAuthHeaders = () => {
     const tokensRaw = localStorage.getItem("authTokens");
@@ -259,66 +283,110 @@ export default function useSuggestedUsers() {
     }
   }, [allUsers, showingMore]);
 
-  // Follow/unfollow functionality with public/private handling
+  // Follow functionality using same pattern as ConnectionPage
   const followUser = useCallback(
     async (userId) => {
+      setProcessingId(userId);
+
+      // Find the user to check if they're private
+      const targetUser = [...allUsers, ...suggestedUsers].find(
+        (u) => u.id === userId
+      );
+      const targetIsPrivate = targetUser?.isPrivate || false;
+
+      // Optimistic UI update for public accounts
+      let prevAllUsers = allUsers;
+      let prevSuggestedUsers = suggestedUsers;
+
       try {
-        const headers = getAuthHeaders();
-
-        // Find the user to check if they're private
-        const user = [...allUsers, ...suggestedUsers].find(
-          (u) => u.id === userId
-        );
-        const isPrivate = user?.isPrivate || false;
-
-        await apiClient.post(
-          "/follows/follow/",
-          { following_id: userId },
-          { headers }
-        );
-
-        // Update the user's follow status in both allUsers and suggestedUsers
-        const updateUserStatus = (user) => {
-          if (user.id === userId) {
-            if (isPrivate) {
-              return {
-                ...user,
-                followStatus: "requested",
-                isRequestSent: true,
-              };
-            } else {
+        if (!targetIsPrivate) {
+          // Update follow status immediately for public users
+          const updateUserStatus = (user) => {
+            if (user.id === userId) {
               return {
                 ...user,
                 followStatus: "following",
                 isFollowed: true,
               };
             }
-          }
-          return user;
-        };
+            return user;
+          };
 
-        setAllUsers((prev) => prev.map(updateUserStatus));
-        setSuggestedUsers((prev) => prev.map(updateUserStatus));
+          setAllUsers((prev) => prev.map(updateUserStatus));
+          setSuggestedUsers((prev) => prev.map(updateUserStatus));
+        }
+
+        // Small UX delay and prevent double clicks (same as ConnectionPage)
+        await new Promise((r) => setTimeout(r, 2000));
+
+        const headers = getAuthHeaders();
+        await apiClient.post(
+          "/follows/follow_user/",
+          { user_id: userId },
+          { headers }
+        );
+
+        // Use target user's privacy to decide whether the follow is immediate or a request
+        if (targetIsPrivate) {
+          // Store the request locally with timestamp so UI shows "Request Sent"
+          const map = loadRequestMap();
+          map[String(userId)] = Date.now();
+          saveRequestMap(map);
+          setRequestSent(Object.keys(map).map((k) => Number(k)));
+
+          // Update UI to show request sent for private users
+          const updateUserStatus = (user) => {
+            if (user.id === userId) {
+              return {
+                ...user,
+                followStatus: "requested",
+                isRequestSent: true,
+              };
+            }
+            return user;
+          };
+
+          setAllUsers((prev) => prev.map(updateUserStatus));
+          setSuggestedUsers((prev) => prev.map(updateUserStatus));
+        }
 
         return {
           success: true,
-          isPrivate,
-          status: isPrivate ? "requested" : "following",
+          isPrivate: targetIsPrivate,
+          status: targetIsPrivate ? "requested" : "following",
         };
       } catch (error) {
+        // Revert optimistic update on failure
+        if (!targetIsPrivate) {
+          setAllUsers(prevAllUsers);
+          setSuggestedUsers(prevSuggestedUsers);
+        }
         console.error("[SuggestedUsers] Error following user:", error);
         return {
           success: false,
           error: error.message,
         };
+      } finally {
+        setTimeout(() => setProcessingId(null), 300);
       }
     },
-    [allUsers, suggestedUsers]
+    [
+      allUsers,
+      suggestedUsers,
+      loadRequestMap,
+      saveRequestMap,
+      setRequestSent,
+      setProcessingId,
+    ]
   );
 
   useEffect(() => {
     fetchSuggestedUsers();
-  }, [fetchSuggestedUsers]);
+
+    // Initialize requestSent from localStorage (same as ConnectionPage)
+    const map = loadRequestMap();
+    setRequestSent(Object.keys(map).map((k) => Number(k)));
+  }, [fetchSuggestedUsers, loadRequestMap]);
 
   return {
     suggestedUsers,
@@ -326,6 +394,8 @@ export default function useSuggestedUsers() {
     showingMore,
     loading,
     error,
+    requestSent,
+    processingId,
     refreshSuggestions: fetchSuggestedUsers,
     showMoreSuggestions,
     followUser,

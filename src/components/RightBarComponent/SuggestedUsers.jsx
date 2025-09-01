@@ -9,6 +9,8 @@ const SuggestedUsers = () => {
     showingMore,
     loading,
     error,
+    requestSent,
+    processingId,
     refreshSuggestions,
     showMoreSuggestions,
     followUser,
@@ -174,18 +176,27 @@ const SuggestedUsers = () => {
               {/* Enhanced follow button with status handling */}
               <button
                 onClick={(event) => handleFollow(user, event)}
-                disabled={user.isFollowed || user.isRequestSent}
+                disabled={
+                  user.isFollowed ||
+                  user.isRequestSent ||
+                  requestSent.includes(user.id) ||
+                  processingId === user.id
+                }
                 className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 hover:shadow-md ${
                   user.isFollowed
                     ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-                    : user.isRequestSent
+                    : user.isRequestSent || requestSent.includes(user.id)
                     ? "bg-yellow-200 text-yellow-700 cursor-not-allowed"
+                    : processingId === user.id
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                     : "bg-purple-600 hover:bg-purple-700 text-white"
                 }`}
               >
-                {user.isFollowed
+                {processingId === user.id
+                  ? "..."
+                  : user.isFollowed
                   ? "Following"
-                  : user.isRequestSent
+                  : user.isRequestSent || requestSent.includes(user.id)
                   ? "Request Sent"
                   : "Follow"}
               </button>
