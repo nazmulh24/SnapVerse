@@ -8,20 +8,22 @@ const RightSidebar = () => {
   const { user } = useAuthContext();
 
   return (
-    <div className="hidden lg:flex absolute right-0 top-0 h-screen w-80 bg-white border-l border-gray-200 flex-col z-30 overflow-y-auto">
+    <div className="hidden lg:flex absolute right-0 top-0 h-screen w-80 bg-gray-50 border-l border-gray-200 flex-col z-30 overflow-y-auto">
       {/* User Profile Section */}
-      <div className="border-b border-gray-100">
+      <div className="bg-white border-b border-gray-100">
         <UserProfile user={user} />
       </div>
 
-      {/* Suggested Users */}
+      {/* Suggested Users - Enhanced */}
       <SuggestedUsers />
 
       {/* Recent Activity */}
-      <RecentActivity />
+      <div className="bg-white mx-4 rounded-xl shadow-sm border border-gray-100">
+        <RecentActivity />
+      </div>
 
       {/* Footer */}
-      <div className="mt-auto">
+      <div className="mt-auto bg-white">
         <RightSidebarFooter />
       </div>
     </div>
