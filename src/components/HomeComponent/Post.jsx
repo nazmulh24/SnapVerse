@@ -136,16 +136,14 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
         </div>
       )}
 
-      {/* Post Image - Show after caption */}
-      <PostImage
-        src={
-          post.image
-            ? `https://res.cloudinary.com/dlkq5sjum/${post.image}`
-            : null
-        }
-        alt={`Post by ${formattedUser.full_name}`}
-        onDoubleClick={handleDoubleClickLike}
-      />
+      {/* Post Image - Only show if image exists */}
+      {post.image && (
+        <PostImage
+          src={`https://res.cloudinary.com/dlkq5sjum/${post.image}`}
+          alt={`Post by ${formattedUser.full_name}`}
+          onDoubleClick={handleDoubleClickLike}
+        />
+      )}
 
       {/* Post Actions - Like, Comment, Share buttons */}
       <PostActions
