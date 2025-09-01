@@ -14,8 +14,13 @@ const PostHeader = ({ user, timeAgo, location, isEdited }) => {
           <p className="font-semibold text-gray-900 text-sm">
             {user.full_name || user.username}
           </p>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             <span>{timeAgo}</span>
+            {isEdited && (
+              <span className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                Edited
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -25,11 +30,6 @@ const PostHeader = ({ user, timeAgo, location, isEdited }) => {
             <MdLocationOn className="text-xs" />
             <span>{location}</span>
           </div>
-        )}
-        {isEdited && (
-          <span className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
-            Edited
-          </span>
         )}
       </div>
     </div>
