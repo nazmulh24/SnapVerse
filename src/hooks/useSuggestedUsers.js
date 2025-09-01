@@ -69,6 +69,7 @@ export default function useSuggestedUsers() {
       const headers = getAuthHeaders();
       const currentUserId = currentUser.id;
       let allFetchedUsers = [];
+      let followingIds = []; // Store users we're already following
 
       // First, try to get users who follow me but I don't follow back
       try {
@@ -79,7 +80,11 @@ export default function useSuggestedUsers() {
 
         const followers = followersResponse.data.results || [];
         const following = followingResponse.data.results || [];
-        const followingIds = following.map((f) => f.following.id);
+        followingIds = following.map((f) => f.following.id);
+        console.log(
+          `[SuggestedUsers] Currently following ${followingIds.length} users:`,
+          followingIds
+        );
 
         // Users who follow me but I don't follow back (excluding current user)
         const notFollowingBack = followers
@@ -100,6 +105,8 @@ export default function useSuggestedUsers() {
           "[SuggestedUsers] Could not fetch follow relationships:",
           followError
         );
+        // If we can't get following data, set empty array so suggestions still work
+        followingIds = [];
       }
 
       // If we don't have enough users, get random users
@@ -123,7 +130,7 @@ export default function useSuggestedUsers() {
           const allUsers =
             randomUsersResponse.data.results || randomUsersResponse.data || [];
 
-          // Filter out current user and users already added
+          // Filter out current user, users already added, and users we're already following
           const existingIds = allFetchedUsers.map((u) => u.id);
           const availableUsers = allUsers.filter((user) => {
             const userId = user.id;
@@ -131,8 +138,9 @@ export default function useSuggestedUsers() {
               userId !== currentUserId &&
               String(userId) !== String(currentUserId);
             const isNotExisting = !existingIds.includes(userId);
+            const isNotAlreadyFollowing = !followingIds.includes(userId);
 
-            return isNotCurrentUser && isNotExisting;
+            return isNotCurrentUser && isNotExisting && isNotAlreadyFollowing;
           });
 
           // Add random users up to 15 total
@@ -184,18 +192,25 @@ export default function useSuggestedUsers() {
         ];
       }
 
-      // Final safety filter to ensure current user is never included
+      // Final safety filter to ensure current user and already followed users are never included
       const finalFilteredUsers = allFetchedUsers.filter((user) => {
         const userId = user.id;
-        return (
-          userId !== currentUserId && String(userId) !== String(currentUserId)
-        );
+        const isNotCurrentUser =
+          userId !== currentUserId && String(userId) !== String(currentUserId);
+        const isNotAlreadyFollowing = !followingIds.includes(userId);
+
+        return isNotCurrentUser && isNotAlreadyFollowing;
       });
 
       // Store all users and show first 4
       setAllUsers(finalFilteredUsers);
       setSuggestedUsers(finalFilteredUsers.slice(0, 4));
       setShowingMore(false);
+
+      console.log(
+        `[SuggestedUsers] Final suggestions (${finalFilteredUsers.length} users, excluding ${followingIds.length} followed users):`,
+        finalFilteredUsers.map((u) => u.username)
+      );
     } catch (error) {
       console.error("[SuggestedUsers] Error fetching suggested users:", error);
       setError(error.message);
