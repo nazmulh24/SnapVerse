@@ -29,15 +29,30 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
         post.author.image ||
         post.author.photo;
 
+      let avatarUrl;
+      if (profilePicture) {
+        if (profilePicture.startsWith("http")) {
+          // Already a full URL, use as-is
+          avatarUrl = profilePicture;
+        } else if (profilePicture.startsWith("image/upload/")) {
+          // Partial Cloudinary path, add base URL
+          avatarUrl = `https://res.cloudinary.com/dlkq5sjum/${profilePicture}`;
+        } else {
+          // Just filename, add full Cloudinary path
+          avatarUrl = `https://res.cloudinary.com/dlkq5sjum/image/upload/${profilePicture}`;
+        }
+      } else {
+        // Fallback to generated avatar
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          post.author.full_name || post.author.username || "User"
+        )}&background=random&color=fff`;
+      }
+
       return {
         username: post.author.username || "unknown",
         full_name:
           post.author.full_name || post.author.username || "Unknown User",
-        avatar: profilePicture
-          ? `https://res.cloudinary.com/dlkq5sjum/${profilePicture}`
-          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              post.author.full_name || post.author.username || "User"
-            )}&background=random&color=fff`,
+        avatar: avatarUrl,
       };
     }
 
@@ -49,14 +64,29 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
       post.user_avatar ||
       post.user_image;
 
+    let avatarUrl;
+    if (profilePicture) {
+      if (profilePicture.startsWith("http")) {
+        // Already a full URL, use as-is
+        avatarUrl = profilePicture;
+      } else if (profilePicture.startsWith("image/upload/")) {
+        // Partial Cloudinary path, add base URL
+        avatarUrl = `https://res.cloudinary.com/dlkq5sjum/${profilePicture}`;
+      } else {
+        // Just filename, add full Cloudinary path
+        avatarUrl = `https://res.cloudinary.com/dlkq5sjum/image/upload/${profilePicture}`;
+      }
+    } else {
+      // Fallback to generated avatar
+      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        post.user_full_name || post.user || "User"
+      )}&background=random&color=fff`;
+    }
+
     return {
       username: post.user || "unknown",
       full_name: post.user_full_name || post.user || "Unknown User",
-      avatar: profilePicture
-        ? `https://res.cloudinary.com/dlkq5sjum/${profilePicture}`
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            post.user_full_name || post.user || "User"
-          )}&background=random&color=fff`,
+      avatar: avatarUrl,
     };
   };
 
@@ -73,12 +103,17 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
 
   // Debug: Log profile picture info in development
   if (import.meta.env.DEV) {
-    console.log(`[Post ${post.id}] Profile picture info:`, {
-      author: post.author,
-      user_profile_picture: post.user_profile_picture,
-      profile_picture: post.profile_picture,
-      final_avatar: formattedUser.avatar,
-      user_data: formattedUser,
+    console.log(`[Post ${post.id}] Profile picture debug:`, {
+      post_structure: {
+        has_author: !!post.author,
+        author_fields: post.author ? Object.keys(post.author) : [],
+        author_profile_picture: post.author?.profile_picture,
+        author_avatar: post.author?.avatar,
+        user_profile_picture: post.user_profile_picture,
+        profile_picture: post.profile_picture,
+      },
+      formatted_user: formattedUser,
+      final_avatar_url: formattedUser.avatar,
     });
   }
 
