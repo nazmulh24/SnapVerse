@@ -145,13 +145,19 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
         />
       )}
 
-      {/* Post Actions - Like, Comment, Share buttons */}
+      {/* Post Actions - Like, Comment, Share buttons with reactions */}
       <PostActions
-        initialLikes={parseInt(post.reactions_count) || 0}
-        isLiked={post.is_liked || false}
-        onLike={(liked) => onLike && onLike(post.id, liked)}
+        postId={post.id}
+        initialReactions={post.reactions || {}}
+        currentUserReaction={post.user_reaction || null}
         onComment={() => onComment && onComment(post.id)}
         onShare={() => onShare && onShare(post.id)}
+        onReactionUpdate={(reactionData) => {
+          // Update post data with new reaction information
+          if (onLike) {
+            onLike(post.id, reactionData.userReaction === "like", reactionData);
+          }
+        }}
       />
 
       {/* Comments Section - Show 2 comments */}

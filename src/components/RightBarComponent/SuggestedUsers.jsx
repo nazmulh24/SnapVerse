@@ -197,7 +197,7 @@ const SuggestedUsers = () => {
                   : user.isFollowed
                   ? "Following"
                   : user.isRequestSent || requestSent.includes(user.id)
-                  ? "Request Sent"
+                  ? "Requested"
                   : "Follow"}
               </button>
             </div>

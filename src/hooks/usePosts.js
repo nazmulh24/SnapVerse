@@ -28,13 +28,37 @@ const usePosts = () => {
     [fetchPosts]
   );
 
-  // Handle like/unlike with optimistic updates
+  // Handle like/unlike with optimistic updates and reaction data
   const handleLike = useCallback(
-    async (postId, isLiked) => {
+    async (postId, isLiked, reactionData = null) => {
       // Set loading state for this specific post
       setLoadingStates((prev) => ({ ...prev, [postId]: true }));
 
-      // Optimistic update
+      // If we have detailed reaction data from the new system, use it
+      if (reactionData) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                reactions: reactionData.reactions || post.reactions || {},
+                user_reaction: reactionData.userReaction || null,
+                reactions_count:
+                  reactionData.totalReactions?.toString() ||
+                  post.reactions_count,
+                is_liked: reactionData.userReaction === "like",
+              };
+            }
+            return post;
+          })
+        );
+
+        // Clear loading state and return success
+        setLoadingStates((prev) => ({ ...prev, [postId]: false }));
+        return { success: true };
+      }
+
+      // Legacy like system - optimistic update
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post.id === postId) {
