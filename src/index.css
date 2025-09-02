@@ -71,3 +71,14 @@
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
 }
+
+/* Pull to refresh styles */
+.pull-to-refresh-container {
+  touch-action: pan-down;
+  overscroll-behavior-y: contain;
+}
+
+/* Disable default pull-to-refresh on mobile browsers */
+body {
+  overscroll-behavior-y: contain;
+}

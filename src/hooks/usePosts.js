@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import useApi from "./useApi";
 
 const usePosts = () => {
@@ -16,17 +16,166 @@ const usePosts = () => {
   const [posts, setPosts] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
 
-  // Load posts with caching
+  // Infinite scrolling states
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refs for pagination tracking
+  const abortControllerRef = useRef(null);
+  const lastFetchedPageRef = useRef(0);
+
+  // Shuffle array utility function
+  const shuffleArray = useCallback((array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
+  // Load posts with pagination support
   const loadPosts = useCallback(
-    async (params = {}) => {
-      const result = await fetchPosts(params);
-      if (result.success) {
-        setPosts(result.data.results || result.data || []);
+    async (params = {}, options = {}) => {
+      const {
+        page = 1,
+        append = false,
+        shuffle = false,
+        pageSize = 20,
+      } = options;
+
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-      return result;
+
+      // Create new abort controller
+      abortControllerRef.current = new AbortController();
+
+      try {
+        if (!append) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoadingMore(true);
+        }
+
+        const queryParams = {
+          page,
+          page_size: pageSize,
+          ...params,
+        };
+
+        const result = await fetchPosts(queryParams);
+
+        if (result.success && result.data) {
+          const newPosts = result.data.results || result.data || [];
+          const count = result.data.count || newPosts.length;
+          const nextPage = result.data.next;
+
+          console.log(
+            `[usePosts] Loaded ${newPosts.length} posts for page ${page}`
+          );
+          console.log(
+            `[usePosts] Total count: ${count}, Has next: ${!!nextPage}`
+          );
+
+          let processedPosts = newPosts;
+
+          // Shuffle posts if requested (usually on refresh)
+          if (shuffle && processedPosts.length > 0) {
+            processedPosts = shuffleArray(processedPosts);
+            console.log("[usePosts] Posts shuffled");
+          }
+
+          setPosts((prevPosts) => {
+            if (append && page > 1) {
+              // Append new posts for infinite scroll
+              const existingIds = new Set(prevPosts.map((post) => post.id));
+              const uniqueNewPosts = processedPosts.filter(
+                (post) => !existingIds.has(post.id)
+              );
+              return [...prevPosts, ...uniqueNewPosts];
+            } else {
+              // Replace posts for initial load or refresh
+              return processedPosts;
+            }
+          });
+
+          setCurrentPage(page);
+          setTotalCount(count);
+          setHasNextPage(!!nextPage && newPosts.length === pageSize);
+          lastFetchedPageRef.current = page;
+
+          clearError();
+        }
+
+        return result;
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("[usePosts] Error loading posts:", error);
+        }
+        return { success: false, error: error.message };
+      } finally {
+        setIsLoadingMore(false);
+        setIsRefreshing(false);
+        abortControllerRef.current = null;
+      }
     },
-    [fetchPosts]
+    [fetchPosts, clearError, shuffleArray]
   );
+
+  // Load more posts for infinite scrolling
+  const loadMorePosts = useCallback(async () => {
+    if (isLoadingMore || !hasNextPage || loading) {
+      return;
+    }
+
+    const nextPage = currentPage + 1;
+    console.log(`[usePosts] Loading more posts - page ${nextPage}`);
+
+    return await loadPosts(
+      {},
+      {
+        page: nextPage,
+        append: true,
+      }
+    );
+  }, [currentPage, hasNextPage, isLoadingMore, loading, loadPosts]);
+
+  // Refresh posts with shuffle
+  const refreshPosts = useCallback(
+    async (shouldShuffle = true) => {
+      console.log("[usePosts] Refreshing posts with shuffle:", shouldShuffle);
+      setCurrentPage(1);
+      setHasNextPage(true);
+      lastFetchedPageRef.current = 0;
+
+      return await loadPosts(
+        {},
+        {
+          page: 1,
+          append: false,
+          shuffle: shouldShuffle,
+        }
+      );
+    },
+    [loadPosts]
+  );
+
+  // Initial load on mount
+  const initializePosts = useCallback(async () => {
+    return await loadPosts(
+      {},
+      {
+        page: 1,
+        append: false,
+        shuffle: true,
+      }
+    );
+  }, [loadPosts]);
 
   // Handle like/unlike with optimistic updates and reaction data
   const handleLike = useCallback(
@@ -199,12 +348,6 @@ const usePosts = () => {
     // or open a comments modal
   }, []);
 
-  // Refresh posts
-  const refreshPosts = useCallback(() => {
-    clearError();
-    return loadPosts();
-  }, [loadPosts, clearError]);
-
   // Get loading state for a specific post
   const isPostLoading = useCallback(
     (postId) => {
@@ -219,7 +362,9 @@ const usePosts = () => {
 
     // Actions
     loadPosts,
+    loadMorePosts,
     refreshPosts,
+    initializePosts,
     handleLike,
     handleComment,
     handleShare,
@@ -232,6 +377,13 @@ const usePosts = () => {
     error,
     clearError,
     isPostLoading,
+
+    // Infinite scroll states
+    hasNextPage,
+    currentPage,
+    isLoadingMore,
+    totalCount,
+    isRefreshing,
 
     // Utils
     postsCount: posts.length,

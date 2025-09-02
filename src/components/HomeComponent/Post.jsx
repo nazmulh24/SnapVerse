@@ -101,22 +101,6 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
     ? formatTimeAgo(post.created_at)
     : "Unknown time";
 
-  // Debug: Log profile picture info in development
-  if (import.meta.env.DEV) {
-    console.log(`[Post ${post.id}] Profile picture debug:`, {
-      post_structure: {
-        has_author: !!post.author,
-        author_fields: post.author ? Object.keys(post.author) : [],
-        author_profile_picture: post.author?.profile_picture,
-        author_avatar: post.author?.avatar,
-        user_profile_picture: post.user_profile_picture,
-        profile_picture: post.profile_picture,
-      },
-      formatted_user: formattedUser,
-      final_avatar_url: formattedUser.avatar,
-    });
-  }
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
       {/* Post Header - Profile picture, full_name, time, location and edited status on right */}
