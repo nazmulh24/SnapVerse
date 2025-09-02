@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router";
 import {
   MdSearch,
@@ -6,41 +6,18 @@ import {
   MdPerson,
   MdTag,
   MdAutoAwesome,
+  MdImage,
+  MdFavorite,
 } from "react-icons/md";
-
-// Mock search data - in a real app, this would come from an API
-const mockData = [
-  {
-    id: 1,
-    type: "user",
-    name: "John Doe",
-    username: "@johndoe",
-    avatar: "/user-profile-illustration.png",
-  },
-  {
-    id: 2,
-    type: "user",
-    name: "Jane Smith",
-    username: "@janesmith",
-    avatar: "/user-profile-illustration.png",
-  },
-  {
-    id: 3,
-    type: "user",
-    name: "Mike Johnson",
-    username: "@mikej",
-    avatar: "/user-profile-illustration.png",
-  },
-  { id: 4, type: "hashtag", name: "#photography", posts: "1.2M posts" },
-  { id: 5, type: "hashtag", name: "#travel", posts: "856K posts" },
-  { id: 6, type: "hashtag", name: "#food", posts: "2.1M posts" },
-];
+import useApi from "../../hooks/useApi";
 
 const Logo = ({ className = "", onSearch }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
+  const { fetchPosts } = useApi();
 
   // Add CSS animations
   useEffect(() => {
@@ -64,25 +41,49 @@ const Logo = ({ className = "", onSearch }) => {
     };
   }, []);
 
-  // Handle search functionality
+  // Real-time search function - Enhanced for live results
+  const searchPosts = useCallback(
+    async (query) => {
+      // Allow search for single character and above
+      if (!query || query.trim().length < 1) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const result = await fetchPosts({
+          search: query.trim(),
+          page_size: 20,
+        });
+        if (result.success && result.data) {
+          const posts = result.data.results || result.data || [];
+          console.log(
+            `Live search for "${query}": ${posts.length} results found`
+          );
+          setSearchResults(posts);
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+        setShowResults(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchPosts]
+  );
+
+  // Handle search functionality with faster debouncing for live results
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
+    const timeoutId = setTimeout(() => {
+      searchPosts(searchQuery);
+    }, 150); // Reduced to 150ms for faster response
 
-    // Simulate search with mock data
-    const filteredResults = mockData.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.username &&
-          item.username.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-
-    setSearchResults(filteredResults.slice(0, 5)); // Limit to 5 results
-    setShowResults(true);
-  }, [searchQuery]);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchPosts]);
 
   // Handle click outside to close search results
   useEffect(() => {
@@ -99,6 +100,14 @@ const Logo = ({ className = "", onSearch }) => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
+
+    // Show search results immediately when typing (even if empty)
+    if (value.length > 0) {
+      setShowResults(true);
+    } else {
+      setShowResults(false);
+      setSearchResults([]);
+    }
 
     // Call parent search handler if provided
     if (onSearch) {
@@ -117,16 +126,18 @@ const Logo = ({ className = "", onSearch }) => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setShowResults(false);
-    // Handle search submission
-    console.log("Search for:", searchQuery);
+    // Keep the search results open and focused
+    setShowResults(true);
   };
 
   const handleResultClick = (result) => {
     setShowResults(false);
     setSearchQuery("");
-    console.log("Clicked on:", result);
-    // Handle navigation to user profile or hashtag page
+
+    // Handle post click - you can add navigation to specific post here
+    console.log("Clicked on post:", result);
+    // For example: navigate to post detail page
+    // navigate(`/post/${result.id}`);
   };
 
   return (
@@ -181,7 +192,7 @@ const Logo = ({ className = "", onSearch }) => {
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                placeholder="Search amazing content..."
+                placeholder="Type to search people..."
                 className="w-full sm:pl-12 sm:pr-12 pl-10 pr-10 sm:py-3.5 py-2.5 bg-transparent sm:rounded-xl rounded-lg focus:outline-none sm:text-sm text-xs placeholder-gray-400 font-medium"
               />
 
@@ -200,81 +211,155 @@ const Logo = ({ className = "", onSearch }) => {
         </form>
 
         {/* Enhanced Search Results Dropdown */}
-        {showResults && searchResults.length > 0 && (
+        {showResults && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-gray-200/80 rounded-xl shadow-2xl shadow-purple-500/10 z-50 max-h-72 overflow-y-auto">
-            <div className="p-2">
-              {searchResults.map((result, index) => (
-                <button
-                  key={result.id}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full flex items-center space-x-3 p-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-lg transition-all duration-200 text-left group transform hover:scale-[1.02]"
-                  style={{
-                    animationDelay: `${index * 50}ms`,
-                    animation: "slideIn 0.3s ease-out forwards",
-                  }}
-                >
-                  {result.type === "user" ? (
-                    <>
-                      <div className="relative">
+            {isLoading ? (
+              <div className="p-4 text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto"></div>
+                <p className="text-xs text-gray-500 mt-2">Searching...</p>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="p-2">
+                {searchResults.map((post, index) => {
+                  // Format user data exactly like SuggestedUsers does
+                  const formatUserData = (post) => {
+                    // Check if post has author data (from API response)
+                    if (post.author) {
+                      // Enhanced Cloudinary image handling
+                      let avatarUrl;
+                      if (post.author.profile_picture) {
+                        console.log(
+                          "Profile picture field:",
+                          post.author.profile_picture
+                        );
+
+                        if (post.author.profile_picture.startsWith("http")) {
+                          // Already a full URL
+                          avatarUrl = post.author.profile_picture;
+                        } else if (
+                          post.author.profile_picture.startsWith(
+                            "image/upload/"
+                          )
+                        ) {
+                          // Partial Cloudinary path
+                          avatarUrl = `https://res.cloudinary.com/dlkq5sjum/${post.author.profile_picture}`;
+                        } else {
+                          // Just filename, add full Cloudinary path
+                          avatarUrl = `https://res.cloudinary.com/dlkq5sjum/image/upload/${post.author.profile_picture}`;
+                        }
+                        console.log("Generated Cloudinary URL:", avatarUrl);
+                      } else {
+                        // Fallback to UI Avatars
+                        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          post.author.full_name || post.author.username
+                        )}&background=6366f1&color=fff&size=100`;
+                        console.log("Using fallback avatar:", avatarUrl);
+                      }
+
+                      return {
+                        id: post.author.id,
+                        username: post.author.username,
+                        fullName:
+                          post.author.full_name ||
+                          `${post.author.first_name || ""} ${
+                            post.author.last_name || ""
+                          }`.trim() ||
+                          post.author.username,
+                        avatar: avatarUrl,
+                        caption: post.content || post.caption || "No caption",
+                        mutualFriends: post.author.mutual_friends_count || 0,
+                      };
+                    }
+
+                    // Fallback to direct post properties with Cloudinary support
+                    let fallbackAvatar;
+                    if (post.user_profile_picture || post.profile_picture) {
+                      const profilePic =
+                        post.user_profile_picture || post.profile_picture;
+                      console.log("Fallback profile picture:", profilePic);
+
+                      if (profilePic.startsWith("http")) {
+                        fallbackAvatar = profilePic;
+                      } else if (profilePic.startsWith("image/upload/")) {
+                        fallbackAvatar = `https://res.cloudinary.com/dlkq5sjum/${profilePic}`;
+                      } else {
+                        fallbackAvatar = `https://res.cloudinary.com/dlkq5sjum/image/upload/${profilePic}`;
+                      }
+                      console.log("Fallback Cloudinary URL:", fallbackAvatar);
+                    } else {
+                      fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        post.user_full_name || post.user || "User"
+                      )}&background=6366f1&color=fff&size=100`;
+                      console.log("Using fallback UI avatar:", fallbackAvatar);
+                    }
+
+                    return {
+                      id: post.id,
+                      username: post.user || "unknown",
+                      fullName:
+                        post.user_full_name || post.user || "Unknown User",
+                      avatar: fallbackAvatar,
+                      caption: post.content || post.caption || "No caption",
+                      mutualFriends: 0,
+                    };
+                  };
+
+                  const formattedUser = formatUserData(post);
+
+                  // Debug: Log the user data to see what fields are available
+                  console.log("Search result - Original post:", post);
+                  console.log("Search result - Author data:", post.author);
+                  console.log("Search result - Formatted user:", formattedUser);
+
+                  return (
+                    <button
+                      key={post.id}
+                      onClick={() => handleResultClick(post)}
+                      className="w-full flex items-start space-x-3 p-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-lg transition-all duration-200 text-left group transform hover:scale-[1.02]"
+                      style={{
+                        animationDelay: `${index * 50}ms`,
+                        animation: "slideIn 0.3s ease-out forwards",
+                      }}
+                    >
+                      {/* User Avatar */}
+                      <div className="relative flex-shrink-0">
                         <img
-                          src={result.avatar}
-                          alt={result.name}
+                          src={formattedUser.avatar}
+                          alt={formattedUser.fullName}
                           className="w-10 h-10 rounded-full object-cover ring-2 ring-purple-100 group-hover:ring-purple-300 transition-all duration-200"
                         />
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
+
+                      {/* User Info */}
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors duration-200">
-                          {result.name}
+                          {formattedUser.fullName}
                         </p>
-                        <p className="text-xs text-gray-500 truncate group-hover:text-gray-600 transition-colors duration-200">
-                          {result.username}
-                        </p>
-                      </div>
-                      <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors duration-200">
-                        <MdPerson className="text-purple-600 text-sm" />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-                        <MdTag className="text-white text-sm" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors duration-200">
-                          {result.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate group-hover:text-gray-600 transition-colors duration-200">
-                          {result.posts}
+
+                        {/* Caption */}
+                        <p className="text-xs text-gray-500 line-clamp-1">
+                          {formattedUser.caption}
                         </p>
                       </div>
-                      <div className="px-2 py-1 bg-pink-100 rounded-md text-xs font-medium text-pink-600 group-hover:bg-pink-200 transition-colors duration-200">
-                        Tag
-                      </div>
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : searchQuery.trim() !== "" ? (
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <MdSearch className="text-gray-400 text-2xl" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  No posts found
+                </p>
+                <p className="text-xs text-gray-500">
+                  Try searching with different keywords
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
-
-        {/* Enhanced No Results Message */}
-        {showResults &&
-          searchResults.length === 0 &&
-          searchQuery.trim() !== "" && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-gray-200/80 rounded-xl shadow-xl z-50 p-6 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                <MdSearch className="text-gray-400 text-2xl" />
-              </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">
-                No results found
-              </p>
-              <p className="text-xs text-gray-500">
-                Try searching for "{searchQuery}" with different keywords
-              </p>
-            </div>
-          )}
       </div>
     </div>
   );

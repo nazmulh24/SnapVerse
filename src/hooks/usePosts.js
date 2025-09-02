@@ -129,39 +129,50 @@ const usePosts = () => {
   );
 
   // Load more posts for infinite scrolling
-  const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore || !hasNextPage || loading) {
-      return;
-    }
+  const loadMorePosts = useCallback(
+    async (params = {}) => {
+      if (isLoadingMore || !hasNextPage || loading) {
+        return;
+      }
 
-    const nextPage = currentPage + 1;
-    console.log(`[usePosts] Loading more posts - page ${nextPage}`);
+      const nextPage = currentPage + 1;
+      console.log(
+        `[usePosts] Loading more posts - page ${nextPage} with params:`,
+        params
+      );
 
-    return await loadPosts(
-      {},
-      {
+      return await loadPosts(params, {
         page: nextPage,
         append: true,
-      }
-    );
-  }, [currentPage, hasNextPage, isLoadingMore, loading, loadPosts]);
+      });
+    },
+    [currentPage, hasNextPage, isLoadingMore, loading, loadPosts]
+  );
 
   // Refresh posts with shuffle
   const refreshPosts = useCallback(
-    async (shouldShuffle = true) => {
-      console.log("[usePosts] Refreshing posts with shuffle:", shouldShuffle);
+    async (params = {}, shouldShuffle = true) => {
+      // If params is a boolean (for backward compatibility), treat it as shouldShuffle
+      if (typeof params === "boolean") {
+        shouldShuffle = params;
+        params = {};
+      }
+
+      console.log(
+        "[usePosts] Refreshing posts with params:",
+        params,
+        "shuffle:",
+        shouldShuffle
+      );
       setCurrentPage(1);
       setHasNextPage(true);
       lastFetchedPageRef.current = 0;
 
-      return await loadPosts(
-        {},
-        {
-          page: 1,
-          append: false,
-          shuffle: shouldShuffle,
-        }
-      );
+      return await loadPosts(params, {
+        page: 1,
+        append: false,
+        shuffle: shouldShuffle,
+      });
     },
     [loadPosts]
   );

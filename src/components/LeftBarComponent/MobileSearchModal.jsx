@@ -1,22 +1,30 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   MdSearch,
   MdClear,
   MdPerson,
-  MdTag,
   MdTrendingUp,
   MdHistory,
   MdArrowBack,
   MdOutlineEmojiObjects,
+  MdImage,
+  MdFavorite,
 } from "react-icons/md";
+import useApi from "../../hooks/useApi";
 
-const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
+const MobileSearchModal = ({ isOpen, onClose }) => {
   const searchRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { fetchPosts } = useApi();
+
   const [recentSearches, setRecentSearches] = useState([
     "design",
     "photography",
     "travel tips",
   ]);
+
   // eslint-disable-next-line no-unused-vars
   const [trendingSearches, setTrendingSearches] = useState([
     { query: "photography", count: "1.2M" },
@@ -25,14 +33,39 @@ const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
     { query: "food", count: "4.1M" },
   ]);
 
-  const {
-    searchQuery = "",
-    setSearchQuery = () => {},
-    searchResults = [],
-    isLoading = false,
-    handleResultClick = () => {},
-    handleClearSearch = () => {},
-  } = searchHook || {};
+  // Real-time search function
+  const searchPosts = useCallback(
+    async (query) => {
+      if (!query || query.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const result = await fetchPosts({ search: query.trim(), page_size: 5 });
+        if (result.success && result.data) {
+          const posts = result.data.results || result.data || [];
+          setSearchResults(posts);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchPosts]
+  );
+
+  // Handle search functionality with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchPosts(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchPosts]);
 
   // Focus on search input when modal opens with improved timing
   useEffect(() => {
@@ -47,12 +80,28 @@ const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
     setSearchQuery(e.target.value);
   };
 
+  const handleSearchSubmit = (query) => {
+    // Keep search results visible
+    setSearchQuery(query || searchQuery);
+  };
+
   const handleTrendingClick = (query) => {
     setSearchQuery(query);
   };
 
   const handleRecentClick = (query) => {
     setSearchQuery(query);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const handleResultClick = (result) => {
+    onClose();
+    console.log("Clicked on post:", result);
+    // Handle post click navigation if needed
   };
 
   const handleClearRecent = () => {
@@ -83,7 +132,13 @@ const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
               <MdArrowBack className="text-xl" />
             </button>
 
-            <div className="relative flex-1">
+            <form
+              className="relative flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearchSubmit(searchQuery);
+              }}
+            >
               <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
               <input
                 ref={searchRef}
@@ -95,13 +150,14 @@ const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all duration-200"
                 >
                   <MdClear className="text-lg" />
                 </button>
               )}
-            </div>
+            </form>
           </div>
         </div>
 
@@ -182,44 +238,64 @@ const MobileSearchModal = ({ isOpen, onClose, searchHook }) => {
           {/* Search Results */}
           {!isLoading && searchQuery && searchResults.length > 0 && (
             <div className="p-2">
-              {searchResults.map((result) => (
+              {searchResults.map((post) => (
                 <button
-                  key={result.id}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-purple-50 rounded-xl transition-all duration-200 text-left"
+                  key={post.id}
+                  onClick={() => handleResultClick(post)}
+                  className="w-full flex items-start gap-3 p-3 hover:bg-purple-50 rounded-xl transition-all duration-200 text-left"
                 >
-                  {result.type === "user" ? (
-                    <>
-                      <div className="relative">
-                        <img
-                          src={result.avatar}
-                          alt={result.name}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                        />
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={
+                        post.user?.profile_image ||
+                        post.user?.profilePicture ||
+                        "/user-profile-illustration.png"
+                      }
+                      alt={
+                        post.user?.full_name ||
+                        post.user?.fullName ||
+                        post.user?.username ||
+                        "User"
+                      }
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-gray-900 text-sm leading-tight truncate">
+                        {post.user?.full_name ||
+                          post.user?.fullName ||
+                          post.user?.username ||
+                          "Unknown User"}
+                      </p>
+                      <span className="text-xs text-gray-400">·</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Mutual Friends */}
+                    {post.user?.mutual_friends_count > 0 && (
+                      <p className="text-xs text-purple-600 mb-1">
+                        {post.user.mutual_friends_count} mutual friend
+                        {post.user.mutual_friends_count !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-700 line-clamp-2">
+                      {post.content}
+                    </p>
+                    {post.image && (
+                      <div className="mt-2">
+                        <div className="w-full h-20 bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={post.image}
+                            alt="Post"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm leading-tight">
-                          {result.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {result.username}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                        <MdTag className="text-white text-sm" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm leading-tight">
-                          {result.name}
-                        </p>
-                        <p className="text-xs text-gray-500">{result.posts}</p>
-                      </div>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
