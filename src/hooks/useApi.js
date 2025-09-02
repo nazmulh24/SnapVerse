@@ -149,6 +149,34 @@ const useApi = () => {
     [get, user?.username]
   );
 
+  const fetchMyPosts = useCallback(
+    async (params = {}) => {
+      console.log(
+        "[useApi] Fetching my posts for user:",
+        user?.username || "anonymous"
+      );
+
+      const queryString = new URLSearchParams(params).toString();
+      const endpoint = `/posts/my_posts/${
+        queryString ? `?${queryString}` : ""
+      }`;
+
+      const result = await get(endpoint);
+
+      if (result.success) {
+        const posts = result.data.results || result.data || [];
+        console.log(`[useApi] Loaded ${posts.length} my posts`);
+
+        if (posts.length > 0) {
+          console.log("[useApi] First my post structure:", posts[0]);
+        }
+      }
+
+      return result;
+    },
+    [get, user?.username]
+  );
+
   const createPost = useCallback(
     async (postData) => {
       console.log("[useApi] Creating post:", postData);
@@ -221,6 +249,7 @@ const useApi = () => {
 
     // Posts methods
     fetchPosts,
+    fetchMyPosts,
     createPost,
     updatePost,
     deletePost,

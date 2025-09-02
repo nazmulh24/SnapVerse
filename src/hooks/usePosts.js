@@ -4,6 +4,7 @@ import useApi from "./useApi";
 const usePosts = () => {
   const {
     fetchPosts,
+    fetchMyPosts,
     likePost,
     unlikePost,
     createComment,
@@ -356,12 +357,74 @@ const usePosts = () => {
     [loadingStates]
   );
 
+  // Load user's own posts specifically
+  const loadMyPosts = useCallback(
+    async (params = {}, options = {}) => {
+      const { page = 1, append = false, pageSize = 20 } = options;
+
+      console.log(`[usePosts] Loading my posts - page ${page}`);
+
+      try {
+        setIsLoadingMore(page > 1);
+        if (page === 1 && !append) {
+          setIsRefreshing(true);
+        }
+
+        const requestParams = {
+          page,
+          page_size: pageSize,
+          ...params,
+        };
+
+        const result = await fetchMyPosts(requestParams);
+
+        if (result.success) {
+          const { results = [], count = 0, next: nextPage } = result.data || {};
+
+          const newPosts = Array.isArray(results) ? results : [];
+          console.log(`[usePosts] Loaded ${newPosts.length} my posts`);
+
+          setPosts((prevPosts) => {
+            if (append && page > 1) {
+              // Filter out duplicates before appending
+              const existingIds = new Set(prevPosts.map((post) => post.id));
+              const uniqueNewPosts = newPosts.filter(
+                (post) => !existingIds.has(post.id)
+              );
+              return [...prevPosts, ...uniqueNewPosts];
+            } else {
+              // Replace posts for initial load or refresh
+              return newPosts;
+            }
+          });
+
+          setCurrentPage(page);
+          setTotalCount(count);
+          setHasNextPage(!!nextPage && newPosts.length === pageSize);
+          lastFetchedPageRef.current = page;
+
+          clearError();
+        }
+
+        return result;
+      } catch (error) {
+        console.error("[usePosts] Error loading my posts:", error);
+        return { success: false, error: error.message };
+      } finally {
+        setIsLoadingMore(false);
+        setIsRefreshing(false);
+      }
+    },
+    [fetchMyPosts, clearError]
+  );
+
   return {
     // Data
     posts,
 
     // Actions
     loadPosts,
+    loadMyPosts,
     loadMorePosts,
     refreshPosts,
     initializePosts,
