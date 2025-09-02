@@ -12,22 +12,33 @@ const useAuth = () => {
   };
 
   const [authTokens, setAuthTokens] = useState(getToken());
+  const [loading, setLoading] = useState(!!getToken()); // Only load if we have tokens
 
   //--> Fetch user profile
   useEffect(() => {
-    if (authTokens) {
-      const fetchUserProfile = async () => {
+    const initializeAuth = async () => {
+      if (authTokens) {
+        setLoading(true); // Set loading when starting to fetch user
         try {
           const response = await AuthApiClient.get("/auth/users/me");
           //   console.log(response.data);
           setUser(response.data);
         } catch (error) {
           console.error("Failed to fetch user profile:", error);
+          // If token is invalid, clear it
+          setAuthTokens(null);
+          setUser(null);
+          localStorage.removeItem("authTokens");
         }
-      };
+        setLoading(false); // Set loading false after fetch completes
+      } else {
+        // No auth tokens, clear user and set loading to false
+        setUser(null);
+        setLoading(false);
+      }
+    };
 
-      fetchUserProfile();
-    }
+    initializeAuth();
   }, [authTokens]);
 
   const handleAPIError = (
@@ -214,6 +225,8 @@ const useAuth = () => {
 
   return {
     user,
+    authTokens,
+    loading,
     loginUser,
     forgotPassword,
     resetPassword,

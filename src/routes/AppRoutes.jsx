@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router";
 import MainLayout from "../components/layouts/MainLayout";
+import PrivateRoute from "../components/PrivateRoute";
 import Home from "../pages/Home";
 import MessagesPage from "../pages/MessagesPage";
 import CreatePage from "../pages/CreatePage";
@@ -32,45 +33,44 @@ import Register from "../pages/Register";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Login/Register as full page */}
+      {/* Public Routes - Only Login/Register accessible without authentication */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Main app routes under MainLayout */}
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/create" element={<CreatePage />} />
-        <Route path="/connections" element={<ConnectionPage />} />
-        <Route path="/reels" element={<ReelsPage />} />
-        <Route path="/monetization" element={<MonetizationPage />} />
+      {/* Private Routes - All other routes require authentication */}
+      <Route element={<PrivateRoute />}>
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/create" element={<CreatePage />} />
+          <Route path="/connections" element={<ConnectionPage />} />
+          <Route path="/reels" element={<ReelsPage />} />
+          <Route path="/monetization" element={<MonetizationPage />} />
 
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/saved" element={<SavedPage />} />
-        <Route path="/trending" element={<TrendingPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/groups" element={<GroupsPage />} />
-        <Route path="/business" element={<BusinessPage />} />
-        <Route path="/creator-studio" element={<CreatorStudioPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/saved" element={<SavedPage />} />
+          <Route path="/trending" element={<TrendingPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/business" element={<BusinessPage />} />
+          <Route path="/creator-studio" element={<CreatorStudioPage />} />
 
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/insights" element={<InsightsPage />} />
-        <Route path="/ads" element={<AdsManagerPage />} />
-        <Route path="/shop" element={<ShopPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/ads" element={<AdsManagerPage />} />
+          <Route path="/shop" element={<ShopPage />} />
 
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/security" element={<SecurityPage />} />
-        <Route path="/help" element={<HelpCenterPage />} />
-        <Route path="/feedback" element={<FeedbackPage />} />
-        <Route path="/about" element={<AboutPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/security" element={<SecurityPage />} />
+          <Route path="/help" element={<HelpCenterPage />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
+          <Route path="/about" element={<AboutPage />} />
 
-        <Route path="/activity" element={<ActivityPage />} />
-        <Route path="/account" element={<AccountPage />} />
+          <Route path="/activity" element={<ActivityPage />} />
+          <Route path="/account" element={<AccountPage />} />
+        </Route>
       </Route>
-
-      {/* Protected Routes */}
-      {/* Here comes Protected Routes Later... */}
     </Routes>
   );
 };
