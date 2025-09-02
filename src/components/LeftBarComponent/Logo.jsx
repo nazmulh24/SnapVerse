@@ -8,6 +8,7 @@ import {
   MdAutoAwesome,
   MdImage,
   MdFavorite,
+  MdHistory,
 } from "react-icons/md";
 import useApi from "../../hooks/useApi";
 
@@ -18,6 +19,10 @@ const Logo = ({ className = "", onSearch }) => {
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
   const { fetchPosts } = useApi();
+  const [recentSearches, setRecentSearches] = useState(() => {
+    const saved = localStorage.getItem("snapverse_recent_searches");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Add CSS animations
   useEffect(() => {
@@ -97,22 +102,58 @@ const Logo = ({ className = "", onSearch }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Function to save recent searches
+  const saveToRecentSearches = (query) => {
+    if (!query || query.trim().length < 2) return;
+
+    const trimmedQuery = query.trim();
+    const updatedSearches = [
+      trimmedQuery,
+      ...recentSearches.filter(
+        (search) => search.toLowerCase() !== trimmedQuery.toLowerCase()
+      ),
+    ].slice(0, 5); // Keep only 5 recent searches
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "snapverse_recent_searches",
+      JSON.stringify(updatedSearches)
+    );
+  };
+
+  // Function to clear recent searches
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem("snapverse_recent_searches");
+  };
+
+  // Function to remove a specific recent search
+  const removeRecentSearch = (searchToRemove) => {
+    const updatedSearches = recentSearches.filter(
+      (search) => search !== searchToRemove
+    );
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "snapverse_recent_searches",
+      JSON.stringify(updatedSearches)
+    );
+  };
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
 
-    // Show search results immediately when typing (even if empty)
-    if (value.length > 0) {
-      setShowResults(true);
-    } else {
-      setShowResults(false);
-      setSearchResults([]);
-    }
+    // Show search results immediately when typing or when focused (even if empty)
+    setShowResults(true);
 
     // Call parent search handler if provided
     if (onSearch) {
       onSearch(value);
     }
+  };
+
+  const handleSearchFocus = () => {
+    setShowResults(true);
   };
 
   const handleClearSearch = () => {
@@ -126,11 +167,19 @@ const Logo = ({ className = "", onSearch }) => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    // Save search query if it's valid
+    if (searchQuery.trim().length >= 2) {
+      saveToRecentSearches(searchQuery);
+    }
     // Keep the search results open and focused
     setShowResults(true);
   };
 
   const handleResultClick = (result) => {
+    // Save the search query that led to this result
+    if (searchQuery.trim().length >= 2) {
+      saveToRecentSearches(searchQuery);
+    }
     setShowResults(false);
     setSearchQuery("");
 
@@ -189,9 +238,11 @@ const Logo = ({ className = "", onSearch }) => {
               <MdSearch className="absolute sm:left-4 left-3 top-1/2 transform -translate-y-1/2 text-gray-400 sm:text-lg text-base group-focus-within:text-purple-500 transition-colors duration-300" />
 
               <input
+                ref={searchRef}
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onFocus={handleSearchFocus}
                 placeholder="Type to search people..."
                 className="w-full sm:pl-12 sm:pr-12 pl-10 pr-10 sm:py-3.5 py-2.5 bg-transparent sm:rounded-xl rounded-lg focus:outline-none sm:text-sm text-xs placeholder-gray-400 font-medium"
               />
@@ -217,6 +268,65 @@ const Logo = ({ className = "", onSearch }) => {
               <div className="p-4 text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto"></div>
                 <p className="text-xs text-gray-500 mt-2">Searching...</p>
+              </div>
+            ) : searchQuery.trim() === "" ? (
+              /* Recent Searches */
+              <div className="p-2">
+                {recentSearches.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between px-2 py-1 mb-2">
+                      <span className="text-xs font-semibold text-gray-600">
+                        Recent searches
+                      </span>
+                      <button
+                        onClick={clearRecentSearches}
+                        className="text-xs text-purple-600 hover:text-purple-700 font-medium"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    {recentSearches.map((search, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between group hover:bg-gray-50 rounded-lg p-2 cursor-pointer"
+                        onClick={() => {
+                          setSearchQuery(search);
+                          saveToRecentSearches(search);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                            <MdHistory className="text-gray-500 text-sm" />
+                          </div>
+                          <span className="text-sm text-gray-700">
+                            {search}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecentSearch(search);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 transition-all"
+                        >
+                          <MdClear className="text-gray-400 text-xs" />
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="p-6 text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MdSearch className="text-gray-400 text-2xl" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Start typing to search
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Search for people, posts, and more
+                    </p>
+                  </div>
+                )}
               </div>
             ) : searchResults.length > 0 ? (
               <div className="p-2">

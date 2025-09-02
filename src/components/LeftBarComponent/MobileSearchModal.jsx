@@ -19,11 +19,10 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { fetchPosts } = useApi();
 
-  const [recentSearches, setRecentSearches] = useState([
-    "design",
-    "photography",
-    "travel tips",
-  ]);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    const saved = localStorage.getItem("snapverse_recent_searches");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // eslint-disable-next-line no-unused-vars
   const [trendingSearches, setTrendingSearches] = useState([
@@ -33,23 +32,30 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
     { query: "food", count: "4.1M" },
   ]);
 
-  // Real-time search function
+  // Real-time search function - Enhanced for live results (same as Logo.jsx)
   const searchPosts = useCallback(
     async (query) => {
-      if (!query || query.trim().length < 2) {
+      // Allow search for single character and above
+      if (!query || query.trim().length < 1) {
         setSearchResults([]);
         return;
       }
 
       setIsLoading(true);
       try {
-        const result = await fetchPosts({ search: query.trim(), page_size: 5 });
+        const result = await fetchPosts({
+          search: query.trim(),
+          page_size: 20,
+        });
         if (result.success && result.data) {
           const posts = result.data.results || result.data || [];
+          console.log(
+            `Mobile search for "${query}": ${posts.length} results found`
+          );
           setSearchResults(posts);
         }
       } catch (error) {
-        console.error("Search error:", error);
+        console.error("Mobile search error:", error);
         setSearchResults([]);
       } finally {
         setIsLoading(false);
@@ -58,11 +64,11 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
     [fetchPosts]
   );
 
-  // Handle search functionality with debouncing
+  // Handle search functionality with faster debouncing for live results
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       searchPosts(searchQuery);
-    }, 300); // 300ms debounce
+    }, 150); // Reduced to 150ms for faster response
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchPosts]);
@@ -76,21 +82,60 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+  // Function to save recent searches
+  const saveToRecentSearches = (query) => {
+    if (!query || query.trim().length < 2) return;
+
+    const trimmedQuery = query.trim();
+    const updatedSearches = [
+      trimmedQuery,
+      ...recentSearches.filter(
+        (search) => search.toLowerCase() !== trimmedQuery.toLowerCase()
+      ),
+    ].slice(0, 5); // Keep only 5 recent searches
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "snapverse_recent_searches",
+      JSON.stringify(updatedSearches)
+    );
+  };
+
+  // Function to clear recent searches
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem("snapverse_recent_searches");
+  };
+
+  // Function to remove a specific recent search
+  const removeRecentSearch = (searchToRemove) => {
+    const updatedSearches = recentSearches.filter(
+      (search) => search !== searchToRemove
+    );
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(
+      "snapverse_recent_searches",
+      JSON.stringify(updatedSearches)
+    );
   };
 
   const handleSearchSubmit = (query) => {
+    // Save search query if it's valid
+    if ((query || searchQuery).trim().length >= 2) {
+      saveToRecentSearches(query || searchQuery);
+    }
     // Keep search results visible
     setSearchQuery(query || searchQuery);
   };
 
   const handleTrendingClick = (query) => {
     setSearchQuery(query);
+    saveToRecentSearches(query);
   };
 
   const handleRecentClick = (query) => {
     setSearchQuery(query);
+    saveToRecentSearches(query);
   };
 
   const handleClearSearch = () => {
@@ -99,13 +144,17 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
   };
 
   const handleResultClick = (result) => {
+    // Save the search query that led to this result
+    if (searchQuery.trim().length >= 2) {
+      saveToRecentSearches(searchQuery);
+    }
     onClose();
     console.log("Clicked on post:", result);
     // Handle post click navigation if needed
   };
 
   const handleClearRecent = () => {
-    setRecentSearches([]);
+    clearRecentSearches();
   };
 
   const handleBackdropClick = (e) => {
@@ -144,8 +193,8 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
                 ref={searchRef}
                 type="text"
                 value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search SnapVerse..."
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Type to search people..."
                 className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500/30 text-sm placeholder-gray-400"
               />
               {searchQuery && (
@@ -191,16 +240,28 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
 
                   <div className="space-y-2">
                     {recentSearches.map((search, index) => (
-                      <button
+                      <div
                         key={index}
-                        onClick={() => handleRecentClick(search)}
-                        className="flex items-center w-full gap-3 p-2 hover:bg-gray-50 rounded-xl transition-colors"
+                        className="flex items-center justify-between group hover:bg-gray-50 rounded-xl p-2 transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <MdHistory className="text-gray-500" />
-                        </div>
-                        <span className="text-sm text-gray-700">{search}</span>
-                      </button>
+                        <button
+                          onClick={() => handleRecentClick(search)}
+                          className="flex items-center gap-3 flex-1"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <MdHistory className="text-gray-500" />
+                          </div>
+                          <span className="text-sm text-gray-700">
+                            {search}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => removeRecentSearch(search)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 transition-all"
+                        >
+                          <MdClear className="text-gray-400 text-xs" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -238,66 +299,136 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
           {/* Search Results */}
           {!isLoading && searchQuery && searchResults.length > 0 && (
             <div className="p-2">
-              {searchResults.map((post) => (
-                <button
-                  key={post.id}
-                  onClick={() => handleResultClick(post)}
-                  className="w-full flex items-start gap-3 p-3 hover:bg-purple-50 rounded-xl transition-all duration-200 text-left"
-                >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={
-                        post.user?.profile_image ||
-                        post.user?.profilePicture ||
-                        "/user-profile-illustration.png"
-                      }
-                      alt={
-                        post.user?.full_name ||
-                        post.user?.fullName ||
-                        post.user?.username ||
-                        "User"
-                      }
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900 text-sm leading-tight truncate">
-                        {post.user?.full_name ||
-                          post.user?.fullName ||
-                          post.user?.username ||
-                          "Unknown User"}
-                      </p>
-                      <span className="text-xs text-gray-400">·</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+              {searchResults.map((post) => {
+                // Format user data exactly like Logo.jsx does
+                const formatUserData = (post) => {
+                  // Check if post has author data (from API response)
+                  if (post.author) {
+                    // Enhanced Cloudinary image handling
+                    let avatarUrl;
+                    if (post.author.profile_picture) {
+                      console.log(
+                        "Mobile - Profile picture field:",
+                        post.author.profile_picture
+                      );
 
-                    {/* Mutual Friends */}
-                    {post.user?.mutual_friends_count > 0 && (
-                      <p className="text-xs text-purple-600 mb-1">
-                        {post.user.mutual_friends_count} mutual friend
-                        {post.user.mutual_friends_count !== 1 ? "s" : ""}
+                      if (post.author.profile_picture.startsWith("http")) {
+                        // Already a full URL
+                        avatarUrl = post.author.profile_picture;
+                      } else if (
+                        post.author.profile_picture.startsWith("image/upload/")
+                      ) {
+                        // Partial Cloudinary path
+                        avatarUrl = `https://res.cloudinary.com/dlkq5sjum/${post.author.profile_picture}`;
+                      } else {
+                        // Just filename, add full Cloudinary path
+                        avatarUrl = `https://res.cloudinary.com/dlkq5sjum/image/upload/${post.author.profile_picture}`;
+                      }
+                      console.log(
+                        "Mobile - Generated Cloudinary URL:",
+                        avatarUrl
+                      );
+                    } else {
+                      // Fallback to UI Avatars
+                      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        post.author.full_name || post.author.username
+                      )}&background=6366f1&color=fff&size=100`;
+                      console.log("Mobile - Using fallback avatar:", avatarUrl);
+                    }
+
+                    return {
+                      id: post.author.id,
+                      username: post.author.username,
+                      fullName:
+                        post.author.full_name ||
+                        `${post.author.first_name || ""} ${
+                          post.author.last_name || ""
+                        }`.trim() ||
+                        post.author.username,
+                      avatar: avatarUrl,
+                      caption: post.content || post.caption || "No caption",
+                      mutualFriends: post.author.mutual_friends_count || 0,
+                    };
+                  }
+
+                  // Fallback to direct post properties with Cloudinary support
+                  let fallbackAvatar;
+                  if (post.user_profile_picture || post.profile_picture) {
+                    const profilePic =
+                      post.user_profile_picture || post.profile_picture;
+                    console.log(
+                      "Mobile - Fallback profile picture:",
+                      profilePic
+                    );
+
+                    if (profilePic.startsWith("http")) {
+                      fallbackAvatar = profilePic;
+                    } else if (profilePic.startsWith("image/upload/")) {
+                      fallbackAvatar = `https://res.cloudinary.com/dlkq5sjum/${profilePic}`;
+                    } else {
+                      fallbackAvatar = `https://res.cloudinary.com/dlkq5sjum/image/upload/${profilePic}`;
+                    }
+                    console.log(
+                      "Mobile - Fallback Cloudinary URL:",
+                      fallbackAvatar
+                    );
+                  } else {
+                    fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      post.user_full_name || post.user || "User"
+                    )}&background=6366f1&color=fff&size=100`;
+                    console.log(
+                      "Mobile - Using fallback UI avatar:",
+                      fallbackAvatar
+                    );
+                  }
+
+                  return {
+                    id: post.id,
+                    username: post.user || "unknown",
+                    fullName:
+                      post.user_full_name || post.user || "Unknown User",
+                    avatar: fallbackAvatar,
+                    caption: post.content || post.caption || "No caption",
+                    mutualFriends: 0,
+                  };
+                };
+
+                const formattedUser = formatUserData(post);
+
+                // Debug: Log the user data to see what fields are available
+                console.log("Mobile search result - Original post:", post);
+                console.log("Mobile search result - Author data:", post.author);
+                console.log(
+                  "Mobile search result - Formatted user:",
+                  formattedUser
+                );
+
+                return (
+                  <button
+                    key={post.id}
+                    onClick={() => handleResultClick(post)}
+                    className="w-full flex items-start gap-3 p-3 hover:bg-purple-50 rounded-xl transition-all duration-200 text-left"
+                  >
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={formattedUser.avatar}
+                        alt={formattedUser.fullName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm leading-tight truncate">
+                        {formattedUser.fullName}
                       </p>
-                    )}
-                    <p className="text-sm text-gray-700 line-clamp-2">
-                      {post.content}
-                    </p>
-                    {post.image && (
-                      <div className="mt-2">
-                        <div className="w-full h-20 bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={post.image}
-                            alt="Post"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
+
+                      {/* Caption */}
+                      <p className="text-xs text-gray-500 line-clamp-1">
+                        {formattedUser.caption}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
