@@ -14,7 +14,7 @@ window.testCommentAPI = async (postId) => {
       `http://127.0.0.1:8000/api/v1/posts/${postId}/comments/`,
       {
         headers: {
-          Authorization: `Bearer ${tokens.access}`,
+          Authorization: `JWT ${tokens.access}`,
           "Content-Type": "application/json",
         },
       }

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { MessageCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { MessageCircle, MoreHorizontal, Trash2, Send } from "lucide-react";
 import AuthContext from "../../context/AuthContext";
 import { getAvatarUrl } from "../../utils/avatarUtils";
 
@@ -14,6 +14,7 @@ const CommentItem = ({
   const [replyText, setReplyText] = useState("");
   const [showReplies, setShowReplies] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user } = useContext(AuthContext);
 
@@ -131,8 +132,9 @@ const CommentItem = ({
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
-    if (!replyText.trim()) return;
+    if (!replyText.trim() || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       await onReply(safeComment.id, replyText.trim());
       setReplyText("");
@@ -140,6 +142,15 @@ const CommentItem = ({
       setShowReplies(true);
     } catch (error) {
       console.error("Failed to add reply:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleReplySubmit(e);
     }
   };
 
@@ -243,19 +254,37 @@ const CommentItem = ({
                 alt="Your avatar"
                 className="w-6 h-6 rounded-full object-cover flex-shrink-0"
               />
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder={`Reply to ${
-                    safeComment.user?.full_name ||
-                    safeComment.user?.username ||
-                    "User"
-                  }...`}
-                  className="w-full bg-gray-100 rounded-full px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
-                  autoFocus
-                />
+              <div className="flex-1 relative">
+                <div className="flex items-center bg-gray-100 rounded-full border border-gray-200 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={`Reply to ${
+                      safeComment.user?.full_name ||
+                      safeComment.user?.username ||
+                      "User"
+                    }...`}
+                    className="flex-1 bg-transparent px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none"
+                    autoFocus
+                    disabled={isSubmitting}
+                  />
+
+                  {/* Send button */}
+                  <button
+                    type="submit"
+                    disabled={!replyText.trim() || isSubmitting}
+                    className={`p-1.5 mr-1.5 rounded-full transition-colors ${
+                      replyText.trim() && !isSubmitting
+                        ? "text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        : "text-gray-300 cursor-not-allowed"
+                    }`}
+                    title="Send reply"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </form>

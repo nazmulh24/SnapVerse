@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Send, Smile } from "lucide-react";
-import EmojiPicker from "./EmojiPicker";
+import { Send } from "lucide-react";
 import AuthContext from "../../context/AuthContext";
 import { getAvatarUrl } from "../../utils/avatarUtils";
 
@@ -11,7 +10,6 @@ const CommentForm = ({
 }) => {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { user } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
@@ -38,10 +36,6 @@ const CommentForm = ({
     }
   };
 
-  const handleEmojiSelect = (emoji) => {
-    setComment((prev) => prev + emoji);
-  };
-
   return (
     <form onSubmit={handleSubmit} className="border-t border-gray-200 p-3">
       <div className="flex space-x-3">
@@ -65,24 +59,6 @@ const CommentForm = ({
               disabled={isSubmitting}
               className="flex-1 bg-transparent px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none"
             />
-
-            {/* Emoji button */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Add emoji"
-              >
-                <Smile className="w-4 h-4" />
-              </button>
-
-              <EmojiPicker
-                isOpen={showEmojiPicker}
-                onEmojiSelect={handleEmojiSelect}
-                onClose={() => setShowEmojiPicker(false)}
-              />
-            </div>
 
             {/* Send button */}
             <button
