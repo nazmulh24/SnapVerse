@@ -1,73 +1,40 @@
 import { useState, useCallback } from "react";
+import apiClient from "../services/api-client";
 
 const useComments = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Get auth token from localStorage
+  const getAuthHeaders = () => {
+    const authTokens = localStorage.getItem("authTokens");
+    if (authTokens) {
+      const tokens = JSON.parse(authTokens);
+      return {
+        Authorization: `Bearer ${tokens.access}`,
+      };
+    }
+    return {};
+  };
 
   const fetchComments = useCallback(async (postId) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Mock API call - replace with your actual API endpoint
-      const response = await fetch(`/api/posts/${postId}/comments`);
+      const response = await apiClient.get(`posts/${postId}/comments/`, {
+        headers: getAuthHeaders(),
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch comments");
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (err) {
-      setError(err.message);
-      // Return mock data for development
+      setError(err.message || "Failed to fetch comments");
+      console.error("Failed to fetch comments:", err);
+
+      // Return empty array on error to prevent crashes
       return {
-        results: [
-          {
-            id: 1,
-            content: "Great post! Thanks for sharing.",
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-            user: {
-              id: 1,
-              username: "johndoe",
-              full_name: "John Doe",
-              profile_picture: null,
-            },
-            likes_count: 5,
-            is_liked: false,
-            replies_count: 2,
-            replies: [
-              {
-                id: 101,
-                content: "I agree! Really insightful.",
-                created_at: new Date(Date.now() - 1800000).toISOString(),
-                user: {
-                  id: 2,
-                  username: "janesmith",
-                  full_name: "Jane Smith",
-                  profile_picture: null,
-                },
-                likes_count: 2,
-                is_liked: true,
-              },
-            ],
-          },
-          {
-            id: 2,
-            content: "Love this! 😍",
-            created_at: new Date(Date.now() - 7200000).toISOString(),
-            user: {
-              id: 3,
-              username: "mikebrown",
-              full_name: "Mike Brown",
-              profile_picture: null,
-            },
-            likes_count: 8,
-            is_liked: true,
-            replies_count: 0,
-            replies: [],
-          },
-        ],
+        results: [],
+        count: 0,
       };
     } finally {
       setLoading(false);
@@ -79,39 +46,19 @@ const useComments = () => {
     setError(null);
 
     try {
-      // Mock API call - replace with your actual API endpoint
-      const response = await fetch(`/api/posts/${postId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content }),
-      });
+      const response = await apiClient.post(
+        `posts/${postId}/comments/`,
+        { content },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to add comment");
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (err) {
-      setError(err.message);
-      // Return mock data for development
-      return {
-        id: Date.now(),
-        content,
-        created_at: new Date().toISOString(),
-        user: {
-          id: 999,
-          username: "currentuser",
-          full_name: "Current User",
-          profile_picture: null,
-        },
-        likes_count: 0,
-        is_liked: false,
-        replies_count: 0,
-        replies: [],
-      };
+      setError(err.message || "Failed to add comment");
+      console.error("Failed to add comment:", err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -122,22 +69,18 @@ const useComments = () => {
     setError(null);
 
     try {
-      // Mock API call - replace with your actual API endpoint
-      const response = await fetch(
-        `/api/posts/${postId}/comments/${commentId}`,
+      const response = await apiClient.delete(
+        `posts/${postId}/comments/${commentId}/`,
         {
-          method: "DELETE",
+          headers: getAuthHeaders(),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to delete comment");
-      }
-
-      return true;
+      return response.data;
     } catch (err) {
-      setError(err.message);
-      return true; // Return true for mock
+      setError(err.message || "Failed to delete comment");
+      console.error("Failed to delete comment:", err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -148,68 +91,19 @@ const useComments = () => {
     setError(null);
 
     try {
-      // Mock API call - replace with your actual API endpoint
-      const response = await fetch(
-        `/api/posts/${postId}/comments/${parentCommentId}/replies`,
+      const response = await apiClient.post(
+        `posts/${postId}/comments/${parentCommentId}/replies/`,
+        { content },
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ content }),
+          headers: getAuthHeaders(),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to add reply");
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (err) {
-      setError(err.message);
-      // Return mock data for development
-      return {
-        id: Date.now(),
-        content,
-        created_at: new Date().toISOString(),
-        user: {
-          id: 999,
-          username: "currentuser",
-          full_name: "Current User",
-          profile_picture: null,
-        },
-        likes_count: 0,
-        is_liked: false,
-        parent_id: parentCommentId,
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const likeComment = useCallback(async (postId, commentId) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Mock API call - replace with your actual API endpoint
-      const response = await fetch(
-        `/api/posts/${postId}/comments/${commentId}/like`,
-        {
-          method: "POST",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to like comment");
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      setError(err.message);
-      return { is_liked: true, likes_count: 1 }; // Mock response
+      setError(err.message || "Failed to add reply");
+      console.error("Failed to add reply:", err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -220,7 +114,6 @@ const useComments = () => {
     addComment,
     deleteComment,
     addReply,
-    likeComment,
     loading,
     error,
   };

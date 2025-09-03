@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Send, Smile } from "lucide-react";
 import EmojiPicker from "./EmojiPicker";
+import AuthContext from "../../context/AuthContext";
+import { getAvatarUrl } from "../../utils/avatarUtils";
 
 const CommentForm = ({
   onSubmit,
@@ -10,6 +12,7 @@ const CommentForm = ({
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const { user } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +45,7 @@ const CommentForm = ({
       <div className="flex space-x-3">
         {/* Current user avatar */}
         <img
-          src={`https://ui-avatars.com/api/?name=Current%20User&background=random&color=fff&size=32`}
+          src={getAvatarUrl(user, 32)}
           alt="Your avatar"
           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
         />

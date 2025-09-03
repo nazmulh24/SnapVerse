@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { MessageCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import AuthContext from "../../context/AuthContext";
+import { getAvatarUrl } from "../../utils/avatarUtils";
 
 const CommentItem = ({
   comment,
   onReply,
   onDelete,
-  currentUserId = 999,
+  currentUserId = null,
   isReply = false,
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [showReplies, setShowReplies] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
+  const { user } = useContext(AuthContext);
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -23,17 +27,6 @@ const CommentItem = ({
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
     return `${Math.floor(diffInSeconds / 604800)}w`;
-  };
-
-  const getAvatar = (user) => {
-    if (user.profile_picture) {
-      return user.profile_picture.startsWith("http")
-        ? user.profile_picture
-        : `https://res.cloudinary.com/dlkq5sjum/image/upload/${user.profile_picture}`;
-    }
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      user.full_name || user.username || "User"
-    )}&background=random&color=fff&size=32`;
   };
 
   const handleReplySubmit = async (e) => {
@@ -55,13 +48,13 @@ const CommentItem = ({
     setShowMenu(false);
   };
 
-  const isOwner = comment.user.id === currentUserId;
+  const isOwner = comment.user.id === (currentUserId || user?.id);
 
   return (
     <div className={`flex space-x-2 ${isReply ? "ml-8 mt-2" : "mt-3"}`}>
       {/* Avatar */}
       <img
-        src={getAvatar(comment.user)}
+        src={getAvatarUrl(comment.user, 32)}
         alt={comment.user.full_name}
         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
       />
@@ -126,7 +119,7 @@ const CommentItem = ({
           <form onSubmit={handleReplySubmit} className="mt-2 ml-3">
             <div className="flex space-x-2">
               <img
-                src={`https://ui-avatars.com/api/?name=Current%20User&background=random&color=fff&size=24`}
+                src={getAvatarUrl(user, 24)}
                 alt="Your avatar"
                 className="w-6 h-6 rounded-full object-cover flex-shrink-0"
               />

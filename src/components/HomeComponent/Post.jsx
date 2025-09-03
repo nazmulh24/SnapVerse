@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PostHeader from "./PostHeader";
 import PostImage from "./PostImage";
 import PostActions from "./PostActions";
@@ -10,7 +10,14 @@ import useComments from "../../hooks/useComments";
 const Post = ({ post, onLike, onShare }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
-  const { addComment, deleteComment, fetchComments, addReply } = useComments();
+  const [postData, setPostData] = useState(post);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const { fetchComments, addComment, deleteComment, addReply } = useComments();
+
+  // Update postData when post prop changes
+  useEffect(() => {
+    setPostData(post);
+  }, [post]);
   // Format time ago from created_at
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -97,8 +104,8 @@ const Post = ({ post, onLike, onShare }) => {
   };
 
   const handleDoubleClickLike = () => {
-    if (onLike && !post.is_liked) {
-      onLike(post.id, true);
+    if (onLike && !postData.is_liked) {
+      onLike(postData.id, true);
     }
   };
 
@@ -106,13 +113,16 @@ const Post = ({ post, onLike, onShare }) => {
   const handleCommentClick = async () => {
     if (!showComments) {
       // Load comments when opening comment section
+      setLoadingComments(true);
       try {
-        const commentsData = await fetchComments(post.id);
+        const commentsData = await fetchComments(postData.id);
         console.log("Fetched comments data:", commentsData);
         setComments(commentsData.results || commentsData || []);
       } catch (error) {
         console.error("Failed to load comments:", error);
         setComments([]);
+      } finally {
+        setLoadingComments(false);
       }
     }
     setShowComments(!showComments);
@@ -122,7 +132,14 @@ const Post = ({ post, onLike, onShare }) => {
   const handleAddComment = async (postId, content) => {
     try {
       const newComment = await addComment(postId, content);
-      setComments((prev) => [...prev, newComment]);
+      setComments((prev) => [newComment, ...prev]);
+
+      // Update post data to reflect new comment count
+      setPostData((prev) => ({
+        ...prev,
+        comments_count: (parseInt(prev.comments_count) || 0) + 1,
+      }));
+
       return newComment;
     } catch (error) {
       console.error("Failed to add comment:", error);
@@ -135,6 +152,12 @@ const Post = ({ post, onLike, onShare }) => {
     try {
       await deleteComment(postId, commentId);
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+
+      // Update post data to reflect new comment count
+      setPostData((prev) => ({
+        ...prev,
+        comments_count: Math.max((parseInt(prev.comments_count) || 0) - 1, 0),
+      }));
     } catch (error) {
       console.error("Failed to delete comment:", error);
       throw error;
@@ -144,8 +167,21 @@ const Post = ({ post, onLike, onShare }) => {
   // Handle adding a reply to comment
   const handleAddReply = async (parentCommentId, content) => {
     try {
-      const newReply = await addReply(post.id, parentCommentId, content);
-      setComments((prev) => [...prev, newReply]);
+      const newReply = await addReply(postData.id, parentCommentId, content);
+
+      // Update the parent comment with the new reply
+      setComments((prev) =>
+        prev.map((comment) =>
+          comment.id === parentCommentId
+            ? {
+                ...comment,
+                replies: [...(comment.replies || []), newReply],
+                replies_count: (comment.replies_count || 0) + 1,
+              }
+            : comment
+        )
+      );
+
       return newReply;
     } catch (error) {
       console.error("Failed to add reply:", error);
@@ -153,9 +189,22 @@ const Post = ({ post, onLike, onShare }) => {
     }
   };
 
-  const formattedUser = formatUserData(post);
-  const timeAgo = post.created_at
-    ? formatTimeAgo(post.created_at)
+  // Handle reaction updates
+  const handleReactionUpdate = (reactionData) => {
+    setPostData((prev) => ({
+      ...prev,
+      reactions: reactionData.reactions || prev.reactions,
+      user_reaction: reactionData.user_reaction,
+    }));
+
+    if (onLike) {
+      onLike(postData.id, reactionData.userReaction === "like", reactionData);
+    }
+  };
+
+  const formattedUser = formatUserData(postData);
+  const timeAgo = postData.created_at
+    ? formatTimeAgo(postData.created_at)
     : "Unknown time";
 
   return (
@@ -164,64 +213,115 @@ const Post = ({ post, onLike, onShare }) => {
       <PostHeader
         user={formattedUser}
         timeAgo={timeAgo}
-        location={post.location}
-        isEdited={post.is_edited}
+        location={postData.location}
+        isEdited={postData.is_edited}
       />
 
       {/* Post Caption/Content - Show before image */}
-      {(post.content || post.caption) && (
+      {(postData.content || postData.caption) && (
         <div className="px-4 pb-3">
           <p className="text-gray-800 text-sm">
-            {post.content || post.caption}
+            {postData.content || postData.caption}
           </p>
         </div>
       )}
 
       {/* Post Image - Only show if image exists */}
-      {post.image && (
+      {postData.image && (
         <PostImage
-          src={`https://res.cloudinary.com/dlkq5sjum/${post.image}`}
+          src={`https://res.cloudinary.com/dlkq5sjum/${postData.image}`}
           alt={`Post by ${formattedUser.full_name}`}
           onDoubleClick={handleDoubleClickLike}
         />
       )}
 
+      {/* Like and Comment Counts */}
+      {((postData.reactions &&
+        Object.values(postData.reactions).some((count) => count > 0)) ||
+        postData.comments_count > 0) && (
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            {/* Reaction count on the left */}
+            {postData.reactions &&
+              Object.values(postData.reactions).some((count) => count > 0) && (
+                <button className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg px-2 py-1 -mx-2 transition-colors group">
+                  <div className="flex items-center -space-x-1">
+                    {postData.reactions.like > 0 && (
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-30">
+                        👍
+                      </div>
+                    )}
+                    {postData.reactions.love > 0 && (
+                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-20">
+                        ❤️
+                      </div>
+                    )}
+                    {postData.reactions.haha > 0 && (
+                      <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-10">
+                        😂
+                      </div>
+                    )}
+                    {postData.reactions.wow > 0 && (
+                      <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
+                        😮
+                      </div>
+                    )}
+                    {postData.reactions.sad > 0 && (
+                      <div className="w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
+                        😢
+                      </div>
+                    )}
+                    {postData.reactions.angry > 0 && (
+                      <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
+                        😠
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-600 group-hover:underline font-medium">
+                    {Object.values(postData.reactions).reduce(
+                      (sum, count) => sum + count,
+                      0
+                    )}
+                  </span>
+                </button>
+              )}
+
+            {/* Comment count on the right */}
+            {postData.comments_count > 0 && (
+              <button
+                onClick={handleCommentClick}
+                className="text-sm text-gray-600 hover:underline transition-colors font-medium"
+              >
+                {postData.comments_count}{" "}
+                {postData.comments_count === 1 ? "comment" : "comments"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Post Actions - Like, Comment, Share buttons with reactions */}
       <PostActions
-        postId={post.id}
-        initialReactions={post.reactions || {}}
-        currentUserReaction={post.user_reaction || null}
+        postId={postData.id}
+        initialReactions={postData.reactions || {}}
+        currentUserReaction={postData.user_reaction || null}
         onComment={handleCommentClick}
-        onShare={() => onShare && onShare(post.id)}
-        onReactionUpdate={(reactionData) => {
-          // Update post data with new reaction information
-          if (onLike) {
-            onLike(post.id, reactionData.userReaction === "like", reactionData);
-          }
-        }}
-      />
-
-      {/* Comments Section - Show 2 comments */}
-      <PostContent
-        caption="" // Don't show caption again here
-        username={formattedUser.username}
-        full_name={formattedUser.full_name}
-        commentsCount={parseInt(post.comments_count) || 0}
-        onViewComments={handleCommentClick}
-        showComments={true}
+        onShare={() => onShare && onShare(postData.id)}
+        onReactionUpdate={handleReactionUpdate}
       />
 
       {/* Comment Section */}
       <ErrorBoundary>
         <CommentSection
-          postId={post.id}
+          postId={postData.id}
           isVisible={showComments}
           onClose={() => setShowComments(false)}
           initialComments={comments}
-          commentsCount={parseInt(post.comments_count) || 0}
+          commentsCount={parseInt(postData.comments_count) || 0}
           onAddComment={handleAddComment}
           onDeleteComment={handleDeleteComment}
           onAddReply={handleAddReply}
+          loading={loadingComments}
         />
       </ErrorBoundary>
     </div>

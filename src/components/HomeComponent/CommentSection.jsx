@@ -1,7 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { X, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  X,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+} from "lucide-react";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
+import AuthContext from "../../context/AuthContext";
 
 const CommentSection = ({
   postId,
@@ -12,9 +19,11 @@ const CommentSection = ({
   onAddComment,
   onDeleteComment,
   onAddReply,
+  loading = false,
 }) => {
   const [comments, setComments] = useState(initialComments);
   const [showAllComments, setShowAllComments] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     setComments(initialComments);
@@ -85,7 +94,12 @@ const CommentSection = ({
 
       {/* Comments list */}
       <div className="max-h-96 overflow-y-auto">
-        {comments.length === 0 ? (
+        {loading ? (
+          <div className="p-6 text-center">
+            <Loader2 className="w-6 h-6 text-gray-400 mx-auto mb-3 animate-spin" />
+            <p className="text-gray-500 text-sm">Loading comments...</p>
+          </div>
+        ) : comments.length === 0 ? (
           <div className="p-6 text-center">
             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">No comments yet</p>
@@ -101,7 +115,7 @@ const CommentSection = ({
                 comment={comment}
                 onReply={handleAddReply}
                 onDelete={handleDeleteComment}
-                currentUserId={999} // Replace with actual current user ID
+                currentUserId={user?.id || null}
               />
             ))}
 

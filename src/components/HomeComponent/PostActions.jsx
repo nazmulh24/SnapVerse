@@ -14,7 +14,6 @@ const PostActions = ({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [userReaction, setUserReaction] = useState(currentUserReaction);
   const [reactions, setReactions] = useState(initialReactions);
-  const [showReactionDetails, setShowReactionDetails] = useState(false);
 
   const { addReaction, removeReaction, loading } = useReactions();
 
@@ -28,12 +27,6 @@ const PostActions = ({
     sad: { emoji: "😢", label: "Sad", color: "text-gray-600" },
     angry: { emoji: "😠", label: "Angry", color: "text-orange-600" },
   };
-
-  // Calculate total reactions dynamically
-  const totalReactions = Object.values(reactions).reduce(
-    (sum, count) => sum + count,
-    0
-  );
 
   useEffect(() => {
     setUserReaction(currentUserReaction);
@@ -94,64 +87,10 @@ const PostActions = ({
   const handleComment = () => onComment?.();
   const handleShare = () => onShare?.();
   const toggleReactionPicker = () => setShowReactionPicker(!showReactionPicker);
-  const toggleReactionDetails = () =>
-    setShowReactionDetails(!showReactionDetails);
 
   return (
     <div className="px-4 py-3 border-t border-gray-100">
-      {/* Simple Reactions Summary */}
-      {totalReactions > 0 && (
-        <div className="mb-3">
-          <button
-            onClick={toggleReactionDetails}
-            className="flex items-center space-x-2 hover:bg-gray-50 rounded p-2 transition-colors"
-          >
-            {/* Simple emoji display */}
-            <div className="flex space-x-1">
-              {Object.entries(reactions)
-                .filter(([, count]) => count > 0)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 3)
-                .map(([reactionType]) => (
-                  <span key={reactionType} className="text-sm">
-                    {reactionConfig[reactionType]?.emoji}
-                  </span>
-                ))}
-            </div>
-            <span className="text-sm text-gray-600">{totalReactions}</span>
-          </button>
-
-          {/* Simple Reaction Details */}
-          {showReactionDetails && (
-            <div className="mt-2 bg-white border rounded-lg shadow-lg p-3 absolute z-20 min-w-48">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                Reactions
-              </h4>
-              {Object.entries(reactions)
-                .filter(([, count]) => count > 0)
-                .sort(([, a], [, b]) => b - a)
-                .map(([type, count]) => (
-                  <div
-                    key={type}
-                    className="flex items-center justify-between py-1"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span>{reactionConfig[type]?.emoji}</span>
-                      <span className="text-sm text-gray-700">
-                        {reactionConfig[type]?.label}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                      {count}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Simple Action Buttons */}
+      {/* Action Buttons */}
       <div className="flex items-center justify-between">
         {/* Reaction Button */}
         <div className="relative flex-1">
@@ -212,11 +151,10 @@ const PostActions = ({
       </div>
 
       {/* Click outside to close modals */}
-      {(showReactionDetails || showReactionPicker) && (
+      {showReactionPicker && (
         <div
           className="fixed inset-0 z-10"
           onClick={() => {
-            setShowReactionDetails(false);
             setShowReactionPicker(false);
           }}
         />
