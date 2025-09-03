@@ -6,6 +6,7 @@ import PostContent from "./PostContent";
 import CommentSection from "./CommentSection";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import useComments from "../../hooks/useComments";
+import useReactions from "../../hooks/useReactions";
 
 const Post = ({ post, onLike, onShare }) => {
   const [showComments, setShowComments] = useState(false);
@@ -13,8 +14,12 @@ const Post = ({ post, onLike, onShare }) => {
   const [postData, setPostData] = useState(post);
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentsError, setCommentsError] = useState(null);
+  const [loadingReactions, setLoadingReactions] = useState(false);
+  const [reactionsError, setReactionsError] = useState(null);
+
   const { fetchComments, addComment, deleteComment, addReply, error } =
     useComments();
+  const { addReaction, fetchReactions } = useReactions();
 
   // Update postData when post prop changes
   useEffect(() => {
@@ -210,16 +215,177 @@ const Post = ({ post, onLike, onShare }) => {
     }
   };
 
-  // Handle reaction updates
-  const handleReactionUpdate = (reactionData) => {
-    setPostData((prev) => ({
-      ...prev,
-      reactions: reactionData.reactions || prev.reactions,
-      user_reaction: reactionData.user_reaction,
-    }));
+  // Handle reaction click (unified like comment pattern)
+  const handleReactionClick = async (reactionType) => {
+    try {
+      console.log("😊 Attempting to handle reaction for post:", postData.id);
+      console.log("😊 Reaction type:", reactionType);
 
-    if (onLike) {
-      onLike(postData.id, reactionData.userReaction === "like", reactionData);
+      // Immediate optimistic update for better UX
+      const oldUserReaction = postData.user_reaction;
+      const isTogglingSame = oldUserReaction === reactionType;
+
+      setPostData((prev) => {
+        const newReactions = { ...prev.reactions };
+
+        // Remove old reaction if exists
+        if (prev.user_reaction) {
+          newReactions[prev.user_reaction] = Math.max(
+            0,
+            (newReactions[prev.user_reaction] || 0) - 1
+          );
+        }
+
+        // If toggling the same reaction, don't add it back
+        if (!isTogglingSame) {
+          newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
+        }
+
+        return {
+          ...prev,
+          reactions: newReactions,
+          user_reaction: isTogglingSame ? null : reactionType,
+        };
+      });
+
+      setLoadingReactions(true);
+      setReactionsError(null);
+
+      const result = await addReaction(postData.id, reactionType);
+
+      if (result.success) {
+        console.log("😊 Reaction handled successfully:", result.data);
+        console.log("😊 Current postData.reactions:", postData.reactions);
+        console.log("😊 Old user reaction:", oldUserReaction);
+
+        // Handle API response based on action type
+        if (result.data) {
+          const { action, reaction_type } = result.data;
+          console.log(
+            "😊 API action:",
+            action,
+            "reaction_type:",
+            reaction_type
+          );
+
+          setPostData((prev) => {
+            // Reset to original state first
+            const originalReactions = { ...postData.reactions };
+            console.log(
+              "😊 Original reactions before update:",
+              originalReactions
+            );
+
+            // Remove old user reaction from original state
+            if (oldUserReaction) {
+              originalReactions[oldUserReaction] = Math.max(
+                0,
+                (originalReactions[oldUserReaction] || 0) - 1
+              );
+              console.log("😊 After removing old reaction:", originalReactions);
+            }
+
+            if (action === "added") {
+              // Reaction was added
+              originalReactions[reaction_type] =
+                (originalReactions[reaction_type] || 0) + 1;
+              console.log("😊 After adding new reaction:", originalReactions);
+              return {
+                ...prev,
+                reactions: originalReactions,
+                user_reaction: reaction_type,
+              };
+            } else if (action === "removed") {
+              // Reaction was removed (toggle off)
+              console.log(
+                "😊 Reaction removed, final reactions:",
+                originalReactions
+              );
+              return {
+                ...prev,
+                reactions: originalReactions,
+                user_reaction: null,
+              };
+            }
+
+            // If no action specified, keep current state
+            return prev;
+          });
+        }
+
+        // Call the callback if provided
+        if (onLike && reactionType === "like") {
+          onLike(postData.id, result.data.action === "added", result.data);
+        }
+
+        return result.data;
+      } else {
+        // Revert optimistic update on failure
+        setPostData((prev) => {
+          const newReactions = { ...prev.reactions };
+
+          // Revert the reaction changes
+          if (isTogglingSame) {
+            // We were removing, so add it back
+            newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
+          } else {
+            // We were adding, so remove it
+            newReactions[reactionType] = Math.max(
+              0,
+              (newReactions[reactionType] || 0) - 1
+            );
+
+            // Restore old reaction if exists
+            if (oldUserReaction) {
+              newReactions[oldUserReaction] =
+                (newReactions[oldUserReaction] || 0) + 1;
+            }
+          }
+
+          return {
+            ...prev,
+            reactions: newReactions,
+            user_reaction: oldUserReaction,
+          };
+        });
+
+        throw new Error(result.error || "Failed to handle reaction");
+      }
+    } catch (error) {
+      console.error("❌ Failed to handle reaction:", error);
+      setReactionsError(error.message || "Failed to handle reaction");
+      throw error;
+    } finally {
+      setLoadingReactions(false);
+    }
+  };
+
+  // Handle fetching reactions (similar to comment pattern)
+  const handleFetchReactions = async () => {
+    try {
+      console.log("🔄 Fetching reactions for post:", postData.id);
+
+      setLoadingReactions(true);
+      setReactionsError(null);
+
+      const reactionsData = await fetchReactions(postData.id);
+      console.log("📦 Received reactions data:", reactionsData);
+
+      if (reactionsData) {
+        setPostData((prev) => ({
+          ...prev,
+          reactions: reactionsData.reactions || prev.reactions,
+          user_reaction: reactionsData.user_reaction || prev.user_reaction,
+        }));
+      }
+
+      return reactionsData;
+    } catch (error) {
+      console.error("❌ Failed to fetch reactions:", error);
+      setReactionsError(error.message || "Failed to fetch reactions");
+      throw error;
+    } finally {
+      setLoadingReactions(false);
     }
   };
 
@@ -256,70 +422,23 @@ const Post = ({ post, onLike, onShare }) => {
         />
       )}
 
-      {/* Like and Comment Counts */}
-      {((postData.reactions &&
-        Object.values(postData.reactions).some((count) => count > 0)) ||
-        postData.comments_count > 0) && (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            {/* Reaction count on the left */}
-            {postData.reactions &&
-              Object.values(postData.reactions).some((count) => count > 0) && (
-                <button className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg px-2 py-1 -mx-2 transition-colors group">
-                  <div className="flex items-center -space-x-1">
-                    {postData.reactions.like > 0 && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-30">
-                        👍
-                      </div>
-                    )}
-                    {postData.reactions.love > 0 && (
-                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-20">
-                        ❤️
-                      </div>
-                    )}
-                    {postData.reactions.haha > 0 && (
-                      <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-xs border-2 border-white z-10">
-                        😂
-                      </div>
-                    )}
-                    {postData.reactions.wow > 0 && (
-                      <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
-                        😮
-                      </div>
-                    )}
-                    {postData.reactions.sad > 0 && (
-                      <div className="w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
-                        😢
-                      </div>
-                    )}
-                    {postData.reactions.angry > 0 && (
-                      <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs border-2 border-white">
-                        😠
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-600 group-hover:underline font-medium">
-                    {Object.values(postData.reactions).reduce(
-                      (sum, count) => sum + count,
-                      0
-                    )}
-                  </span>
-                </button>
-              )}
-
-            {/* Comment count on the right */}
-            {postData.comments_count > 0 && (
-              <button
-                onClick={handleCommentClick}
-                className="text-sm text-gray-600 hover:underline transition-colors font-medium"
-              >
-                {postData.comments_count}{" "}
-                {postData.comments_count === 1 ? "comment" : "comments"}
-              </button>
-            )}
+      {/* Like and Comment Counts - Always show */}
+      <div className="px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          {/* Total Reaction count on the left */}
+          <div className="text-sm text-gray-600 hover:underline transition-colors font-medium">
+            Total Reaction: {parseInt(postData.reactions_count) || 0}
           </div>
+
+          {/* Total Comment count on the right */}
+          <button
+            onClick={handleCommentClick}
+            className="text-sm text-gray-600 hover:underline transition-colors font-medium"
+          >
+            Total Comments: {parseInt(postData.comments_count) || 0}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Post Actions - Like, Comment, Share buttons with reactions */}
       <PostActions
@@ -328,7 +447,10 @@ const Post = ({ post, onLike, onShare }) => {
         currentUserReaction={postData.user_reaction || null}
         onComment={handleCommentClick}
         onShare={() => onShare && onShare(postData.id)}
-        onReactionUpdate={handleReactionUpdate}
+        onReactionClick={handleReactionClick}
+        onFetchReactions={handleFetchReactions}
+        loadingReactions={loadingReactions}
+        reactionsError={reactionsError}
       />
 
       {/* Comment Section */}

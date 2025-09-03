@@ -32,6 +32,15 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Don't log expected 400 errors for reaction API fallback mechanism
+    if (
+      error.response?.status === 400 &&
+      error.config?.url?.includes("/react/")
+    ) {
+      // This is likely a fallback case for reaction payload format
+      return Promise.reject(error);
+    }
+
     console.error(`[API] ${error.response?.status || "Network"} error:`, error);
 
     // Handle common HTTP errors

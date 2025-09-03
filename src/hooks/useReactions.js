@@ -93,15 +93,19 @@ const useReactions = () => {
         response = await apiClient.post(`/posts/${postId}/react/`, payload, {
           headers,
         });
-      } catch {
-        // If reaction_type fails, try with just 'reaction'
-        console.log(`[useReactions] reaction_type failed, trying 'reaction'`);
-        payload = { reaction: reactionType };
-        console.log(`[useReactions] Fallback payload:`, payload);
+      } catch (firstError) {
+        // If reaction_type fails (expected 400 error), try with just 'reaction'
+        if (firstError.response?.status === 400) {
+          console.log(`[useReactions] Using fallback payload format`);
+          payload = { reaction: reactionType };
 
-        response = await apiClient.post(`/posts/${postId}/react/`, payload, {
-          headers,
-        });
+          response = await apiClient.post(`/posts/${postId}/react/`, payload, {
+            headers,
+          });
+        } else {
+          // Re-throw unexpected errors
+          throw firstError;
+        }
       }
 
       console.log(`[useReactions] ✅ Add reaction success:`, response.data);
