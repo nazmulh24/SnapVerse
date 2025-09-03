@@ -1,4 +1,5 @@
 import React from "react";
+import UserProfileLink from "../shared/UserProfileLink";
 
 export default function UserList({
   users,
@@ -18,17 +19,29 @@ export default function UserList({
             key={user.id}
             className="flex items-center gap-5 py-5 group rounded-xl transition-colors"
           >
-            <div className="relative">
+            {/* Clickable Avatar */}
+            <UserProfileLink
+              username={user.username}
+              asDiv={true}
+              className="relative hover:opacity-80 transition-opacity"
+            >
               <img
                 src={user.avatar}
                 alt={user.name}
                 className="w-14 h-14 rounded-full object-cover border-2 border-purple-100 shadow-sm group-hover:border-purple-400 transition-all"
               />
               <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
-            </div>
+            </UserProfileLink>
+
             <div className="flex-1 min-w-0">
+              {/* Clickable Name */}
               <div className="font-semibold text-gray-900 text-lg truncate">
-                {user.name}
+                <UserProfileLink
+                  username={user.username}
+                  className="hover:text-blue-600 transition-colors text-left"
+                >
+                  {user.name}
+                </UserProfileLink>
               </div>
               <div className="text-sm text-gray-500 truncate">
                 {user.username}

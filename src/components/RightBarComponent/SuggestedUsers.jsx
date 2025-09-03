@@ -1,6 +1,7 @@
 import React from "react";
 import { MdVerified } from "react-icons/md";
 import useSuggestedUsers from "../../hooks/useSuggestedUsers";
+import UserProfileLink from "../shared/UserProfileLink";
 
 const SuggestedUsers = () => {
   const {
@@ -121,8 +122,12 @@ const SuggestedUsers = () => {
               }`}
             >
               <div className="flex items-center space-x-3">
-                {/* Enhanced avatar with ring */}
-                <div className="relative">
+                {/* Enhanced avatar with ring - Clickable */}
+                <UserProfileLink
+                  username={user.username}
+                  asDiv={true}
+                  className="relative hover:opacity-80 transition-opacity"
+                >
                   <img
                     src={user.avatar}
                     alt={user.fullName}
@@ -138,13 +143,17 @@ const SuggestedUsers = () => {
                       <MdVerified className="text-white text-xs" />
                     </div>
                   )}
-                </div>
+                </UserProfileLink>
 
                 <div className="flex-1">
                   <div className="flex items-center">
-                    <p className="font-semibold text-gray-900 text-sm">
+                    {/* Clickable username */}
+                    <UserProfileLink
+                      username={user.username}
+                      className="font-semibold text-gray-900 text-sm hover:text-blue-600 transition-colors text-left"
+                    >
                       {user.fullName}
-                    </p>
+                    </UserProfileLink>
                   </div>
                   <div className="flex items-center space-x-1 mt-0.5">
                     {user.mutualFriends > 15 && (

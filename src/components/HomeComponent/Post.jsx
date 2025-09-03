@@ -1,10 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import PostHeader from "./PostHeader";
 import PostImage from "./PostImage";
 import PostActions from "./PostActions";
 import PostContent from "./PostContent";
+import CommentSection from "./CommentSection";
+import ErrorBoundary from "../shared/ErrorBoundary";
+import useComments from "../../hooks/useComments";
 
-const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
+const Post = ({ post, onLike, onShare }) => {
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const { addComment, deleteComment, fetchComments, addReply } = useComments();
   // Format time ago from created_at
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -96,6 +102,57 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
     }
   };
 
+  // Handle comment button click
+  const handleCommentClick = async () => {
+    if (!showComments) {
+      // Load comments when opening comment section
+      try {
+        const commentsData = await fetchComments(post.id);
+        console.log("Fetched comments data:", commentsData);
+        setComments(commentsData.results || commentsData || []);
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+        setComments([]);
+      }
+    }
+    setShowComments(!showComments);
+  };
+
+  // Handle adding new comment
+  const handleAddComment = async (postId, content) => {
+    try {
+      const newComment = await addComment(postId, content);
+      setComments((prev) => [...prev, newComment]);
+      return newComment;
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      throw error;
+    }
+  };
+
+  // Handle deleting comment
+  const handleDeleteComment = async (postId, commentId) => {
+    try {
+      await deleteComment(postId, commentId);
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      throw error;
+    }
+  };
+
+  // Handle adding a reply to comment
+  const handleAddReply = async (parentCommentId, content) => {
+    try {
+      const newReply = await addReply(post.id, parentCommentId, content);
+      setComments((prev) => [...prev, newReply]);
+      return newReply;
+    } catch (error) {
+      console.error("Failed to add reply:", error);
+      throw error;
+    }
+  };
+
   const formattedUser = formatUserData(post);
   const timeAgo = post.created_at
     ? formatTimeAgo(post.created_at)
@@ -134,7 +191,7 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
         postId={post.id}
         initialReactions={post.reactions || {}}
         currentUserReaction={post.user_reaction || null}
-        onComment={() => onComment && onComment(post.id)}
+        onComment={handleCommentClick}
         onShare={() => onShare && onShare(post.id)}
         onReactionUpdate={(reactionData) => {
           // Update post data with new reaction information
@@ -150,9 +207,23 @@ const Post = ({ post, onLike, onComment, onShare, onViewComments }) => {
         username={formattedUser.username}
         full_name={formattedUser.full_name}
         commentsCount={parseInt(post.comments_count) || 0}
-        onViewComments={() => onViewComments && onViewComments(post.id)}
+        onViewComments={handleCommentClick}
         showComments={true}
       />
+
+      {/* Comment Section */}
+      <ErrorBoundary>
+        <CommentSection
+          postId={post.id}
+          isVisible={showComments}
+          onClose={() => setShowComments(false)}
+          initialComments={comments}
+          commentsCount={parseInt(post.comments_count) || 0}
+          onAddComment={handleAddComment}
+          onDeleteComment={handleDeleteComment}
+          onAddReply={handleAddReply}
+        />
+      </ErrorBoundary>
     </div>
   );
 };

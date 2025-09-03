@@ -59,13 +59,14 @@ const PostContent = ({
       )}
 
       {/* View all comments link */}
-      {commentsCount > 2 && (
+      {commentsCount > 0 && (
         <button
           onClick={handleViewComments}
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200"
         >
-          View all {commentsCount}{" "}
-          {commentsCount === 1 ? "comment" : "comments"}
+          {commentsCount === 1
+            ? "View 1 comment"
+            : `View all ${commentsCount} comments`}
         </button>
       )}
     </div>
