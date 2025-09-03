@@ -6,8 +6,26 @@ const useReactions = () => {
   const [error, setError] = useState(null);
 
   const getAuthHeaders = () => {
+    // Try both token storage methods
     const tokensRaw = localStorage.getItem("authTokens");
-    const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
+    const directToken = localStorage.getItem("access_token");
+
+    let access = null;
+
+    if (tokensRaw) {
+      try {
+        access = JSON.parse(tokensRaw)?.access;
+      } catch {
+        console.warn("[useReactions] Failed to parse authTokens");
+      }
+    }
+
+    // Fallback to direct token
+    if (!access && directToken) {
+      access = directToken;
+    }
+
+    console.log("[useReactions] Token found:", !!access);
     return access ? { Authorization: `JWT ${access}` } : {};
   };
 
@@ -16,22 +34,37 @@ const useReactions = () => {
     setLoading(true);
     setError(null);
 
+    console.log(`[useReactions] Fetching reactions for post ${postId}`);
+
     try {
       const headers = getAuthHeaders();
+      console.log(`[useReactions] Request headers:`, headers);
+
       const response = await apiClient.get(`/posts/${postId}/reactions/`, {
         headers,
       });
+
+      console.log(`[useReactions] ✅ Fetch reactions success:`, response.data);
 
       return {
         success: true,
         data: response.data,
       };
     } catch (err) {
-      console.error("[useReactions] Error fetching reactions:", err);
-      setError(err.response?.data?.message || "Failed to fetch reactions");
+      console.error("[useReactions] ❌ Error fetching reactions:", err);
+      console.error("[useReactions] Error response:", err.response?.data);
+      console.error("[useReactions] Error status:", err.response?.status);
+
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch reactions";
+
+      setError(errorMessage);
       return {
         success: false,
-        error: err.response?.data?.message || "Failed to fetch reactions",
+        error: errorMessage,
       };
     } finally {
       setLoading(false);
@@ -43,24 +76,65 @@ const useReactions = () => {
     setLoading(true);
     setError(null);
 
+    console.log(
+      `[useReactions] Adding reaction: ${reactionType} to post ${postId}`
+    );
+
     try {
       const headers = getAuthHeaders();
-      const response = await apiClient.post(
-        `/posts/${postId}/react/`,
-        { reaction_type: reactionType },
-        { headers }
-      );
+      console.log(`[useReactions] Request headers:`, headers);
+
+      // Try primary payload format first
+      let payload = { reaction_type: reactionType };
+      console.log(`[useReactions] Request payload:`, payload);
+
+      let response;
+      try {
+        response = await apiClient.post(`/posts/${postId}/react/`, payload, {
+          headers,
+        });
+      } catch {
+        // If reaction_type fails, try with just 'reaction'
+        console.log(`[useReactions] reaction_type failed, trying 'reaction'`);
+        payload = { reaction: reactionType };
+        console.log(`[useReactions] Fallback payload:`, payload);
+
+        response = await apiClient.post(`/posts/${postId}/react/`, payload, {
+          headers,
+        });
+      }
+
+      console.log(`[useReactions] ✅ Add reaction success:`, response.data);
 
       return {
         success: true,
         data: response.data,
       };
     } catch (err) {
-      console.error("[useReactions] Error adding reaction:", err);
-      setError(err.response?.data?.message || "Failed to add reaction");
+      console.error("[useReactions] ❌ Error adding reaction:", err);
+      console.error("[useReactions] Error response:", err.response?.data);
+      console.error("[useReactions] Error status:", err.response?.status);
+      console.error("[useReactions] Full error response:", err.response);
+      console.error("[useReactions] Request config:", err.config);
+
+      // Log the exact validation errors if available
+      if (err.response?.data) {
+        console.error(
+          "[useReactions] Detailed errors:",
+          JSON.stringify(err.response.data, null, 2)
+        );
+      }
+
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to add reaction";
+
+      setError(errorMessage);
       return {
         success: false,
-        error: err.response?.data?.message || "Failed to add reaction",
+        error: errorMessage,
       };
     } finally {
       setLoading(false);
@@ -72,22 +146,37 @@ const useReactions = () => {
     setLoading(true);
     setError(null);
 
+    console.log(`[useReactions] Removing reaction from post ${postId}`);
+
     try {
       const headers = getAuthHeaders();
+      console.log(`[useReactions] Request headers:`, headers);
+
       const response = await apiClient.delete(`/posts/${postId}/react/`, {
         headers,
       });
+
+      console.log(`[useReactions] ✅ Remove reaction success:`, response.data);
 
       return {
         success: true,
         data: response.data,
       };
     } catch (err) {
-      console.error("[useReactions] Error removing reaction:", err);
-      setError(err.response?.data?.message || "Failed to remove reaction");
+      console.error("[useReactions] ❌ Error removing reaction:", err);
+      console.error("[useReactions] Error response:", err.response?.data);
+      console.error("[useReactions] Error status:", err.response?.status);
+
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to remove reaction";
+
+      setError(errorMessage);
       return {
         success: false,
-        error: err.response?.data?.message || "Failed to remove reaction",
+        error: errorMessage,
       };
     } finally {
       setLoading(false);

@@ -34,59 +34,124 @@ const PostActions = ({
   }, [currentUserReaction, initialReactions]);
 
   const handleReactionSelect = async (reactionType) => {
-    if (loading) return;
+    if (loading) {
+      console.log(
+        "[PostActions] Reaction request already in progress, ignoring"
+      );
+      return;
+    }
+
+    console.log(
+      `[PostActions] Handling reaction: ${reactionType} for post ${postId}`
+    );
+    console.log(`[PostActions] Current user reaction: ${userReaction}`);
+    console.log(`[PostActions] Current reactions:`, reactions);
 
     const oldReaction = userReaction;
     const oldReactions = { ...reactions };
 
-    // Simple optimistic update
+    // Optimistic update
     let newReactions = { ...reactions };
 
+    // Remove old reaction count
     if (oldReaction) {
       newReactions[oldReaction] = Math.max(
         0,
         (newReactions[oldReaction] || 0) - 1
       );
+      console.log(`[PostActions] Removed old reaction: ${oldReaction}`);
     }
 
+    // Handle new reaction
     if (oldReaction !== reactionType) {
+      // Adding a new/different reaction
       newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
       setUserReaction(reactionType);
+      console.log(`[PostActions] Added new reaction: ${reactionType}`);
     } else {
+      // Removing the same reaction (toggle off)
       setUserReaction(null);
+      console.log(`[PostActions] Toggled off reaction: ${reactionType}`);
     }
 
     setReactions(newReactions);
     setShowReactionPicker(false);
 
     try {
-      const result =
-        oldReaction === reactionType
-          ? await removeReaction(postId)
-          : await addReaction(postId, reactionType);
+      let result;
 
-      if (result.success && result.data.reactions) {
-        setReactions(result.data.reactions);
-        if (result.data.user_reaction !== undefined) {
+      if (oldReaction === reactionType) {
+        // Remove reaction (toggle off)
+        console.log(`[PostActions] API call: Removing reaction`);
+        result = await removeReaction(postId);
+      } else {
+        // Add/change reaction
+        console.log(`[PostActions] API call: Adding reaction ${reactionType}`);
+        result = await addReaction(postId, reactionType);
+      }
+
+      console.log(`[PostActions] API result:`, result);
+
+      if (result.success) {
+        if (result.data && result.data.reactions) {
+          console.log(
+            `[PostActions] Updating reactions from API:`,
+            result.data.reactions
+          );
+          setReactions(result.data.reactions);
+        }
+
+        if (result.data && result.data.user_reaction !== undefined) {
+          console.log(
+            `[PostActions] Updating user reaction from API:`,
+            result.data.user_reaction
+          );
           setUserReaction(result.data.user_reaction);
         }
-        onReactionUpdate?.(result.data);
+
+        // Notify parent component
+        if (onReactionUpdate && result.data) {
+          onReactionUpdate(result.data);
+        }
       } else {
-        // Revert on error
+        // Revert optimistic update on API failure
+        console.log(`[PostActions] API failed, reverting optimistic update`);
         setUserReaction(oldReaction);
         setReactions(oldReactions);
+        console.error("[PostActions] Reaction API error:", result.error);
       }
     } catch (error) {
-      // Revert on error
+      // Revert optimistic update on error
+      console.log(
+        `[PostActions] Exception occurred, reverting optimistic update`
+      );
       setUserReaction(oldReaction);
       setReactions(oldReactions);
-      console.error("Failed to update reaction:", error);
+      console.error("[PostActions] Failed to update reaction:", error);
     }
   };
 
   const handleComment = () => onComment?.();
   const handleShare = () => onShare?.();
-  const toggleReactionPicker = () => setShowReactionPicker(!showReactionPicker);
+
+  const toggleReactionPicker = () => {
+    console.log(
+      `[PostActions] Toggling reaction picker: ${!showReactionPicker}`
+    );
+    setShowReactionPicker(!showReactionPicker);
+  };
+
+  const showReactionPickerOnHover = () => {
+    if (!showReactionPicker) {
+      console.log(`[PostActions] Showing reaction picker on hover`);
+      setShowReactionPicker(true);
+    }
+  };
+
+  const hideReactionPicker = () => {
+    console.log(`[PostActions] Hiding reaction picker`);
+    setShowReactionPicker(false);
+  };
 
   return (
     <div className="px-4 py-3 border-t border-gray-100">
@@ -96,14 +161,12 @@ const PostActions = ({
         <div className="relative flex-1">
           <button
             onClick={toggleReactionPicker}
-            onMouseEnter={() =>
-              !showReactionPicker && setShowReactionPicker(true)
-            }
+            onMouseEnter={showReactionPickerOnHover}
             className={`flex items-center justify-center space-x-2 w-full py-2 px-3 rounded-lg transition-colors hover:bg-gray-50 ${
               userReaction
                 ? reactionConfig[userReaction]?.color
                 : "text-gray-600"
-            }`}
+            } ${showReactionPicker ? "bg-gray-50" : ""}`}
           >
             {userReaction ? (
               <>
@@ -125,7 +188,7 @@ const PostActions = ({
           {showReactionPicker && (
             <ReactionPicker
               onReactionSelect={handleReactionSelect}
-              onClose={() => setShowReactionPicker(false)}
+              onClose={hideReactionPicker}
               currentReaction={userReaction}
             />
           )}
@@ -150,13 +213,11 @@ const PostActions = ({
         </button>
       </div>
 
-      {/* Click outside to close modals */}
+      {/* Click outside to close reaction picker */}
       {showReactionPicker && (
         <div
-          className="fixed inset-0 z-10"
-          onClick={() => {
-            setShowReactionPicker(false);
-          }}
+          className="fixed inset-0 z-10 bg-transparent"
+          onClick={hideReactionPicker}
         />
       )}
     </div>

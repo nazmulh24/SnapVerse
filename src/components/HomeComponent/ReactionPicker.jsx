@@ -63,8 +63,17 @@ const ReactionPicker = ({ onReactionSelect, onClose, currentReaction }) => {
   }, [onClose]);
 
   const handleReactionClick = (reactionType) => {
+    console.log(`[ReactionPicker] Reaction selected: ${reactionType}`);
     onReactionSelect(reactionType);
     onClose();
+  };
+
+  const handleMouseEnter = (reactionType) => {
+    setHoveredReaction(reactionType);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredReaction(null);
   };
 
   return (
@@ -76,8 +85,8 @@ const ReactionPicker = ({ onReactionSelect, onClose, currentReaction }) => {
         <button
           key={reaction.type}
           onClick={() => handleReactionClick(reaction.type)}
-          onMouseEnter={() => setHoveredReaction(reaction.type)}
-          onMouseLeave={() => setHoveredReaction(null)}
+          onMouseEnter={() => handleMouseEnter(reaction.type)}
+          onMouseLeave={handleMouseLeave}
           className={`w-10 h-10 rounded-full transition-all hover:scale-110 flex items-center justify-center ${
             reaction.color
           } ${currentReaction === reaction.type ? "ring-2 ring-blue-400" : ""}`}
