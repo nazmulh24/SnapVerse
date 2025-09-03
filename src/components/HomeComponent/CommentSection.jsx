@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { X, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
-import useComments from "../../hooks/useComments";
 
 const CommentSection = ({
   postId,
@@ -16,7 +15,6 @@ const CommentSection = ({
 }) => {
   const [comments, setComments] = useState(initialComments);
   const [showAllComments, setShowAllComments] = useState(false);
-  const { likeComment } = useComments();
 
   useEffect(() => {
     setComments(initialComments);
@@ -41,25 +39,6 @@ const CommentSection = ({
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     } catch (error) {
       console.error("Failed to delete comment:", error);
-    }
-  };
-
-  const handleLikeComment = async (commentId) => {
-    try {
-      const result = await likeComment(postId, commentId);
-      setComments((prev) =>
-        prev.map((comment) =>
-          comment.id === commentId
-            ? {
-                ...comment,
-                is_liked: result.is_liked,
-                likes_count: result.likes_count,
-              }
-            : comment
-        )
-      );
-    } catch (error) {
-      console.error("Failed to like comment:", error);
     }
   };
 
@@ -120,7 +99,6 @@ const CommentSection = ({
               <CommentItem
                 key={comment.id}
                 comment={comment}
-                onLike={handleLikeComment}
                 onReply={handleAddReply}
                 onDelete={handleDeleteComment}
                 currentUserId={999} // Replace with actual current user ID

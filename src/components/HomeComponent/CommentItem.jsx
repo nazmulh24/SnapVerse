@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Heart, MessageCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { MessageCircle, MoreHorizontal, Trash2 } from "lucide-react";
 
 const CommentItem = ({
   comment,
-  onLike,
   onReply,
   onDelete,
   currentUserId = 999,
@@ -49,10 +48,6 @@ const CommentItem = ({
     } catch (error) {
       console.error("Failed to add reply:", error);
     }
-  };
-
-  const handleLike = () => {
-    onLike(comment.id);
   };
 
   const handleDelete = () => {
@@ -112,17 +107,6 @@ const CommentItem = ({
 
         {/* Action buttons */}
         <div className="flex items-center space-x-4 mt-1 ml-3">
-          <button
-            onClick={handleLike}
-            className={`text-xs font-semibold transition-colors ${
-              comment.is_liked
-                ? "text-red-500"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Like
-          </button>
-
           {!isReply && (
             <button
               onClick={() => setShowReplyForm(!showReplyForm)}
@@ -135,21 +119,6 @@ const CommentItem = ({
           <span className="text-xs text-gray-500">
             {formatTimeAgo(comment.created_at)}
           </span>
-
-          {comment.likes_count > 0 && (
-            <div className="flex items-center space-x-1">
-              <Heart
-                className={`w-3 h-3 ${
-                  comment.is_liked
-                    ? "text-red-500 fill-current"
-                    : "text-gray-400"
-                }`}
-              />
-              <span className="text-xs text-gray-500">
-                {comment.likes_count}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Reply form */}
@@ -210,7 +179,7 @@ const CommentItem = ({
                 <CommentItem
                   key={reply.id}
                   comment={reply}
-                  onLike={onLike}
+                  onReply={onReply}
                   onDelete={onDelete}
                   currentUserId={currentUserId}
                   isReply={true}
