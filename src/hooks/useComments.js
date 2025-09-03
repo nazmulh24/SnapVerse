@@ -99,18 +99,57 @@ const useComments = () => {
     setError(null);
 
     try {
+      console.log("📝 Adding comment to post ID:", postId);
+      console.log("📝 Comment content:", content);
+
+      const headers = getAuthHeaders();
+      console.log("📨 Request headers:", headers);
+
+      // Prepare the data payload - Django API expects 'text' field
+      const payload = { text: content };
+      console.log("📦 Request payload:", payload);
+
       const response = await apiClient.post(
         `posts/${postId}/comments/`,
-        { content },
-        {
-          headers: getAuthHeaders(),
-        }
+        payload,
+        { headers }
       );
 
-      return response.data;
+      console.log("✅ Add comment API response:", response);
+      console.log("📊 Add comment response data:", response.data);
+      console.log("📝 Add comment response type:", typeof response.data);
+
+      // Create a standardized comment object that works with our UI
+      let newComment = response.data;
+
+      // If the API returns a string for the user field, convert it to our expected object format
+      if (
+        typeof newComment.user === "string" ||
+        typeof newComment.author === "string"
+      ) {
+        const userName = newComment.user || newComment.author || "Unknown User";
+        newComment = {
+          ...newComment,
+          user: {
+            id: 0,
+            full_name: userName,
+            username: userName.toLowerCase().replace(/\s+/g, "_"),
+            profile_picture: null,
+          },
+        };
+      }
+
+      console.log("🆕 Processed new comment:", newComment);
+      return newComment;
     } catch (err) {
-      setError(err.message || "Failed to add comment");
-      console.error("Failed to add comment:", err);
+      console.error("❌ Failed to add comment:", err);
+      console.error("❌ Error response:", err.response?.data);
+      console.error("❌ Error status:", err.response?.status);
+      console.error("❌ Error message:", err.message);
+
+      setError(
+        err.response?.data?.detail || err.message || "Failed to add comment"
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -144,18 +183,60 @@ const useComments = () => {
     setError(null);
 
     try {
+      console.log("💬 Adding reply to comment ID:", parentCommentId);
+      console.log("💬 Post ID:", postId);
+      console.log("💬 Reply content:", content);
+
+      const headers = getAuthHeaders();
+      console.log("📨 Request headers:", headers);
+
+      // For replies, use the same endpoint but include parent_comment field
+      const payload = {
+        text: content,
+        parent_comment: parentCommentId,
+      };
+      console.log("📦 Reply payload:", payload);
+
       const response = await apiClient.post(
-        `posts/${postId}/comments/${parentCommentId}/replies/`,
-        { content },
-        {
-          headers: getAuthHeaders(),
-        }
+        `posts/${postId}/comments/`,
+        payload,
+        { headers }
       );
 
-      return response.data;
+      console.log("✅ Add reply API response:", response);
+      console.log("📊 Add reply response data:", response.data);
+
+      // Create a standardized reply object
+      let newReply = response.data;
+
+      // If the API returns a string for the user field, convert it to our expected object format
+      if (
+        typeof newReply.user === "string" ||
+        typeof newReply.author === "string"
+      ) {
+        const userName = newReply.user || newReply.author || "Unknown User";
+        newReply = {
+          ...newReply,
+          user: {
+            id: 0,
+            full_name: userName,
+            username: userName.toLowerCase().replace(/\s+/g, "_"),
+            profile_picture: null,
+          },
+        };
+      }
+
+      console.log("🆕 Processed new reply:", newReply);
+      return newReply;
     } catch (err) {
-      setError(err.message || "Failed to add reply");
-      console.error("Failed to add reply:", err);
+      console.error("❌ Failed to add reply:", err);
+      console.error("❌ Error response:", err.response?.data);
+      console.error("❌ Error status:", err.response?.status);
+      console.error("❌ Error message:", err.message);
+
+      setError(
+        err.response?.data?.detail || err.message || "Failed to add reply"
+      );
       throw err;
     } finally {
       setLoading(false);

@@ -84,10 +84,12 @@ const CommentSection = ({
 
   const handleAddComment = async (content) => {
     try {
-      const newComment = await onAddComment(postId, content);
+      console.log("📝 CommentSection - Adding comment:", content);
+      const newComment = await onAddComment(content);
+      console.log("📝 CommentSection - New comment received:", newComment);
       setComments((prev) => [newComment, ...prev]);
     } catch (error) {
-      console.error("Failed to add comment:", error);
+      console.error("❌ CommentSection - Failed to add comment:", error);
     }
   };
 

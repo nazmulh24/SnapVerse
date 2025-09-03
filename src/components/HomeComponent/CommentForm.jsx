@@ -18,12 +18,14 @@ const CommentForm = ({
     e.preventDefault();
     if (!comment.trim() || isSubmitting) return;
 
+    console.log("📝 CommentForm - Submitting comment:", comment.trim());
     setIsSubmitting(true);
     try {
       await onSubmit(comment.trim());
+      console.log("✅ CommentForm - Comment submitted successfully");
       setComment("");
     } catch (error) {
-      console.error("Failed to submit comment:", error);
+      console.error("❌ CommentForm - Failed to submit comment:", error);
     } finally {
       setIsSubmitting(false);
     }

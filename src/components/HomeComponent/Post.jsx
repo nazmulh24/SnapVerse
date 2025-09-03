@@ -144,9 +144,15 @@ const Post = ({ post, onLike, onShare }) => {
   };
 
   // Handle adding new comment
-  const handleAddComment = async (postId, content) => {
+  const handleAddComment = async (content) => {
     try {
-      const newComment = await addComment(postId, content);
+      console.log("💬 Attempting to add comment to post:", postData.id);
+      console.log("💬 Comment content:", content);
+
+      const newComment = await addComment(postData.id, content);
+      console.log("💬 New comment created:", newComment);
+
+      // Update the comments list with the new comment
       setComments((prev) => [newComment, ...prev]);
 
       // Update post data to reflect new comment count
@@ -157,7 +163,7 @@ const Post = ({ post, onLike, onShare }) => {
 
       return newComment;
     } catch (error) {
-      console.error("Failed to add comment:", error);
+      console.error("❌ Failed to add comment:", error);
       throw error;
     }
   };
