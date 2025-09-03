@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
@@ -20,18 +21,66 @@ const CommentSection = ({
   onDeleteComment,
   onAddReply,
   loading = false,
+  error = null,
 }) => {
   const [comments, setComments] = useState(initialComments);
   const [showAllComments, setShowAllComments] = useState(false);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
+    console.log(
+      "💬 CommentSection - initialComments changed:",
+      initialComments
+    );
+    console.log(
+      "💬 CommentSection - initialComments type:",
+      typeof initialComments
+    );
+    console.log(
+      "💬 CommentSection - initialComments length:",
+      initialComments?.length
+    );
     setComments(initialComments);
   }, [initialComments]);
 
   // Show only first 3 comments by default
   const displayedComments = showAllComments ? comments : comments.slice(0, 3);
   const hasMoreComments = comments.length > 3;
+
+  console.log("📊 CommentSection render state:");
+  console.log("  - comments:", comments);
+  console.log("  - comments.length:", comments.length);
+  console.log("  - displayedComments:", displayedComments);
+  console.log("  - showAllComments:", showAllComments);
+  console.log("  - hasMoreComments:", hasMoreComments);
+  console.log("  - loading:", loading);
+  console.log("  - isVisible:", isVisible);
+
+  // Enhanced debug for comment structure
+  if (comments && comments.length > 0) {
+    console.log("🔍 CommentSection - First comment full object:", comments[0]);
+    console.log(
+      "🔍 CommentSection - First comment keys:",
+      Object.keys(comments[0])
+    );
+    const firstComment = comments[0];
+    console.log(
+      "🔍 CommentSection - First comment user field:",
+      firstComment.user
+    );
+    console.log(
+      "🔍 CommentSection - First comment author field:",
+      firstComment.author
+    );
+    console.log(
+      "🔍 CommentSection - First comment content field:",
+      firstComment.content
+    );
+    console.log(
+      "🔍 CommentSection - First comment text field:",
+      firstComment.text
+    );
+  }
 
   const handleAddComment = async (content) => {
     try {
@@ -99,6 +148,14 @@ const CommentSection = ({
             <Loader2 className="w-6 h-6 text-gray-400 mx-auto mb-3 animate-spin" />
             <p className="text-gray-500 text-sm">Loading comments...</p>
           </div>
+        ) : error ? (
+          <div className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-3" />
+            <p className="text-red-500 text-sm font-medium">
+              Failed to load comments
+            </p>
+            <p className="text-gray-400 text-xs mt-1">{error}</p>
+          </div>
         ) : comments.length === 0 ? (
           <div className="p-6 text-center">
             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -109,15 +166,18 @@ const CommentSection = ({
           </div>
         ) : (
           <div className="p-3">
-            {displayedComments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                onReply={handleAddReply}
-                onDelete={handleDeleteComment}
-                currentUserId={user?.id || null}
-              />
-            ))}
+            {displayedComments.map((comment, index) => {
+              console.log(`🗨️ Rendering comment ${index}:`, comment);
+              return (
+                <CommentItem
+                  key={comment.id || index}
+                  comment={comment}
+                  onReply={handleAddReply}
+                  onDelete={handleDeleteComment}
+                  currentUserId={user?.id || null}
+                />
+              );
+            })}
 
             {/* Show more/less comments button */}
             {hasMoreComments && (

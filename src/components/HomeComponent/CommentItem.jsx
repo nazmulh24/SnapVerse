@@ -17,6 +17,106 @@ const CommentItem = ({
 
   const { user } = useContext(AuthContext);
 
+  // Early return if comment is null or undefined
+  if (!comment) {
+    console.error("❌ CommentItem: comment prop is null or undefined");
+    return null;
+  }
+
+  // Ensure comment has at minimum required structure
+  const safeComment = {
+    id: comment.id || Date.now(),
+    content: comment.content || comment.text || comment.body || "",
+    created_at:
+      comment.created_at ||
+      comment.date ||
+      comment.timestamp ||
+      new Date().toISOString(),
+    user: (() => {
+      // Try different possible user field names and structures
+      const userSource = comment.user || comment.author || comment.owner || {};
+
+      // Log the actual user data we received
+      console.log("🔍 Raw user data from API:", userSource);
+      console.log("🔍 Full comment object:", comment);
+      console.log("🔍 Comment keys:", Object.keys(comment));
+
+      // Check if there's profile picture data elsewhere in the comment
+      if (
+        comment.profile_picture ||
+        comment.user_profile_picture ||
+        comment.avatar
+      ) {
+        console.log("🔍 Found profile picture in comment:", {
+          profile_picture: comment.profile_picture,
+          user_profile_picture: comment.user_profile_picture,
+          avatar: comment.avatar,
+        });
+      }
+
+      // Handle case where user data is just a string (user's name)
+      if (typeof userSource === "string") {
+        console.log(
+          "🔍 User data is string, creating user object from name:",
+          userSource
+        );
+
+        // Check if profile picture is stored elsewhere in the comment
+        const profilePicture =
+          comment.profile_picture ||
+          comment.user_profile_picture ||
+          comment.avatar ||
+          comment.user_avatar ||
+          null;
+
+        console.log("🔍 Found profile picture from comment:", profilePicture);
+
+        return {
+          id: 0,
+          full_name: userSource,
+          username: userSource.toLowerCase().replace(/\s+/g, "_"),
+          profile_picture: profilePicture,
+        };
+      }
+
+      // Handle case where user data is an object
+      if (typeof userSource === "object" && userSource !== null) {
+        return {
+          id: userSource.id || userSource.user_id || 0,
+          full_name:
+            userSource.full_name ||
+            userSource.fullName ||
+            userSource.name ||
+            userSource.display_name ||
+            userSource.username ||
+            "Unknown User",
+          username:
+            userSource.username ||
+            userSource.user_name ||
+            userSource.handle ||
+            "unknown",
+          profile_picture:
+            userSource.profile_picture ||
+            userSource.profilePicture ||
+            userSource.avatar ||
+            userSource.image ||
+            userSource.photo ||
+            null,
+        };
+      }
+
+      // Fallback for other cases
+      return {
+        id: 0,
+        full_name: "Unknown User",
+        username: "unknown",
+        profile_picture: null,
+      };
+    })(),
+    replies_count: comment.replies_count || 0,
+    replies: comment.replies || [],
+  };
+
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const commentDate = new Date(dateString);
@@ -34,7 +134,7 @@ const CommentItem = ({
     if (!replyText.trim()) return;
 
     try {
-      await onReply(comment.id, replyText.trim());
+      await onReply(safeComment.id, replyText.trim());
       setReplyText("");
       setShowReplyForm(false);
       setShowReplies(true);
@@ -44,19 +144,36 @@ const CommentItem = ({
   };
 
   const handleDelete = () => {
-    onDelete(comment.id);
+    onDelete(safeComment.id);
     setShowMenu(false);
   };
 
-  const isOwner = comment.user.id === (currentUserId || user?.id);
+  const isOwner = safeComment.user?.id === (currentUserId || user?.id);
+
+  // Debug the comment data structure
+  console.log("🗨️ CommentItem received comment:", comment);
+  console.log("🗨️ SafeComment:", safeComment);
+  console.log("🗨️ SafeComment.user:", safeComment.user);
+  console.log("🗨️ SafeComment.user.full_name:", safeComment.user?.full_name);
+  console.log(
+    "🗨️ SafeComment.user.profile_picture:",
+    safeComment.user?.profile_picture
+  );
+  console.log("🗨️ SafeComment.content:", safeComment.content);
 
   return (
     <div className={`flex space-x-2 ${isReply ? "ml-8 mt-2" : "mt-3"}`}>
       {/* Avatar */}
       <img
-        src={getAvatarUrl(comment.user, 32)}
-        alt={comment.user.full_name}
+        src={getAvatarUrl(safeComment.user, 32)}
+        alt={safeComment.user?.full_name || "User"}
         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+        onError={(e) => {
+          console.error("🖼️ Avatar failed to load:", e.target.src);
+          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            safeComment.user?.full_name || "User"
+          )}&background=random&color=fff&size=32`;
+        }}
       />
 
       <div className="flex-1 min-w-0">
@@ -65,10 +182,13 @@ const CommentItem = ({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h4 className="font-semibold text-sm text-gray-900">
-                {comment.user.full_name}
+                {safeComment.user?.full_name ||
+                  safeComment.user?.username ||
+                  safeComment.user?.name ||
+                  "Unknown User"}
               </h4>
               <p className="text-gray-800 text-sm mt-0.5 break-words">
-                {comment.content}
+                {safeComment.content || "No content"}
               </p>
             </div>
 
@@ -110,7 +230,7 @@ const CommentItem = ({
           )}
 
           <span className="text-xs text-gray-500">
-            {formatTimeAgo(comment.created_at)}
+            {formatTimeAgo(safeComment.created_at)}
           </span>
         </div>
 
@@ -128,7 +248,11 @@ const CommentItem = ({
                   type="text"
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder={`Reply to ${comment.user.full_name}...`}
+                  placeholder={`Reply to ${
+                    safeComment.user?.full_name ||
+                    safeComment.user?.username ||
+                    "User"
+                  }...`}
                   className="w-full bg-gray-100 rounded-full px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                   autoFocus
                 />
@@ -138,21 +262,21 @@ const CommentItem = ({
         )}
 
         {/* Show replies button */}
-        {comment.replies_count > 0 && !showReplies && !isReply && (
+        {safeComment.replies_count > 0 && !showReplies && !isReply && (
           <button
             onClick={() => setShowReplies(true)}
             className="flex items-center space-x-1 mt-2 ml-3 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
             <span>
-              View {comment.replies_count}{" "}
-              {comment.replies_count === 1 ? "reply" : "replies"}
+              View {safeComment.replies_count}{" "}
+              {safeComment.replies_count === 1 ? "reply" : "replies"}
             </span>
           </button>
         )}
 
         {/* Hide replies button */}
-        {showReplies && comment.replies_count > 0 && !isReply && (
+        {showReplies && safeComment.replies_count > 0 && !isReply && (
           <button
             onClick={() => setShowReplies(false)}
             className="flex items-center space-x-1 mt-2 ml-3 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
@@ -164,11 +288,11 @@ const CommentItem = ({
 
         {/* Replies */}
         {showReplies &&
-          comment.replies &&
-          comment.replies.length > 0 &&
+          safeComment.replies &&
+          safeComment.replies.length > 0 &&
           !isReply && (
             <div className="mt-2">
-              {comment.replies.map((reply) => (
+              {safeComment.replies.map((reply) => (
                 <CommentItem
                   key={reply.id}
                   comment={reply}

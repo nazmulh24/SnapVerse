@@ -12,7 +12,9 @@ const Post = ({ post, onLike, onShare }) => {
   const [comments, setComments] = useState([]);
   const [postData, setPostData] = useState(post);
   const [loadingComments, setLoadingComments] = useState(false);
-  const { fetchComments, addComment, deleteComment, addReply } = useComments();
+  const [commentsError, setCommentsError] = useState(null);
+  const { fetchComments, addComment, deleteComment, addReply, error } =
+    useComments();
 
   // Update postData when post prop changes
   useEffect(() => {
@@ -114,12 +116,25 @@ const Post = ({ post, onLike, onShare }) => {
     if (!showComments) {
       // Load comments when opening comment section
       setLoadingComments(true);
+      setCommentsError(null);
       try {
+        console.log("🚀 Starting to fetch comments for post:", postData.id);
         const commentsData = await fetchComments(postData.id);
-        console.log("Fetched comments data:", commentsData);
-        setComments(commentsData.results || commentsData || []);
-      } catch (error) {
-        console.error("Failed to load comments:", error);
+        console.log("📦 Received comments data:", commentsData);
+        console.log("📊 Comments data type:", typeof commentsData);
+        console.log(
+          "🔍 Comments data structure:",
+          Object.keys(commentsData || {})
+        );
+
+        const commentsArray = commentsData.results || commentsData || [];
+        console.log("📝 Final comments array:", commentsArray);
+        console.log("🔢 Comments array length:", commentsArray.length);
+
+        setComments(commentsArray);
+      } catch (err) {
+        console.error("❌ Failed to load comments:", err);
+        setCommentsError(err.message || "Failed to load comments");
         setComments([]);
       } finally {
         setLoadingComments(false);
@@ -322,6 +337,7 @@ const Post = ({ post, onLike, onShare }) => {
           onDeleteComment={handleDeleteComment}
           onAddReply={handleAddReply}
           loading={loadingComments}
+          error={commentsError || error}
         />
       </ErrorBoundary>
     </div>
