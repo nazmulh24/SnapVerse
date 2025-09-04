@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { MdClose, MdArrowBackIos, MdArrowForwardIos } from "react-icons/md";
+import { useState } from "react";
 
 const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
@@ -10,22 +9,12 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
     (post) => post.image && post.image.trim() !== ""
   );
 
-  console.log("PhotosTab - userImages:", userImages);
-  console.log("PhotosTab - postsWithImages:", postsWithImages);
-
   // Helper function to get image URL
   const getImageUrl = (imageUrl) => {
     if (imageUrl.startsWith("http")) {
       return imageUrl;
     }
     return `https://res.cloudinary.com/dlkq5sjum/${imageUrl}`;
-  };
-
-  // Handle image click
-  const handleImageClick = (index) => {
-    console.log("Image clicked, index:", index); // Debug log
-    setSelectedImageIndex(index);
-    setIsModalOpen(true);
   };
 
   // Handle close modal
@@ -75,7 +64,6 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("Image clicked directly! Index:", index);
               setSelectedImageIndex(index);
               setIsModalOpen(true);
             }}
@@ -88,7 +76,7 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
               display: "block",
             }}
             onError={() => {
-              console.log("Image failed to load:", post.image);
+              // Handle image load error
             }}
           />
         </div>
@@ -98,20 +86,12 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
 
   // Render image modal
   const renderImageModal = () => {
-    console.log(
-      "renderImageModal called - isModalOpen:",
-      isModalOpen,
-      "selectedImageIndex:",
-      selectedImageIndex
-    );
-
     if (!isModalOpen || selectedImageIndex === null) {
       return null;
     }
 
     const currentPost = postsWithImages[selectedImageIndex];
     if (!currentPost) {
-      console.log("No current post found for index:", selectedImageIndex);
       return null;
     }
 
@@ -130,7 +110,6 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
           bottom: 0,
         }}
         onClick={() => {
-          console.log("Modal background clicked, closing modal");
           handleCloseModal();
         }}
       >
@@ -139,7 +118,6 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
           className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold"
           onClick={(e) => {
             e.stopPropagation();
-            console.log("Close button clicked");
             handleCloseModal();
           }}
           style={{ zIndex: 100000 }}
@@ -207,27 +185,6 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
     <>
       <div className="px-8 py-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-6">Photos</h3>
-
-        {/* Debug info */}
-        <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-          <p>Debug: Total userImages: {userImages?.length || 0}</p>
-          <p>Debug: Posts with images: {postsWithImages.length}</p>
-          <p>Debug: Modal open: {isModalOpen ? "Yes" : "No"}</p>
-          <p>Debug: Selected index: {selectedImageIndex}</p>
-
-          {/* Test button */}
-          {postsWithImages.length > 0 && (
-            <button
-              onClick={() => {
-                console.log("Test button clicked");
-                handleImageClick(0);
-              }}
-              className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs"
-            >
-              Test Modal (Click to open first image)
-            </button>
-          )}
-        </div>
 
         {postsWithImages.length > 0 ? renderPhotoGrid() : renderEmptyState()}
       </div>

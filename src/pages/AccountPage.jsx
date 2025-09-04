@@ -16,8 +16,6 @@ import {
   businessItems,
   settingsItems,
   tabs,
-  getAvatarUrl,
-  getCoverPhotoUrl,
 } from "../components/Account/accountUtils";
 
 const AccountPage = () => {
@@ -142,8 +140,6 @@ const AccountPage = () => {
               onComment={commentOnPost}
               onShare={sharePost}
               onLoadMore={loadMorePosts}
-              getAvatarUrl={getAvatarUrl}
-              getCoverPhotoUrl={getCoverPhotoUrl}
             />
           )}
 
