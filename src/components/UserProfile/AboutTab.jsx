@@ -9,6 +9,42 @@ import {
 } from "react-icons/md";
 
 const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
+  // Helper function to format gender display
+  const formatGender = (gender) => {
+    const genderMap = {
+      male: "Male",
+      female: "Female",
+      other: "Other",
+    };
+    return genderMap[gender] || "Gender not specified";
+  };
+
+  // Helper function to format relationship status display
+  const formatRelationshipStatus = (status) => {
+    const statusMap = {
+      single: "Single",
+      in_a_relationship: "In a Relationship",
+      married: "Married",
+      divorced: "Divorced",
+      widowed: "Widowed",
+    };
+    return statusMap[status] || "Not specified";
+  };
+
+  // Helper function to format join date
+  const formatJoinDate = () => {
+    if (joinDate) return joinDate;
+
+    if (profileUser?.date_joined) {
+      return new Date(profileUser.date_joined).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+    }
+
+    return "Recently joined";
+  };
+
   return (
     //--> About activeTab
     <div className="px-8 py-6">
@@ -168,7 +204,7 @@ const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
                           : "text-gray-400 italic"
                       } truncate`}
                     >
-                      {profileUser.gender || "Gender not specified"}
+                      {formatGender(profileUser.gender)}
                     </p>
                   </div>
                 </div>
@@ -189,7 +225,9 @@ const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
                           : "text-gray-400 italic"
                       } truncate`}
                     >
-                      {profileUser.relationship_status || "Not specified"}
+                      {formatRelationshipStatus(
+                        profileUser.relationship_status
+                      )}
                     </p>
                   </div>
                 </div>
@@ -201,9 +239,7 @@ const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-500">Joined</p>
-                    <p className="text-sm text-gray-800">
-                      {joinDate || "Recently joined"}
-                    </p>
+                    <p className="text-sm text-gray-800">{formatJoinDate()}</p>
                   </div>
                 </div>
               </div>

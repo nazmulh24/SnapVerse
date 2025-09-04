@@ -85,6 +85,11 @@ const useAuth = () => {
 
     try {
       await AuthApiClient.put("/auth/users/me/", data);
+      
+      // Fetch fresh user data to update the context
+      const response = await AuthApiClient.get("/auth/users/me");
+      setUser(response.data);
+      
       return handleAPISuccess("Profile updated successfully");
     } catch (error) {
       return handleAPIError(error);

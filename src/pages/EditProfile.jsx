@@ -51,10 +51,13 @@ const EditProfile = () => {
   // Initialize form with user data from context
   useEffect(() => {
     if (user) {
-      console.log("User data from context:", user);
+      console.log("✅ Initializing form with user data:", {
+        userId: user._id,
+        privacy: user.is_private,
+        privacyType: typeof user.is_private,
+      });
 
-      // Initialize form with user data
-      const newFormData = {
+      setFormData({
         cover_photo: user.cover_photo || "",
         profile_picture: user.profile_picture || "",
         username: user.username || "",
@@ -68,23 +71,11 @@ const EditProfile = () => {
         date_of_birth: user.date_of_birth || "",
         gender: user.gender || "",
         relationship_status: user.relationship_status || "",
-        is_private: user.is_private || false,
-      };
-      setFormData(newFormData);
-      console.log("Form auto-filled with data:", newFormData);
-      console.log("Individual field check:");
-      console.log("username:", user.username);
-      console.log("first_name:", user.first_name);
-      console.log("last_name:", user.last_name);
-      console.log("email:", user.email);
+        is_private: user.is_private === true || user.is_private === "true",
+      });
       setIsLoading(false);
     }
   }, [user]);
-
-  // Debug: Log when successMessage changes
-  useEffect(() => {
-    console.log("successMessage changed:", successMessage);
-  }, [successMessage]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -193,16 +184,16 @@ const EditProfile = () => {
     setErrors({});
     setSuccessMessage("");
 
-    console.log("Form submission started, cleared previous messages");
-
     try {
       // Create FormData for file upload
       const formDataToSend = new FormData();
 
       // Add all form fields
       Object.keys(formData).forEach((key) => {
-        if (formData[key]) {
-          formDataToSend.append(key, formData[key]);
+        const value = formData[key];
+        // Include the field if it has a value OR if it's a boolean (to handle false values)
+        if (value || typeof value === "boolean") {
+          formDataToSend.append(key, value);
         }
       });
 
@@ -214,32 +205,16 @@ const EditProfile = () => {
         formDataToSend.append("cover_photo", coverPhoto);
       }
 
-      // Make API call to update profile using the built-in updateUserProfile function
-      console.log("Making API call to update profile...");
-      console.log("FormData contents:", Array.from(formDataToSend.entries()));
-
       const result = await updateUserProfile(formDataToSend);
 
-      console.log("Update result:", result);
-
       if (result.success) {
-        console.log("Profile updated successfully!");
         setSuccessMessage(result.message || "Profile updated successfully!");
 
-        // Refresh user data to get the updated profile
-        console.log("Refreshing user data...");
-        // The updateUserProfile should handle the user update internally
-
-        console.log(
-          "Success message set, waiting 3 seconds before navigation..."
-        );
-        // Navigate back to profile after 3 seconds
+        // Show success message for 2 seconds then navigate
         setTimeout(() => {
-          console.log("Navigating to profile...");
           navigate(`/profile/${user.username}`);
-        }, 3000);
+        }, 2000);
       } else {
-        console.error("Profile update failed:", result.message);
         setErrors({
           general:
             result.message || "Failed to update profile. Please try again.",
@@ -247,9 +222,6 @@ const EditProfile = () => {
       }
     } catch (error) {
       console.error("Error in profile update:", error);
-      console.error("Error type:", error.constructor.name);
-      console.error("Error message:", error.message);
-
       setErrors({
         general: "An unexpected error occurred. Please try again.",
       });
@@ -277,7 +249,7 @@ const EditProfile = () => {
     return null;
   };
 
-  if (!user) {
+  if (!user || user.is_private === undefined) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner />
@@ -674,31 +646,70 @@ const EditProfile = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900">
-                          Private Account
+                          Account Privacy
                         </h4>
                         <p className="text-sm text-gray-600">
-                          Only approved followers can see your posts
+                          Control who can see your posts and profile
                         </p>
                       </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="is_private"
-                        checked={
-                          formData.is_private === true ||
-                          formData.is_private === "true"
-                        }
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            is_private: e.target.checked,
-                          }));
-                        }}
-                        className="sr-only peer"
-                      />
-                      <div className="w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300/50 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
-                    </label>
+
+                    {/* Privacy Toggle with Labels */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <MdVisibility
+                          className={`w-4 h-4 transition-colors duration-200 ${
+                            !formData.is_private
+                              ? "text-blue-600"
+                              : "text-gray-400"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors duration-200 ${
+                            !formData.is_private
+                              ? "text-blue-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Public
+                        </span>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="is_private"
+                          checked={Boolean(formData.is_private)}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              is_private: e.target.checked,
+                            }));
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300/50 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
+                      </label>
+
+                      <div className="flex items-center gap-2">
+                        <MdLock
+                          className={`w-4 h-4 transition-colors duration-200 ${
+                            formData.is_private
+                              ? "text-blue-600"
+                              : "text-gray-400"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors duration-200 ${
+                            formData.is_private
+                              ? "text-blue-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Private
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
