@@ -3,90 +3,72 @@ import Post from "../HomeComponent/Post";
 import InfiniteScrollTrigger from "../shared/InfiniteScrollTrigger";
 import LoadingSpinner from "../shared/LoadingSpinner";
 
+/**
+ * PostsTab Component - Displays ONLY the profile user's posts
+ * Filters out any posts that don't belong to the current profile user
+ */
 const PostsTab = ({
   userPosts,
   loading,
-  isLoadingProfile,
   loadingUserPosts,
   hasNextPage,
   isOwnProfile,
-  fullName,
-  handleLike,
-  handleComment,
-  handleShare,
-  loadMorePosts,
+  profileUser,
+  onLike,
+  onComment,
+  onShare,
+  onLoadMore,
 }) => {
+  // Get the user's display name
+  const getDisplayName = () => {
+    if (!profileUser) return "User";
+    const fullName = `${profileUser.first_name || ""} ${
+      profileUser.last_name || ""
+    }`.trim();
+    return fullName || profileUser.username || "User";
+  };
+
+  const displayName = getDisplayName();
+
+  // Use userPosts directly since useUserProfile should already provide filtered posts
+  const postsToShow = userPosts || [];
+
   return (
-    // <div className="px-8 py-6">
-    //   <h3 className="text-lg font-semibold text-slate-900 mb-4">
-    //     {isOwnProfile ? "My Posts" : `${fullName}'s Posts`}
-    //   </h3>
-    //   {(loading || isLoadingProfile || loadingUserPosts) &&
-    //   (!userPosts || userPosts.length === 0) ? (
-    //     <div className="flex justify-center py-12">
-    //       <LoadingSpinner />
-    //     </div>
-    //   ) : userPosts && userPosts.length > 0 ? (
-    //     <div className="space-y-6">
-    //       {userPosts.map((post) => (
-    //         <Post
-    //           key={post.id}
-    //           post={post}
-    //           onLike={onLike}
-    //           onComment={onComment}
-    //           onShare={onShare}
-    //         />
-    //       ))}
-    //       {hasNextPage && (
-    //         <InfiniteScrollTrigger loading={loading} onLoadMore={onLoadMore} />
-    //       )}
-    //     </div>
-    //   ) : (
-    //     <div className="text-center py-12">
-    //       <div className="text-gray-400 text-lg mb-2">No posts yet</div>
-    //       <p className="text-gray-500">
-    //         {isOwnProfile
-    //           ? "Share your first post to get started!"
-    //           : `${fullName} hasn't shared any posts yet.`}
-    //       </p>
-    //     </div>
-    //   )}
-    //   </div>
-    //--> Posts activeTab
     <div className="px-8 py-6">
       <h3 className="text-lg font-semibold text-slate-900 mb-4">
-        {isOwnProfile ? "My Posts" : `${fullName}'s Posts`}
+        {isOwnProfile ? "My Posts" : `${displayName}'s Posts`}
       </h3>
-      {(loading || isLoadingProfile || loadingUserPosts) &&
-      (!userPosts || userPosts.length === 0) ? (
+
+      {/* Loading state */}
+      {(loading || loadingUserPosts) &&
+      (!postsToShow || postsToShow.length === 0) ? (
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
-      ) : userPosts && userPosts.length > 0 ? (
+      ) : postsToShow && postsToShow.length > 0 ? (
+        /* Show user posts */
         <div className="space-y-6">
-          {userPosts.map((post) => (
+          {postsToShow.map((post) => (
             <Post
               key={post.id}
               post={post}
-              onLike={handleLike}
-              onComment={handleComment}
-              onShare={handleShare}
+              onLike={onLike}
+              onComment={onComment}
+              onShare={onShare}
             />
           ))}
           {hasNextPage && (
-            <InfiniteScrollTrigger
-              loading={loading}
-              onLoadMore={loadMorePosts}
-            />
+            <InfiniteScrollTrigger loading={loading} onLoadMore={onLoadMore} />
           )}
         </div>
       ) : (
+        /* Empty state */
         <div className="text-center py-12">
           <div className="text-gray-400 text-lg mb-2">No posts yet</div>
           <p className="text-gray-500">
             {isOwnProfile
               ? "Share your first post to get started!"
-              : `${fullName} hasn't shared any posts yet.`}
+              : `${displayName} hasn't shared any posts yet.`}
           </p>
         </div>
       )}

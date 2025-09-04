@@ -33,17 +33,13 @@ const useUserProfile = (username) => {
   useEffect(() => {
     const loadUserData = async () => {
       if (!username) {
-        console.log("[UserProfile] No username/ID provided");
         return;
       }
 
-      console.log("[UserProfile] Loading profile for identifier:", username);
       setIsLoadingProfile(true);
       setApiError(null);
 
       try {
-        console.log("🔗 Attempting to find user with identifier:", username);
-
         // Create different possible username formats to try
         const possibleUsernames = [
           username, // Original as-is
@@ -59,7 +55,6 @@ const useUserProfile = (username) => {
 
         // Remove duplicates
         const uniqueUsernames = [...new Set(possibleUsernames)];
-        console.log("🎯 Will try these username formats:", uniqueUsernames);
 
         let realUserData = null;
 
@@ -67,8 +62,6 @@ const useUserProfile = (username) => {
         for (const tryUsername of uniqueUsernames) {
           const encodedUsername = encodeURIComponent(tryUsername);
           const apiEndpoint = `http://127.0.0.1:8000/api/v1/users/${encodedUsername}/`;
-
-          console.log(`🔄 Trying endpoint: ${apiEndpoint}`);
 
           try {
             const response = await fetch(apiEndpoint, {
@@ -82,17 +75,10 @@ const useUserProfile = (username) => {
 
             if (response.ok) {
               realUserData = await response.json();
-              console.log("✅ API SUCCESS with endpoint:", apiEndpoint);
-              console.log("✅ API SUCCESS - Complete user data:", realUserData);
               break; // Stop trying once we find a successful one
-            } else {
-              console.log(`❌ Failed with ${apiEndpoint}: ${response.status}`);
             }
-          } catch (fetchError) {
-            console.log(
-              `🚫 Network error with ${apiEndpoint}:`,
-              fetchError.message
-            );
+          } catch {
+            // Continue to next username variant
           }
         }
 
@@ -176,114 +162,55 @@ const useUserProfile = (username) => {
     };
 
     const loadPostsForUser = async (realUserData) => {
-      console.log(
-        "[UserProfile] Loading posts for user:",
-        realUserData.username,
-        "ID:",
-        realUserData.id
-      );
+      // If user profile has posts array with IDs, fetch them individually
+      if (
+        realUserData.posts &&
+        Array.isArray(realUserData.posts) &&
+        realUserData.posts.length > 0
+      ) {
+        setLoadingUserPosts(true);
 
-      const possibleParams = [
-        { author: realUserData.id },
-        { author_id: realUserData.id },
-        { user: realUserData.id },
-        { user_id: realUserData.id },
-        { author__username: realUserData.username },
-        { username: realUserData.username },
-      ];
+        try {
+          const postIds = realUserData.posts;
+          const fetchedPosts = [];
 
-      let postsLoaded = false;
-      for (const params of possibleParams) {
-        console.log("[UserProfile] Trying posts with params:", params);
-        const result = await loadPosts(params, { pageSize: 10 });
-        if (result.success && result.data?.results?.length > 0) {
-          console.log(
-            "[UserProfile] ✅ Successfully loaded posts with params:",
-            params
-          );
-          postsLoaded = true;
-          break;
-        }
-      }
+          // Fetch each post individually
+          for (const postId of postIds) {
+            try {
+              const authTokens = JSON.parse(localStorage.getItem("authTokens"));
+              const accessToken = authTokens?.access;
 
-      if (!postsLoaded) {
-        console.log("[UserProfile] ❌ No posts found with server filtering");
-
-        // If user profile has posts array with IDs, fetch them individually
-        if (
-          realUserData.posts &&
-          Array.isArray(realUserData.posts) &&
-          realUserData.posts.length > 0
-        ) {
-          console.log(
-            "[UserProfile] 🔍 User has post IDs in profile:",
-            realUserData.posts
-          );
-          console.log(
-            "[UserProfile] 🎯 Fetching ONLY user's specific posts by ID"
-          );
-
-          setLoadingUserPosts(true);
-
-          try {
-            const postIds = realUserData.posts;
-            const fetchedPosts = [];
-
-            // Fetch each post individually
-            for (const postId of postIds) {
-              console.log(`[UserProfile] 🔄 Fetching post ID: ${postId}`);
-              try {
-                const response = await fetch(
-                  `http://127.0.0.1:8000/api/v1/posts/${postId}/`,
-                  {
-                    headers: {
-                      Authorization: `JWT ${
-                        JSON.parse(localStorage.getItem("authTokens"))?.access
-                      }`,
-                      "Content-Type": "application/json",
-                    },
-                  }
-                );
-
-                if (response.ok) {
-                  const post = await response.json();
-                  fetchedPosts.push(post);
-                  console.log(
-                    `[UserProfile] ✅ Successfully fetched post ${postId}`
-                  );
-                } else {
-                  console.log(
-                    `[UserProfile] ❌ Failed to fetch post ${postId}: ${response.status}`
-                  );
-                }
-              } catch (error) {
-                console.log(
-                  `[UserProfile] ❌ Error fetching post ${postId}:`,
-                  error
-                );
+              if (!accessToken) {
+                continue;
               }
-            }
 
-            if (fetchedPosts.length > 0) {
-              console.log(
-                `[UserProfile] ✅ Successfully fetched ${fetchedPosts.length} user-specific posts`
+              const response = await fetch(
+                `http://127.0.0.1:8000/api/v1/posts/${postId}/`,
+                {
+                  headers: {
+                    Authorization: `JWT ${accessToken}`,
+                    "Content-Type": "application/json",
+                  },
+                }
               );
-              setUserSpecificPosts(fetchedPosts);
-            } else {
-              console.log(
-                "[UserProfile] ❌ No user-specific posts could be fetched"
-              );
+
+              if (response.ok) {
+                const post = await response.json();
+                fetchedPosts.push(post);
+              }
+            } catch {
+              // Continue with next post if one fails
+              continue;
             }
-          } catch (error) {
-            console.log(
-              "[UserProfile] ❌ Error in individual post fetching:",
-              error
-            );
-          } finally {
-            setLoadingUserPosts(false);
           }
-        } else {
-          console.log("[UserProfile] ❌ No post IDs found in user profile");
+
+          if (fetchedPosts.length > 0) {
+            setUserSpecificPosts(fetchedPosts);
+          }
+        } catch (error) {
+          console.error("Error fetching user posts:", error);
+        } finally {
+          setLoadingUserPosts(false);
         }
       }
     };
@@ -291,25 +218,22 @@ const useUserProfile = (username) => {
     loadUserData();
   }, [username, currentUser, isOwnProfile, loadMyPosts, loadPosts]);
 
-  // Filter posts to show only those from the profile user
+  // Return filtered posts - use userSpecificPosts if available, otherwise filter general posts
   const userPosts =
     userSpecificPosts.length > 0
       ? userSpecificPosts
       : posts?.filter((post) => {
-          if (isOwnProfile) {
-            return true;
-          } else {
-            const isUserPost =
-              post.author?.id === profileUser?.id ||
-              post.author?.username === profileUser?.username ||
-              post.user?.id === profileUser?.id ||
-              post.user?.username === profileUser?.username ||
-              (profileUser?.posts &&
-                Array.isArray(profileUser.posts) &&
-                profileUser.posts.includes(post.id));
+          // Always filter to only show posts from the profile user
+          const isUserPost =
+            post.author?.id === profileUser?.id ||
+            post.author?.username === profileUser?.username ||
+            post.user?.id === profileUser?.id ||
+            post.user?.username === profileUser?.username ||
+            (profileUser?.posts &&
+              Array.isArray(profileUser.posts) &&
+              profileUser.posts.includes(post.id));
 
-            return isUserPost;
-          }
+          return isUserPost;
         }) || [];
 
   const handleFollow = async () => {
