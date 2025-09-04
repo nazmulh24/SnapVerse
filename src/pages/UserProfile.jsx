@@ -65,10 +65,19 @@ const UserProfile = () => {
   // Handle back navigation
   const handleBack = () => window.history.back();
 
+  // Helper function to get proper image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    if (imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+    return `https://res.cloudinary.com/dlkq5sjum/${imageUrl}`;
+  };
+
   // Derived values
   const fullName = getFullName();
-  const avatarUrl = profileUser?.profile_picture || "/default-avatar.png";
-  const coverPhotoUrl = profileUser?.cover_photo || null;
+  const avatarUrl = getImageUrl(profileUser?.profile_picture); // Don't add fallback here, let ProfileInfo handle it
+  const coverPhotoUrl = getImageUrl(profileUser?.cover_photo);
   const joinDate = getJoinDate();
 
   // Render tab content based on active tab

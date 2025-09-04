@@ -54,11 +54,34 @@ const ProfileInfo = ({
       <div className="absolute -top-20 left-8">
         <div className="relative">
           <div className="w-40 h-40 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 p-1 shadow-2xl">
-            <img
-              src={avatarUrl}
-              alt={fullName}
-              className="w-full h-full rounded-full border-4 border-white shadow-lg object-cover"
-            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={fullName}
+                className="w-full h-full rounded-full shadow-lg object-cover"
+                onError={(e) => {
+                  // Hide the image and show the fallback
+                  e.target.style.display = "none";
+                  const fallback = e.target.nextElementSibling;
+                  if (fallback) {
+                    fallback.style.display = "flex";
+                  }
+                }}
+              />
+            ) : null}
+            {/* Fallback: Show first letter of name */}
+            <div
+              className={`w-full h-full rounded-full shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center ${
+                avatarUrl ? "hidden" : "flex"
+              }`}
+            >
+              <span className="text-white text-4xl font-bold">
+                {fullName
+                  ? fullName.trim().split(" ")[0].charAt(0).toUpperCase() +
+                    fullName.trim().split(" ")[1].charAt(0).toUpperCase()
+                  : "U"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
