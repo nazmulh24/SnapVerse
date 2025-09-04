@@ -11,6 +11,7 @@ import {
   MdMoreVert,
   MdEdit,
 } from "react-icons/md";
+import { useNavigate } from "react-router";
 // import { getAvatarUrl } from "../Account/accountUtils";
 
 const ProfileInfo = ({
@@ -24,6 +25,12 @@ const ProfileInfo = ({
   isFollowing,
   isOwnProfile,
 }) => {
+  const navigate = useNavigate();
+
+  const handleEditProfile = () => {
+    navigate("/edit-profile");
+  };
+
   return (
     //--> Profile Info Section
     <div className="relative px-8 pb-8 bg-white">
@@ -146,6 +153,19 @@ const ProfileInfo = ({
                   </button>
                 </div>
               )}
+
+              {/* Edit Profile Button - Mobile/Tablet */}
+              {isOwnProfile && (
+                <div className="flex flex-col sm:flex-row gap-3 sm:hidden lg:hidden">
+                  <button
+                    onClick={handleEditProfile}
+                    className="group bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <MdEdit className="w-4 h-4" />
+                    <span>Edit Profile</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Profile Stats */}
@@ -214,7 +234,7 @@ const ProfileInfo = ({
           {isOwnProfile && (
             <div className="hidden sm:flex lg:flex flex-col gap-3 lg:mt-0 min-w-[180px]">
               <button
-                // onClick={() => navigate("/account")}
+                onClick={handleEditProfile}
                 className="group bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
               >
                 <MdEdit className="w-4 h-4" />
