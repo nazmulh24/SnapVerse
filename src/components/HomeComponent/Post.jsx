@@ -215,7 +215,7 @@ const Post = ({ post, onLike, onShare }) => {
     }
   };
 
-  // Handle reaction click (unified like comment pattern)
+  // Handle reaction click (unified reaction pattern)
   const handleReactionClick = async (reactionType) => {
     try {
       console.log("😊 Attempting to handle reaction for post:", postData.id);
@@ -255,8 +255,6 @@ const Post = ({ post, onLike, onShare }) => {
 
       if (result.success) {
         console.log("😊 Reaction handled successfully:", result.data);
-        console.log("😊 Current postData.reactions:", postData.reactions);
-        console.log("😊 Old user reaction:", oldUserReaction);
 
         // Handle API response based on action type
         if (result.data) {
@@ -271,10 +269,6 @@ const Post = ({ post, onLike, onShare }) => {
           setPostData((prev) => {
             // Reset to original state first
             const originalReactions = { ...postData.reactions };
-            console.log(
-              "😊 Original reactions before update:",
-              originalReactions
-            );
 
             // Remove old user reaction from original state
             if (oldUserReaction) {
@@ -282,29 +276,23 @@ const Post = ({ post, onLike, onShare }) => {
                 0,
                 (originalReactions[oldUserReaction] || 0) - 1
               );
-              console.log("😊 After removing old reaction:", originalReactions);
             }
 
             if (action === "added") {
               // Reaction was added
               originalReactions[reaction_type] =
                 (originalReactions[reaction_type] || 0) + 1;
-              console.log("😊 After adding new reaction:", originalReactions);
               return {
                 ...prev,
                 reactions: originalReactions,
-                user_reaction: reaction_type,
+                user_reaction: reaction_type || reactionType, // Fallback to reactionType if reaction_type is missing
               };
             } else if (action === "removed") {
               // Reaction was removed (toggle off)
-              console.log(
-                "😊 Reaction removed, final reactions:",
-                originalReactions
-              );
               return {
                 ...prev,
                 reactions: originalReactions,
-                user_reaction: null,
+                user_reaction: null, // Always set to null, never empty string
               };
             }
 
@@ -313,9 +301,24 @@ const Post = ({ post, onLike, onShare }) => {
           });
         }
 
-        // Call the callback if provided
-        if (onLike && reactionType === "like") {
-          onLike(postData.id, result.data.action === "added", result.data);
+        // Special handling for 'like' - force state update if needed
+        if (reactionType === "like") {
+          setTimeout(() => {
+            setPostData((current) => {
+              if (
+                result.data.action === "added" &&
+                current.user_reaction !== "like"
+              ) {
+                return { ...current, user_reaction: "like" };
+              } else if (
+                result.data.action === "removed" &&
+                current.user_reaction !== null
+              ) {
+                return { ...current, user_reaction: null };
+              }
+              return current;
+            });
+          }, 100);
         }
 
         return result.data;
@@ -444,7 +447,9 @@ const Post = ({ post, onLike, onShare }) => {
       <PostActions
         postId={postData.id}
         initialReactions={postData.reactions || {}}
-        currentUserReaction={postData.user_reaction || null}
+        currentUserReaction={
+          postData.user_reaction === "" ? null : postData.user_reaction || null
+        }
         onComment={handleCommentClick}
         onShare={() => onShare && onShare(postData.id)}
         onReactionClick={handleReactionClick}

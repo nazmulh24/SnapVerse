@@ -118,16 +118,6 @@ const useReactions = () => {
       console.error("[useReactions] ❌ Error adding reaction:", err);
       console.error("[useReactions] Error response:", err.response?.data);
       console.error("[useReactions] Error status:", err.response?.status);
-      console.error("[useReactions] Full error response:", err.response);
-      console.error("[useReactions] Request config:", err.config);
-
-      // Log the exact validation errors if available
-      if (err.response?.data) {
-        console.error(
-          "[useReactions] Detailed errors:",
-          JSON.stringify(err.response.data, null, 2)
-        );
-      }
 
       const errorMessage =
         err.response?.data?.detail ||

@@ -14,107 +14,118 @@ const PostActions = ({
 }) => {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [userReaction, setUserReaction] = useState(currentUserReaction);
-  const [reactions, setReactions] = useState(initialReactions);
 
-  // Use the new handlers if provided, otherwise fall back to useReactions hook
   const { addReaction, removeReaction, loading } = useReactions();
   const isLoading = loadingReactions || loading;
 
-  // Simplified reaction mappings
+  // Enhanced reaction mappings with background colors
   const reactionConfig = {
-    like: { emoji: "👍", label: "Like", color: "text-blue-600" },
-    dislike: { emoji: "👎", label: "Dislike", color: "text-red-600" },
-    love: { emoji: "❤️", label: "Love", color: "text-red-500" },
-    haha: { emoji: "😂", label: "Haha", color: "text-yellow-600" },
-    wow: { emoji: "😮", label: "Wow", color: "text-purple-600" },
-    sad: { emoji: "😢", label: "Sad", color: "text-gray-600" },
-    angry: { emoji: "😠", label: "Angry", color: "text-orange-600" },
+    like: {
+      emoji: "👍",
+      label: "Like",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      hoverBg: "hover:bg-blue-100",
+      iconColor: "text-blue-600",
+    },
+    dislike: {
+      emoji: "👎",
+      label: "Dislike",
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      hoverBg: "hover:bg-red-100",
+      iconColor: "text-red-600",
+    },
+    love: {
+      emoji: "❤️",
+      label: "Love",
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+      hoverBg: "hover:bg-red-100",
+      iconColor: "text-red-500",
+    },
+    haha: {
+      emoji: "😂",
+      label: "Haha",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      hoverBg: "hover:bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+    wow: {
+      emoji: "😮",
+      label: "Wow",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      hoverBg: "hover:bg-purple-100",
+      iconColor: "text-purple-600",
+    },
+    sad: {
+      emoji: "😢",
+      label: "Sad",
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
+      hoverBg: "hover:bg-gray-100",
+      iconColor: "text-gray-600",
+    },
+    angry: {
+      emoji: "😠",
+      label: "Angry",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      hoverBg: "hover:bg-orange-100",
+      iconColor: "text-orange-600",
+    },
   };
 
   useEffect(() => {
-    console.log(
-      `[PostActions] Props updated - userReaction: ${currentUserReaction}, reactions:`,
-      initialReactions
-    );
-    setUserReaction(currentUserReaction);
-    setReactions(initialReactions);
+    // Convert empty string to null for proper state management
+    const normalizedReaction =
+      currentUserReaction === "" ? null : currentUserReaction;
+    setUserReaction(normalizedReaction);
   }, [currentUserReaction, initialReactions]);
 
   const handleReactionSelect = async (reactionType) => {
-    if (isLoading) {
-      console.log(
-        "[PostActions] Reaction request already in progress, ignoring"
-      );
-      return;
-    }
-
-    console.log(
-      `[PostActions] Handling reaction: ${reactionType} for post ${postId}`
-    );
-    console.log(`[PostActions] Current user reaction: ${userReaction}`);
-    console.log(`[PostActions] Current reactions:`, reactions);
-
-    const oldReaction = userReaction;
+    if (isLoading) return;
 
     setShowReactionPicker(false);
 
     try {
-      let result;
-
-      // Use new unified handler if provided, otherwise fall back to useReactions hook
       if (onReactionClick) {
-        console.log(`[PostActions] Using unified reaction handler`);
-        result = await onReactionClick(reactionType);
+        await onReactionClick(reactionType);
       } else {
         // Fallback to direct useReactions hook calls
+        const oldReaction = userReaction;
         if (oldReaction === reactionType) {
-          // Remove reaction (toggle off)
-          console.log(`[PostActions] API call: Removing reaction`);
-          result = await removeReaction(postId);
+          await removeReaction(postId);
         } else {
-          // Add/change reaction
-          console.log(
-            `[PostActions] API call: Adding reaction ${reactionType}`
-          );
-          result = await addReaction(postId, reactionType);
+          await addReaction(postId, reactionType);
         }
       }
-
-      console.log(`[PostActions] API result:`, result);
-
-      if (result && result.success !== false) {
-        console.log(
-          `[PostActions] API succeeded - parent component will update props`
-        );
-        // Parent component handles all state updates
-        // Our useEffect will sync when props change
-      } else {
-        console.error("[PostActions] Reaction API error:", result?.error);
-      }
     } catch (error) {
-      console.error("[PostActions] Failed to update reaction:", error);
+      console.error("Failed to update reaction:", error);
     }
+  };
+
+  const handleDirectLike = async () => {
+    if (isLoading) return;
+    await handleReactionSelect("like");
   };
 
   const handleComment = () => onComment?.();
   const handleShare = () => onShare?.();
 
   const toggleReactionPicker = () => {
-    console.log(
-      `[PostActions] Toggling reaction picker: ${!showReactionPicker}`
-    );
     setShowReactionPicker(!showReactionPicker);
   };
 
   const showReactionPickerOnHover = () => {
     if (!showReactionPicker && !isLoading) {
-      console.log(`[PostActions] Showing reaction picker on hover`);
       setShowReactionPicker(true);
     }
   };
 
   const hideReactionPicker = () => {
-    console.log(`[PostActions] Hiding reaction picker`);
     setShowReactionPicker(false);
   };
 
@@ -125,13 +136,17 @@ const PostActions = ({
         {/* Reaction Button */}
         <div className="relative flex-1">
           <button
-            onClick={toggleReactionPicker}
+            onClick={handleDirectLike}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              toggleReactionPicker();
+            }}
             onMouseEnter={showReactionPickerOnHover}
             disabled={isLoading}
-            className={`flex items-center justify-center space-x-2 w-full py-2 px-3 rounded-lg transition-colors hover:bg-gray-50 ${
+            className={`flex items-center justify-center space-x-2 w-full py-2 px-3 rounded-lg transition-all duration-200 ${
               userReaction
-                ? reactionConfig[userReaction]?.color
-                : "text-gray-600"
+                ? `${reactionConfig[userReaction]?.color} ${reactionConfig[userReaction]?.bgColor} ${reactionConfig[userReaction]?.hoverBg} border border-current border-opacity-20`
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-700"
             } ${showReactionPicker ? "bg-gray-50" : ""} ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
