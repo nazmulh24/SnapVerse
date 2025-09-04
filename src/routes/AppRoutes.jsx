@@ -26,6 +26,7 @@ import FeedbackPage from "../pages/FeedbackPage";
 import AboutPage from "../pages/AboutPage";
 import ActivityPage from "../pages/ActivityPage";
 import AccountPage from "../pages/AccountPage";
+import UserProfile from "../pages/UserProfile";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -69,6 +70,7 @@ const AppRoutes = () => {
 
           <Route path="/activity" element={<ActivityPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/profile/:username" element={<UserProfile />} />
         </Route>
       </Route>
     </Routes>

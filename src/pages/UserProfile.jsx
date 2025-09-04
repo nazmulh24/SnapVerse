@@ -38,6 +38,12 @@ import {
   MdPersonRemove,
   MdMessage,
   MdMoreVert,
+  MdEmail,
+  MdPhone,
+  MdFavorite,
+  MdWork,
+  MdSchool,
+  MdInfo,
 } from "react-icons/md";
 import Post from "../components/HomeComponent/Post";
 import InfiniteScrollTrigger from "../components/shared/InfiniteScrollTrigger";
@@ -48,9 +54,14 @@ import {
 
 const UserProfile = () => {
   const navigate = useNavigate();
-  const { username } = useParams();
+  const { username } = useParams(); // This could be username or ID
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuthContext();
+
+  // Add state for API response
+  const [apiResponse, setApiResponse] = useState(null);
+  const [apiError, setApiError] = useState(null);
+
   const {
     posts,
     loadPosts,
@@ -76,62 +87,146 @@ const UserProfile = () => {
   useEffect(() => {
     const loadUserData = async () => {
       if (!username) {
-        console.log("[UserProfile] No username provided");
+        console.log("[UserProfile] No username/ID provided");
         return;
       }
 
-      console.log("[UserProfile] Loading profile for username:", username);
+      console.log("[UserProfile] Loading profile for identifier:", username);
       setIsLoadingProfile(true);
+      setApiError(null);
 
       try {
-        // For now, we'll simulate user data - you'll need to implement getUserByUsername API
-        // This is where you'd fetch the user data from your API
-        const userData = {
-          id:
-            username === currentUser?.username
-              ? currentUser.id
-              : `user_${username}`,
-          username: username,
-          full_name:
-            username.charAt(0).toUpperCase() + username.slice(1) + " User",
-          bio: "This is a sample bio for the user profile. Welcome to SnapVerse!",
-          email: `${username}@example.com`,
-          followers_count: Math.floor(Math.random() * 1000) + 100,
-          following_count: Math.floor(Math.random() * 500) + 50,
-          date_joined: new Date(
-            Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          location: "New York, NY",
-          website: "https://example.com",
-          is_verified: Math.random() > 0.8,
-          is_private: Math.random() > 0.7,
-          profile_picture: null,
-          cover_photo: null,
-        };
+        // Try to fetch real user data from API first
+        // Try multiple username formats to find the user
 
-        setProfileUser(userData);
-        setFollowersCount(userData.followers_count);
-        setIsFollowing(Math.random() > 0.5); // Random follow status for demo
+        console.log("🔗 Attempting to find user with identifier:", username);
 
-        // Load posts for this user
-        if (isOwnProfile) {
-          const result = await loadMyPosts({}, { pageSize: 10 });
-          if (!result.success) {
-            console.error("[UserProfile] Failed to load posts:", result.error);
-          }
-        } else {
-          // For other users, we'll use loadPosts with user filter
-          // Note: You may need to implement a specific API endpoint for user posts
-          const result = await loadPosts(
-            { user_id: userData.id },
-            { pageSize: 10 }
-          );
-          if (!result.success) {
-            console.error("[UserProfile] Failed to load posts:", result.error);
+        // Create different possible username formats to try
+        const possibleUsernames = [
+          username, // Original as-is
+          username.toLowerCase(), // lowercase
+          username
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "_")
+            .replace(/_+/g, "_")
+            .replace(/^_|_$/g, ""), // converted from full name
+          username.toLowerCase().replace(/\s+/g, "_"), // spaces to underscores
+          username.toLowerCase().replace(/\s+/g, ""), // remove spaces
+        ];
+
+        // Remove duplicates
+        const uniqueUsernames = [...new Set(possibleUsernames)];
+        console.log("🎯 Will try these username formats:", uniqueUsernames);
+
+        let realUserData = null;
+
+        // Try each username format
+        for (const tryUsername of uniqueUsernames) {
+          const encodedUsername = encodeURIComponent(tryUsername);
+          const apiEndpoint = `http://127.0.0.1:8000/api/v1/users/${encodedUsername}/`;
+
+          console.log(`� Trying endpoint: ${apiEndpoint}`);
+
+          try {
+            const response = await fetch(apiEndpoint, {
+              headers: {
+                Authorization: `JWT ${
+                  JSON.parse(localStorage.getItem("authTokens"))?.access
+                }`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              realUserData = await response.json();
+              console.log("✅ API SUCCESS with endpoint:", apiEndpoint);
+              console.log("✅ API SUCCESS - Complete user data:", realUserData);
+              break; // Stop trying once we find a successful one
+            } else {
+              console.log(`❌ Failed with ${apiEndpoint}: ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.log(
+              `🚫 Network error with ${apiEndpoint}:`,
+              fetchError.message
+            );
           }
         }
+
+        if (realUserData) {
+          setApiResponse(realUserData);
+          setProfileUser(realUserData);
+          setFollowersCount(realUserData.followers_count || 0);
+          setApiError(null);
+          
+          // Load posts for this user after profile is set
+          if (isOwnProfile) {
+            const result = await loadMyPosts({}, { pageSize: 10 });
+            if (!result.success) {
+              console.error("[UserProfile] Failed to load posts:", result.error);
+            }
+          } else {
+            // For other users, use the loaded user data
+            const result = await loadPosts(
+              { user_id: realUserData.id },
+              { pageSize: 10 }
+            );
+            if (!result.success) {
+              console.error("[UserProfile] Failed to load posts:", result.error);
+            }
+          }
+        } else {
+          // All attempts failed
+          setApiError(`All API attempts failed for username: ${username}`);
+          console.log(
+            "❌ All API endpoints failed, falling back to simulated data"
+          );
+          createSimulatedData();
+          
+          // Load posts for simulated user
+          if (isOwnProfile) {
+            const result = await loadMyPosts({}, { pageSize: 10 });
+            if (!result.success) {
+              console.error("[UserProfile] Failed to load posts:", result.error);
+            }
+          } else {
+            // For other users with simulated data, we can't load real posts
+            // but we can simulate the loading attempt
+            console.log("[UserProfile] Using simulated user - no real posts to load");
+          }
+        }
+
+        function createSimulatedData() {
+          console.log("🔄 Using simulated data as fallback");
+          const userData = {
+            id: `user_${username}`,
+            username: username,
+            full_name:
+              username.charAt(0).toUpperCase() + username.slice(1) + " User",
+            bio: "This is a sample bio for the user profile. Welcome to SnapVerse!",
+            email: `${username}@example.com`,
+            followers_count: Math.floor(Math.random() * 1000) + 100,
+            following_count: Math.floor(Math.random() * 500) + 50,
+            posts_count: Math.floor(Math.random() * 200) + 20,
+            date_joined: new Date(
+              Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            location: "New York, NY",
+            website: "https://example.com",
+            is_verified: Math.random() > 0.8,
+            is_private: Math.random() > 0.7,
+            profile_picture: null,
+            cover_photo: null,
+          };
+          setProfileUser(userData);
+          setFollowersCount(userData.followers_count);
+          return userData;
+        }
+
+        setIsFollowing(Math.random() > 0.5); // Random follow status for demo
       } catch (error) {
         console.error("[UserProfile] Error loading user profile:", error);
+        setApiError(`Error: ${error.message}`);
       } finally {
         setIsLoadingProfile(false);
       }
@@ -229,6 +324,94 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* JSON Data Display Section */}
+      <div className="bg-blue-50 border-b border-blue-200 p-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-xl font-bold text-blue-800 mb-4">
+            🔍 Complete User Data (JSON)
+          </h2>
+
+          {/* API Response Section */}
+          {apiResponse && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-green-700 mb-2">
+                ✅ Real API Response:
+              </h3>
+              <div className="bg-white p-4 rounded border overflow-auto max-h-64">
+                <pre className="text-xs text-green-800">
+                  {JSON.stringify(apiResponse, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {/* API Error Section */}
+          {apiError && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-red-700 mb-2">❌ API Error:</h3>
+              <div className="bg-red-100 p-3 rounded border">
+                <p className="text-red-800 text-sm">{apiError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Profile User Data Section */}
+          {profileUser && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-blue-700 mb-2">
+                {apiResponse
+                  ? "📋 Processed Profile Data:"
+                  : "🔄 Simulated Data:"}
+              </h3>
+              <div className="bg-white p-4 rounded border overflow-auto max-h-64">
+                <pre className="text-xs text-blue-800">
+                  {JSON.stringify(profileUser, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {/* URL Parameter Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-3 rounded border">
+              <h4 className="font-semibold text-blue-700 mb-2">
+                URL Parameter:
+              </h4>
+              <p>
+                <strong>Received:</strong> {username}
+              </p>
+              <p>
+                <strong>Type:</strong>{" "}
+                {/^\d+$/.test(username) ? "User ID" : "Username"}
+              </p>
+              <p>
+                <strong>API Endpoint:</strong>
+              </p>
+              <code className="text-xs bg-gray-100 px-1 rounded">
+                {/^\d+$/.test(username)
+                  ? `GET /users/${username}/`
+                  : `GET /users/@${username}/`}
+              </code>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <h4 className="font-semibold text-blue-700 mb-2">
+                Loading Status:
+              </h4>
+              <p>
+                <strong>Loading:</strong> {isLoadingProfile ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>Has Data:</strong> {profileUser ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>API Called:</strong>{" "}
+                {apiResponse ? "Success" : apiError ? "Failed" : "Not yet"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -320,7 +503,7 @@ const UserProfile = () => {
                         )}
                       </div>
                       <p className="text-slate-600 text-lg font-medium">
-                        @{profileUser.username}
+                        {profileUser.username}
                       </p>
 
                       {/* Bio */}
@@ -370,17 +553,17 @@ const UserProfile = () => {
                   </div>
 
                   {/* Profile Stats */}
-                  <div className="flex gap-8 py-4">
+                  <div className="flex items-center justify-start gap-8 py-4">
                     {/* Posts */}
-                    <div className="text-center">
+                    <div className="text-center min-w-0">
                       <div className="text-xl font-bold text-slate-900">
-                        {posts?.length || 0}
+                        {(profileUser.posts_count || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-slate-600">Posts</div>
                     </div>
 
                     {/* Followers */}
-                    <div className="text-center cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
+                    <div className="text-center min-w-0 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
                       <div className="text-xl font-bold text-slate-900">
                         {followersCount.toLocaleString()}
                       </div>
@@ -388,7 +571,7 @@ const UserProfile = () => {
                     </div>
 
                     {/* Following */}
-                    <div className="text-center cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
+                    <div className="text-center min-w-0 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
                       <div className="text-xl font-bold text-slate-900">
                         {(profileUser.following_count || 0).toLocaleString()}
                       </div>
@@ -509,7 +692,7 @@ const UserProfile = () => {
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">
                   {isOwnProfile ? "My Posts" : `${fullName}'s Posts`}
                 </h3>
-                {loading && posts?.length === 0 ? (
+                {(loading || isLoadingProfile) && (!posts || posts.length === 0) ? (
                   <div className="flex justify-center py-12">
                     <LoadingSpinner />
                   </div>
@@ -579,16 +762,52 @@ const UserProfile = () => {
                         </div>
                       )}
 
-                      {/* Basic Information */}
+                      {/* Personal Information */}
                       <div className="bg-white rounded-lg p-6 border border-gray-200">
                         <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                           <MdPerson className="w-4 h-4 text-blue-600" />
-                          Basic Information
+                          Personal Information
                         </h4>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {/* Username */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdPerson className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Username
+                              </p>
+                              <p className="text-sm text-gray-800 truncate">
+                                {profileUser.username}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Email */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdEmail className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Email
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  profileUser.email
+                                    ? "text-gray-800"
+                                    : "text-gray-400 italic"
+                                } truncate`}
+                              >
+                                {profileUser.email || "Email not available"}
+                              </p>
+                            </div>
+                          </div>
+
                           {/* Location */}
-                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                             <div className="flex-shrink-0">
                               <MdLocationOn className="w-5 h-5 text-red-600" />
                             </div>
@@ -609,8 +828,103 @@ const UserProfile = () => {
                             </div>
                           </div>
 
+                          {/* Phone */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdPhone className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Phone
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  profileUser.phone || profileUser.phone_number
+                                    ? "text-gray-800"
+                                    : "text-gray-400 italic"
+                                } truncate`}
+                              >
+                                {profileUser.phone ||
+                                  profileUser.phone_number ||
+                                  "Phone not available"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Date of Birth */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdFavorite className="w-5 h-5 text-pink-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Date of Birth
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  profileUser.date_of_birth
+                                    ? "text-gray-800"
+                                    : "text-gray-400 italic"
+                                } truncate`}
+                              >
+                                {profileUser.date_of_birth
+                                  ? new Date(
+                                      profileUser.date_of_birth
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })
+                                  : "Date of birth not available"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Gender */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdPerson className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Gender
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  profileUser.gender
+                                    ? "text-gray-800"
+                                    : "text-gray-400 italic"
+                                } truncate`}
+                              >
+                                {profileUser.gender || "Gender not specified"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Relationship Status */}
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex-shrink-0">
+                              <MdFavorite className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-500">
+                                Relationship Status
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  profileUser.relationship_status
+                                    ? "text-gray-800"
+                                    : "text-gray-400 italic"
+                                } truncate`}
+                              >
+                                {profileUser.relationship_status ||
+                                  "Not specified"}
+                              </p>
+                            </div>
+                          </div>
+
                           {/* Join Date */}
-                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                             <div className="flex-shrink-0">
                               <MdCalendarMonth className="w-5 h-5 text-purple-600" />
                             </div>
@@ -623,28 +937,6 @@ const UserProfile = () => {
                               </p>
                             </div>
                           </div>
-
-                          {/* Website */}
-                          {profileUser.website && (
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                              <div className="flex-shrink-0">
-                                <MdLink className="w-5 h-5 text-blue-600" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-500">
-                                  Website
-                                </p>
-                                <a
-                                  href={profileUser.website}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-blue-600 hover:text-blue-800 truncate transition-colors"
-                                >
-                                  {profileUser.website}
-                                </a>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>

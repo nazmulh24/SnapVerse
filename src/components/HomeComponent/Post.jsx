@@ -103,9 +103,21 @@ const Post = ({ post, onLike, onShare }) => {
       )}&background=random&color=fff`;
     }
 
+    // Create a username from the full name if needed
+    const fullName = post.user_full_name || post.user || "Unknown User";
+    const username =
+      post.username ||
+      post.user_username ||
+      // Convert full name to username format if no real username available
+      fullName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_|_$/g, "");
+
     return {
-      username: post.user || "unknown",
-      full_name: post.user_full_name || post.user || "Unknown User",
+      username: username,
+      full_name: fullName,
       avatar: avatarUrl,
     };
   };
