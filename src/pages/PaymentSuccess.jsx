@@ -4,9 +4,9 @@ import {
   BiCheck,
   BiX,
   BiStar,
-  BiArrowLeft,
+  BiChevronRight,
   BiDownload,
-  BiShare,
+  BiShareAlt,
 } from "react-icons/bi";
 
 const PaymentSuccess = () => {
@@ -151,7 +151,7 @@ const PaymentSuccess = () => {
                   className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                 >
                   <span>Start Using Pro Features</span>
-                  <BiArrowLeft className="w-5 h-5 rotate-180" />
+                  <BiChevronRight className="w-5 h-5" />
                 </Link>
 
                 <div className="flex space-x-3">
@@ -160,7 +160,7 @@ const PaymentSuccess = () => {
                     <span>Receipt</span>
                   </button>
                   <button className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center space-x-2">
-                    <BiShare className="w-4 h-4" />
+                    <BiShareAlt className="w-4 h-4" />
                     <span>Share</span>
                   </button>
                 </div>
