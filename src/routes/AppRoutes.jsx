@@ -31,6 +31,7 @@ import EditProfile from "../pages/EditProfile";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import PaymentSuccess from "../pages/PaymentSuccess";
 
 const AppRoutes = () => {
   return (
@@ -73,6 +74,7 @@ const AppRoutes = () => {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile/:username" element={<UserProfile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="payment/success" element={<PaymentSuccess />} />
         </Route>
       </Route>
     </Routes>
