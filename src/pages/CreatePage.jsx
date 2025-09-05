@@ -63,11 +63,6 @@ const CreatePage = () => {
       return;
     }
 
-    console.log("[CreatePage] image selected:", {
-      name: first.name,
-      size: first.size,
-      type: first.type,
-    });
     setImages([first]);
     setError(""); // Clear any previous errors
   };
@@ -102,11 +97,6 @@ const CreatePage = () => {
         return;
       }
 
-      console.log("[CreatePage] image dropped:", {
-        name: img.name,
-        size: img.size,
-        type: img.type,
-      });
       setImages([img]);
       setError(""); // Clear any previous errors
     }
@@ -117,19 +107,16 @@ const CreatePage = () => {
     if (images && images[0]) {
       try {
         const url = URL.createObjectURL(images[0]);
-        console.log("Creating preview URL:", url);
         setPreviewUrl(url);
         return () => {
           try {
             URL.revokeObjectURL(url);
-            console.log("Revoked preview URL:", url);
-          } catch (error) {
-            console.warn("Failed to revoke URL:", error);
+          } catch {
+            // Ignore cleanup errors
           }
         };
-      } catch (error) {
-        console.error("Failed to create preview URL:", error);
-        setError("Failed to preview image");
+      } catch {
+        // Ignore preview URL creation errors
       }
     } else {
       setPreviewUrl(null);
@@ -144,38 +131,69 @@ const CreatePage = () => {
     setSuccess(false);
 
     try {
-      // Build multipart/form-data payload
-      const form = new FormData();
-      form.append("caption", content || "");
-      if (images && images[0]) {
-        form.append("image", images[0]);
-      }
-      form.append("location", location || "");
-      form.append("privacy", privacy || "public");
-
       const tokensRaw = localStorage.getItem("authTokens");
       const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
       const headers = access ? { Authorization: `JWT ${access}` } : {};
 
-      // Do NOT set Content-Type header; let the browser set the multipart boundary
-      const res = await apiClient.post("/posts/", form, { headers });
-      console.log(
-        "[CreatePage] server response:",
-        res && res.status,
-        res && res.data
-      );
-      if (res && (res.status === 200 || res.status === 201)) {
-        console.log("[CreatePage] Post created successfully:", res.data);
+      let res;
 
-        // If the response includes image data, let's log it to see the structure
-        if (res.data && res.data.image) {
-          console.log("[CreatePage] Image URL from server:", res.data.image);
-          console.log(
-            "[CreatePage] Full Cloudinary URL would be:",
-            getImageUrl(res.data.image)
-          );
+      // Check if we have an image to upload
+      if (images && images.length > 0 && images[0]) {
+        // Use FormData for posts with images
+        const form = new FormData();
+        form.append("caption", content || "");
+        form.append("image", images[0]);
+        if (location && location.trim()) {
+          form.append("location", location.trim());
+        }
+        form.append("privacy", privacy || "public");
+
+        // Use transformRequest to ensure no Content-Type conflicts
+        res = await apiClient.post("/posts/", form, {
+          headers: {
+            ...headers,
+          },
+          transformRequest: [
+            function (data, headers) {
+              delete headers["Content-Type"];
+              return data;
+            },
+          ],
+        });
+      } else {
+        // Use regular JSON for text-only posts
+        const postData = {
+          caption: content || "",
+          privacy: privacy || "public",
+        };
+
+        // Only include location if it has content
+        if (location && location.trim()) {
+          postData.location = location.trim();
         }
 
+        // Make a direct fetch call to avoid apiClient's default headers interfering
+        const response = await fetch("http://127.0.0.1:8000/api/v1/posts/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          body: JSON.stringify(postData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(JSON.stringify(errorData));
+        }
+
+        res = {
+          status: response.status,
+          data: await response.json(),
+        };
+      }
+
+      if (res && (res.status === 200 || res.status === 201)) {
         setSuccess(true);
         setContent("");
         setImages([]);
@@ -185,16 +203,15 @@ const CreatePage = () => {
         setError("Failed to create post. Server returned unexpected status.");
       }
     } catch (err) {
-      console.error("[CreatePage] request error:", err);
       if (err && err.response) {
         try {
-          setError(
+          const errorMessage =
             typeof err.response.data === "string"
               ? err.response.data
-              : JSON.stringify(err.response.data)
-          );
+              : JSON.stringify(err.response.data, null, 2);
+          setError(`Failed to share post: ${errorMessage}`);
         } catch {
-          setError(String(err.response.data));
+          setError(`Failed to share post: ${String(err.response.data)}`);
         }
       } else {
         setError(err.message || "Failed to create post");
@@ -238,7 +255,6 @@ const CreatePage = () => {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         // Fallback if image fails to load
-                        console.error("Failed to load user profile image:", e);
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
                       }}
@@ -369,14 +385,12 @@ const CreatePage = () => {
                     alt="Preview"
                     className="w-full h-64 object-cover bg-white"
                     onLoad={() => {
-                      console.log("Image loaded successfully");
                       setImageLoading(false);
                     }}
                     onLoadStart={() => {
                       setImageLoading(true);
                     }}
-                    onError={(e) => {
-                      console.error("Image failed to load:", e);
+                    onError={() => {
                       setImageLoading(false);
                       setPreviewUrl(null);
                       setImages([]);
@@ -526,40 +540,6 @@ const CreatePage = () => {
                 <p className="text-green-600 text-sm">
                   Your post is now live and visible to your audience.
                 </p>
-              </div>
-            </div>
-
-            {/* Debug section to test image URLs */}
-            <div className="mt-4 p-3 bg-green-100 rounded-lg">
-              <p className="text-green-700 text-sm font-medium mb-2">
-                Debug Info:
-              </p>
-              <div className="space-y-2 text-xs text-green-600">
-                <div>
-                  User Profile Image: {getUserProfileImage() || "Not available"}
-                </div>
-                <div>
-                  Cloudinary Base URL: https://res.cloudinary.com/dlkq5sjum/
-                </div>
-                <div>
-                  Sample Post Image URL:{" "}
-                  {getImageUrl("image/upload/v1234567890/sample_post.jpg")}
-                </div>
-                {user?.profile_picture && (
-                  <div className="mt-2">
-                    <img
-                      src={getUserProfileImage()}
-                      alt="Profile test"
-                      className="w-12 h-12 rounded-full object-cover border"
-                      onError={(e) =>
-                        console.error("Profile image test failed:", e)
-                      }
-                      onLoad={() =>
-                        console.log("Profile image test loaded successfully")
-                      }
-                    />
-                  </div>
-                )}
               </div>
             </div>
           </div>
