@@ -1,45 +1,31 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { BiStar, BiCheck, BiX } from "react-icons/bi";
 import AuthApiClient from "../services/auth-api-client";
 
 const MonetizationPage = () => {
   const [loading, setLoading] = useState(false);
 
-  const handlePayment = async (username, planName, amount) => {
+  const handlePayment = async () => {
     setLoading(true);
-
     try {
-      const orderData = {
-        amount: amount,
-        orderId: `plan_${planName.toLowerCase()}_${Date.now()}`,
-        numItems: 1,
-      };
-
-      const response = await AuthApiClient.post(`payment/initiate/`, {
-        amount: orderData.amount,
-        orderId: orderData.orderId,
-        numItems: orderData.numItems,
-      });
-
+      const response = await AuthApiClient.post(`payment/initiate/`);
       console.log("Payment response:", response);
-
       if (response.status === 200) {
         window.location.href = response.data.payment_url;
       } else {
         alert("Payment failed");
       }
     } catch (error) {
-      console.error("Payment error:", error);
-      alert(
-        `Failed to initiate payment for ${planName} plan. Please try again.`
-      );
+      console.error("❌ Payment Error Details:");
+      console.error("Error:", error);
+      console.error("Status:", error.response?.status);
+      console.error("Backend Error:", error.response?.data);
+      console.error("Message:", error.message);
+      
+      alert(`Payment failed: ${error.response?.data?.detail || error.message || "Unknown error"}`);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePurchasePlan = (planName, amount) => {
-    handlePayment(planName, amount);
   };
 
   return (
@@ -143,7 +129,7 @@ const MonetizationPage = () => {
             </ul>
 
             <button
-              onClick={() => handlePurchasePlan("Pro", 99)}
+              onClick={handlePayment}
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             >

@@ -8,7 +8,7 @@ const PaymentSuccess = () => {
       <span>
         Return to{" "}
         <Link to="/monetization" className="text-blue-500 hover:underline">
-          Monitization
+          Monetization
         </Link>
       </span>
     </div>
