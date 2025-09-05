@@ -12,7 +12,6 @@ import {
   MdLocationOn,
   MdEmail,
   MdPhone,
-  MdLanguage,
   MdCalendarToday,
   MdFavorite,
   MdLock,
@@ -51,12 +50,6 @@ const EditProfile = () => {
   // Initialize form with user data from context
   useEffect(() => {
     if (user) {
-      console.log("✅ Initializing form with user data:", {
-        userId: user._id,
-        privacy: user.is_private,
-        privacyType: typeof user.is_private,
-      });
-
       setFormData({
         cover_photo: user.cover_photo || "",
         profile_picture: user.profile_picture || "",
@@ -100,10 +93,8 @@ const EditProfile = () => {
       if (!value.startsWith("@")) {
         usernameError = "Username must start with @";
       } else if (value.length < 4) {
-        // @abc minimum
         usernameError = "Username must be at least 4 characters (including @)";
       } else if (value.length > 21) {
-        // @username... maximum
         usernameError = "Username must be at most 21 characters (including @)";
       } else if (!/^@[a-zA-Z0-9_]{3,20}$/.test(value.trim())) {
         usernameError =
