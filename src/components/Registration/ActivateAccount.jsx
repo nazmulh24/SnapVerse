@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import ErroAlert from "../Alert/ErrorAlert";
+import ErrorAlert from "../Alert/ErrorAlert";
 import apiClient from "../../services/api-client";
 
 const ActivateAccount = () => {
@@ -13,13 +13,15 @@ const ActivateAccount = () => {
   useEffect(() => {
     apiClient
       .post("/auth/users/activation/", { uid, token })
-      .then(() => {
-        setMessage("Account activate successfully");
+      .then((response) => {
+        console.log("Activation successful:", response.data);
+        setMessage("Account activated successfully! Redirecting to login...");
         setTimeout(() => navigate("/login"), 3000);
       })
       .catch((error) => {
         setError("Something Went Wrong. Please check your activation link");
-        console.log(error);
+        console.error("Activation error:", error);
+        console.error("Error response:", error.response?.data);
       });
   }, [uid, token, navigate]);
 
@@ -45,7 +47,7 @@ const ActivateAccount = () => {
             <span>{message}</span>
           </div>
         )}
-        {error && <ErroAlert error={error} />}
+        {error && <ErrorAlert error={error} />}
       </div>
     </div>
   );
