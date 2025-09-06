@@ -32,7 +32,7 @@ import EditProfile from "../pages/EditProfile";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import PaymentSuccess from "../pages/PaymentSuccess";
-// import ForgotPassword from "../pages/ForgotPassword";
+import ForgotPassword from "../pages/ForgotPassword";
 // import ResetPassword from "../pages/ResetPassword";
 import ActivateAccount from "../components/Registration/ActivateAccount";
 
@@ -43,8 +43,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      {/* <Route
         path="password/reset/confirm/:uid/:token"
         element={<ResetPassword />}
       /> */}
