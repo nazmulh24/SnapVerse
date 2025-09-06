@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useForm } from "react-hook-form";
 import useAuthContext from "../hooks/useAuthContext";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import {
@@ -18,7 +17,6 @@ import {
   MdLock,
   MdVisibility,
 } from "react-icons/md";
-import EditPasswordForm from "./EditPasswordForm";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -48,14 +46,6 @@ const EditProfile = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(true);
-
-  // React Hook Form for password form
-  const {
-    register,
-    watch,
-    formState: { errors: passwordErrors },
-  } = useForm();
 
   // Initialize form with user data from context
   useEffect(() => {
@@ -714,13 +704,6 @@ const EditProfile = () => {
                   </div>
                 </div>
               </div>
-
-              <EditPasswordForm
-                register={register}
-                errors={errors}
-                watch={watch}
-                isEditing={isEditing}
-              />
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-gray-200">
