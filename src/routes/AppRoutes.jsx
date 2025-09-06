@@ -32,6 +32,9 @@ import EditProfile from "../pages/EditProfile";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import PaymentSuccess from "../pages/PaymentSuccess";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
+import ActivateAccount from "../Registration/ActivateAccount";
 
 const AppRoutes = () => {
   return (
@@ -39,6 +42,14 @@ const AppRoutes = () => {
       {/* Public Routes - Only Login/Register accessible without authentication */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route
+        path="password/reset/confirm/:uid/:token"
+        element={<ResetPassword />}
+      />
+
+      <Route path="activate/:uid/:token" element={<ActivateAccount />} />
 
       {/* Private Routes - All other routes require authentication */}
       <Route element={<PrivateRoute />}>
@@ -72,8 +83,10 @@ const AppRoutes = () => {
 
           <Route path="/activity" element={<ActivityPage />} />
           <Route path="/account" element={<AccountPage />} />
+
           <Route path="/profile/:username" element={<UserProfile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
+
           <Route path="payment/success" element={<PaymentSuccess />} />
         </Route>
       </Route>
