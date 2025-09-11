@@ -1,4 +1,5 @@
 import React from "react";
+import { generateLocalPlaceholder } from "../../utils/avatarUtils";
 
 // Mock sponsor data - can be easily modified or replaced with API data
 const SPONSOR_DATA = [
@@ -128,8 +129,7 @@ const SponsorCard = ({
             className="w-full h-48 object-cover"
             loading="lazy"
             onError={(e) => {
-              e.target.src =
-                "https://via.placeholder.com/400x200/f3f4f6/6b7280?text=Sponsor+Image";
+              e.target.src = generateLocalPlaceholder("Sponsor Image", 400, 200);
             }}
           />
           {/* Brand Badge */}

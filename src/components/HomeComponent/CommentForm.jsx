@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Send } from "lucide-react";
 import AuthContext from "../../context/AuthContext";
-import { getAvatarUrl } from "../../utils/avatarUtils";
+import { getAvatarUrl, handleAvatarError } from "../../utils/avatarUtils";
 
 const CommentForm = ({
   onSubmit,
@@ -44,6 +44,7 @@ const CommentForm = ({
           src={getAvatarUrl(user, 32)}
           alt="Your avatar"
           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          onError={(e) => handleAvatarError(e, user?.full_name || user?.username || 'U', 32)}
         />
 
         {/* Comment input */}

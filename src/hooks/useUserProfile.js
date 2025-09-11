@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useAuthContext from "./useAuthContext";
 import usePosts from "./usePosts";
+import { API_BASE_URL } from "../config/api";
 
 const useUserProfile = (username) => {
   const { user: currentUser } = useAuthContext();
@@ -61,7 +62,7 @@ const useUserProfile = (username) => {
         // Try each username format
         for (const tryUsername of uniqueUsernames) {
           const encodedUsername = encodeURIComponent(tryUsername);
-          const apiEndpoint = `http://127.0.0.1:8000/api/v1/users/${encodedUsername}/`;
+          const apiEndpoint = `${API_BASE_URL}/users/${encodedUsername}/`;
 
           try {
             const response = await fetch(apiEndpoint, {
@@ -184,15 +185,12 @@ const useUserProfile = (username) => {
                 continue;
               }
 
-              const response = await fetch(
-                `http://127.0.0.1:8000/api/v1/posts/${postId}/`,
-                {
-                  headers: {
-                    Authorization: `JWT ${accessToken}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
+              const response = await fetch(`${API_BASE_URL}/posts/${postId}/`, {
+                headers: {
+                  Authorization: `JWT ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
 
               if (response.ok) {
                 const post = await response.json();

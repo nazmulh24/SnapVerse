@@ -173,23 +173,15 @@ const CreatePage = () => {
         }
 
         // Make a direct fetch call to avoid apiClient's default headers interfering
-        const response = await fetch("http://127.0.0.1:8000/api/v1/posts/", {
-          method: "POST",
+        const response = await apiClient.post("/posts/", postData, {
           headers: {
-            "Content-Type": "application/json",
             ...headers,
           },
-          body: JSON.stringify(postData),
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(JSON.stringify(errorData));
-        }
 
         res = {
           status: response.status,
-          data: await response.json(),
+          data: response.data,
         };
       }
 

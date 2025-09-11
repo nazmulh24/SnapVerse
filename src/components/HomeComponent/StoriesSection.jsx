@@ -1,5 +1,6 @@
 import React from "react";
 import { BiPlus } from "react-icons/bi";
+import { generateLocalAvatar } from "../../utils/avatarUtils";
 
 const StoriesSection = ({ stories = [] }) => {
   const defaultStories = [
@@ -8,48 +9,48 @@ const StoriesSection = ({ stories = [] }) => {
       username: "Your Story",
       hasNewStory: false,
       isOwnStory: true,
-      avatar: "https://via.placeholder.com/64x64/8B5CF6/FFFFFF?text=You",
+      avatar: generateLocalAvatar("You", 64, "#8B5CF6"),
     },
     {
       id: 2,
       username: "Sarah",
       hasNewStory: true,
-      avatar: "https://via.placeholder.com/64x64/EC4899/FFFFFF?text=S",
+      avatar: generateLocalAvatar("Sarah", 64, "#EC4899"),
       lastSeen: "2h",
     },
     {
       id: 3,
       username: "Mike",
       hasNewStory: true,
-      avatar: "https://via.placeholder.com/64x64/10B981/FFFFFF?text=M",
+      avatar: generateLocalAvatar("Mike", 64, "#10B981"),
       lastSeen: "5h",
     },
     {
       id: 4,
       username: "Emma",
       hasNewStory: true,
-      avatar: "https://via.placeholder.com/64x64/F59E0B/FFFFFF?text=E",
+      avatar: generateLocalAvatar("Emma", 64, "#F59E0B"),
       lastSeen: "8h",
     },
     {
       id: 5,
       username: "John",
       hasNewStory: false,
-      avatar: "https://via.placeholder.com/64x64/6B7280/FFFFFF?text=J",
+      avatar: generateLocalAvatar("John", 64, "#6B7280"),
       lastSeen: "1d",
     },
     {
       id: 6,
       username: "Lisa",
       hasNewStory: true,
-      avatar: "https://via.placeholder.com/64x64/EF4444/FFFFFF?text=L",
+      avatar: generateLocalAvatar("Lisa", 64, "#EF4444"),
       lastSeen: "3h",
     },
     {
       id: 7,
       username: "David",
       hasNewStory: false,
-      avatar: "https://via.placeholder.com/64x64/3B82F6/FFFFFF?text=D",
+      avatar: generateLocalAvatar("David", 64, "#3B82F6"),
       lastSeen: "2d",
     },
   ];
@@ -80,6 +81,9 @@ const StoriesSection = ({ stories = [] }) => {
                     src={story.avatar}
                     alt={story.username}
                     className="w-full h-full rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.src = generateLocalAvatar(story.username, 64);
+                    }}
                   />
                 </div>
               </div>

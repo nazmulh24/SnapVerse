@@ -1,8 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 const apiClient = axios.create({
-  baseURL: "https://snapverse-api-rho.vercel.app/api/v1/",
-  // baseURL: "http://127.0.0.1:8000/api/v1/",
+  baseURL: API_BASE_URL,
   timeout: 5000, // 5 seconds timeout
   headers: {
     "Content-Type": "application/json",
