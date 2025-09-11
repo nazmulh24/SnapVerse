@@ -74,17 +74,29 @@ const useApi = () => {
           error
         );
 
-        const errorMessage =
-          error.response?.data?.detail ||
-          error.response?.data?.message ||
-          error.message ||
-          "Something went wrong";
+        let errorMessage;
+
+        // Handle timeout errors specifically
+        if (
+          error.code === "ECONNABORTED" ||
+          error.message?.includes("timeout")
+        ) {
+          errorMessage =
+            "Request timeout - the server is taking too long to respond. Please try again.";
+        } else {
+          errorMessage =
+            error.response?.data?.detail ||
+            error.response?.data?.message ||
+            error.message ||
+            "Something went wrong";
+        }
 
         const errorResult = {
           success: false,
           error: errorMessage,
           status: error.response?.status,
           data: error.response?.data,
+          code: error.code, // Include error code for better debugging
         };
 
         setError(errorResult);
