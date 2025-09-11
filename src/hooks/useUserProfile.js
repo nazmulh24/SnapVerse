@@ -3,15 +3,10 @@ import useAuthContext from "./useAuthContext";
 import usePosts from "./usePosts";
 import AuthApiClient from "../services/auth-api-client";
 
-// Simple in-memory cache for user profiles
-const profileCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
 const useUserProfile = (username) => {
   const { user: currentUser } = useAuthContext();
   const {
     posts,
-    loadPosts,
     loadMyPosts,
     handleLike,
     handleComment,
@@ -34,17 +29,8 @@ const useUserProfile = (username) => {
   // Check if viewing own profile - use username directly
   const isOwnProfile = currentUser?.username === username;
 
-  // Check cache first
-  const getCachedProfile = (username) => {
-    const cached = profileCache.get(username);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return cached.data;
-    }
-    return null;
-  };
-
   // Check if current user is following the profile user
-  const checkFollowStatus = async (profileUserId) => {
+  const checkFollowStatus = useCallback(async (profileUserId) => {
     try {
       console.log("🔍 Checking follow status for user ID:", profileUserId);
       const response = await AuthApiClient.get("/follows/following/");
@@ -71,7 +57,7 @@ const useUserProfile = (username) => {
       setIsFollowing(false);
       return false;
     }
-  };
+  }, []);
 
   // Function to load posts for a user with explicit follow status
   const loadPostsForUserWithStatus = useCallback(
@@ -169,84 +155,6 @@ const useUserProfile = (username) => {
     [isOwnProfile]
   );
 
-  // Function to load posts for a user
-  const loadPostsForUser = useCallback(
-    async (realUserData) => {
-      // Check if user can view private content first
-      const canView = isOwnProfile || !realUserData.is_private || isFollowing;
-
-      if (!canView) {
-        console.log("Cannot view posts for private account");
-        setUserSpecificPosts([]);
-        setLoadingUserPosts(false);
-        return;
-      }
-
-      // If user profile has posts array with IDs, fetch them in parallel
-      if (
-        realUserData.posts &&
-        Array.isArray(realUserData.posts) &&
-        realUserData.posts.length > 0
-      ) {
-        setLoadingUserPosts(true);
-
-        try {
-          const postIds = realUserData.posts.slice(0, 10); // Limit to first 10 posts for performance
-
-          // Fetch all posts in parallel instead of sequentially
-          const postPromises = postIds.map(async (postId) => {
-            try {
-              const response = await AuthApiClient.get(`/posts/${postId}/`);
-              return response.data;
-            } catch (error) {
-              console.warn(`Failed to fetch post ${postId}:`, error);
-              return null;
-            }
-          });
-
-          const fetchedPosts = await Promise.all(postPromises);
-          const validPosts = fetchedPosts.filter((post) => post !== null);
-
-          // Filter posts based on privacy levels
-          const filteredPosts = validPosts.filter((post) => {
-            // If it's the user's own profile, show all posts
-            if (isOwnProfile) {
-              return true;
-            }
-
-            // Check privacy field (new logic)
-            if (post.privacy) {
-              switch (post.privacy) {
-                case "public":
-                  return true; // Anyone can see
-                case "followers":
-                  return isFollowing; // Only followers can see
-                case "private":
-                  return false; // Only owner can see (already handled above)
-                default:
-                  return true; // Default to public if unknown privacy value
-              }
-            }
-
-            // Fallback to old is_private field for backwards compatibility
-            return !post.is_private;
-          });
-
-          setUserSpecificPosts(filteredPosts);
-        } catch (error) {
-          console.error("Error loading posts for user:", error);
-          setUserSpecificPosts([]);
-        } finally {
-          setLoadingUserPosts(false);
-        }
-      } else {
-        setUserSpecificPosts([]);
-        setLoadingUserPosts(false);
-      }
-    },
-    [isOwnProfile, isFollowing]
-  );
-
   // Load user profile and posts
   useEffect(() => {
     const loadUserData = async () => {
@@ -258,19 +166,12 @@ const useUserProfile = (username) => {
       console.log("Username type:", typeof username);
       console.log("Username encoded:", encodeURIComponent(username));
 
-      // Check cache first for faster loading
-      const cachedProfile = getCachedProfile(username);
-      if (cachedProfile) {
-        console.log(`📋 Using cached profile for: ${username}`);
-        setApiResponse(cachedProfile.data);
-        setApiError(null);
-        setIsLoadingProfile(false);
-        return;
-      }
-
       try {
         setIsLoadingProfile(true);
         setApiError(null);
+        // Reset follow status to prevent stale data
+        setIsFollowing(false);
+        setUserSpecificPosts([]);
 
         console.log(`🔍 Fetching user profile for: ${username}`);
 
@@ -282,12 +183,6 @@ const useUserProfile = (username) => {
         if (response.data) {
           const realUserData = response.data;
           console.log(`✅ Successfully found user data for: ${username}`);
-
-          // Cache the profile data
-          profileCache.set(username, {
-            data: realUserData,
-            timestamp: Date.now(),
-          });
 
           // Check follow status BEFORE setting profile data for other users
           let followStatus = false;
@@ -361,9 +256,8 @@ const useUserProfile = (username) => {
     currentUser,
     isOwnProfile,
     loadMyPosts,
-    loadPosts,
-    loadPostsForUser,
     loadPostsForUserWithStatus,
+    checkFollowStatus,
   ]);
 
   // Return filtered posts - use userSpecificPosts if available, otherwise filter general posts

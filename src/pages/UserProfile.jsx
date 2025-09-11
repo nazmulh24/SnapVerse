@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import useUserProfile from "../hooks/useUserProfile";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
@@ -15,6 +15,7 @@ import PhotosTab from "../components/UserProfile/PhotosTab";
 const UserProfile = () => {
   const { username } = useParams();
   const [activeTab, setActiveTab] = useState("posts");
+  const [isPrivacyCheckComplete, setIsPrivacyCheckComplete] = useState(false);
 
   const {
     profileUser,
@@ -33,6 +34,19 @@ const UserProfile = () => {
     handleFollow,
     loadMorePosts,
   } = useUserProfile(username);
+
+  // Use effect to handle privacy check completion
+  useEffect(() => {
+    if (!isLoadingProfile && profileUser) {
+      // Give a small delay to ensure follow status is properly set
+      const timer = setTimeout(() => {
+        setIsPrivacyCheckComplete(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setIsPrivacyCheckComplete(false);
+    }
+  }, [isLoadingProfile, profileUser, isFollowing]);
 
   // Loading state
   if (isLoadingProfile) {
@@ -84,12 +98,22 @@ const UserProfile = () => {
 
   // Helper function to check if user can view private content
   const canViewPrivateContent = () => {
-    console.log("🔍 Privacy Check:", {
+    // Add more detailed debugging
+    console.log("🔍 Privacy Check Details:", {
       isOwnProfile,
       isPrivate: profileUser?.is_private,
       isFollowing,
       username: profileUser?.username,
+      profileUserExists: !!profileUser,
+      isLoadingProfile,
+      loadingUserPosts,
     });
+
+    // If we don't have profile data yet, don't allow viewing
+    if (!profileUser) {
+      console.log("❌ No profile data yet");
+      return false;
+    }
 
     // Own profile - can always view
     if (isOwnProfile) {
@@ -113,13 +137,16 @@ const UserProfile = () => {
     return canView;
   };
 
-  // Debug userPosts
+  // Debug userPosts and states
   console.log("🔍 UserProfile Debug:", {
     userPostsLength: userPosts?.length,
     userPosts: userPosts,
     loadingUserPosts,
     isLoadingProfile,
     profileUser: profileUser?.username,
+    isFollowing,
+    isPrivate: profileUser?.is_private,
+    canView: profileUser ? canViewPrivateContent() : "profile not loaded",
   });
 
   // Helper function to get user's full name
@@ -162,6 +189,23 @@ const UserProfile = () => {
 
   // Render tab content based on active tab
   const renderTabContent = () => {
+    // Show loading while profile is still loading, privacy check is incomplete, or if we have a private account and follow status might still be loading
+    if (
+      !profileUser ||
+      !isPrivacyCheckComplete ||
+      (profileUser?.is_private && !isOwnProfile && loadingUserPosts)
+    ) {
+      return (
+        <div className="p-8 text-center">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+          </div>
+        </div>
+      );
+    }
+
     // Check privacy before rendering content
     if (!canViewPrivateContent()) {
       return (
