@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import apiClient from "../services/api-client";
+import AuthApiClient from "../services/auth-api-client";
+import { getAvatarUrl } from "../utils/avatarUtils";
 
 export default function useConnectionsApi(user) {
   const [counts, setCounts] = useState({
@@ -12,6 +13,8 @@ export default function useConnectionsApi(user) {
   const [following, setFollowing] = useState([]);
   const [pending, setPending] = useState([]);
   const [processingId, setProcessingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // localStorage key for client-side pending follow timestamps
   const LS_KEY = "snapverse_follow_requests";
@@ -70,7 +73,7 @@ export default function useConnectionsApi(user) {
       is_private: !!u.is_private,
       name: `${u.first_name} ${u.last_name}`.trim() || u.username,
       username: u.username,
-      avatar: u.profile_picture || "/user-profile-illustration.png",
+      avatar: getAvatarUrl(u),
     };
   };
 
@@ -81,7 +84,7 @@ export default function useConnectionsApi(user) {
       is_private: !!u.is_private,
       name: `${u.first_name} ${u.last_name}`.trim() || u.username,
       username: u.username,
-      avatar: u.profile_picture || "/user-profile-illustration.png",
+      avatar: getAvatarUrl(u),
     };
   };
 
@@ -93,7 +96,7 @@ export default function useConnectionsApi(user) {
       is_private: !!u.is_private,
       name: `${u.first_name} ${u.last_name}`.trim() || u.username,
       username: u.username,
-      avatar: u.profile_picture || "/user-profile-illustration.png",
+      avatar: getAvatarUrl(u),
     };
   };
 
@@ -102,10 +105,7 @@ export default function useConnectionsApi(user) {
     try {
       const map = loadRequestMap();
       // get our following ids to detect accepted requests
-      const tokensRaw = localStorage.getItem("authTokens");
-      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
-      const headers = access ? { Authorization: `JWT ${access}` } : {};
-      const fr = await apiClient.get("/follows/following/", { headers });
+      const fr = await AuthApiClient.get("/follows/following/");
       const followingIds = (fr.data.results || []).map((it) => it.following.id);
       const { map: newMap, changed } = pruneRequestMap(map, followingIds, []);
       if (changed) saveRequestMap(newMap);
@@ -128,19 +128,34 @@ export default function useConnectionsApi(user) {
   }, []);
 
   useEffect(() => {
-    if (!user) return; // Don't fetch if no user is logged in
+    if (!user) {
+      setLoading(false);
+      return; // Don't fetch if no user is logged in
+    }
 
-    const getAuthHeaders = () => {
-      const tokensRaw = localStorage.getItem("authTokens");
-      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
-      return access ? { Authorization: `JWT ${access}` } : {};
+    const fetchAllData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await Promise.all([
+          fetchCounts(),
+          fetchFollowers(),
+          fetchFollowing(),
+          fetchPending(),
+        ]);
+      } catch (err) {
+        console.error("Error fetching connection data:", err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     const fetchCounts = async () => {
       try {
-        const headers = getAuthHeaders();
-        console.log("Fetching counts with headers:", headers);
-        const res = await apiClient.get("/follows/", { headers });
+        console.log("Fetching counts...");
+        const res = await AuthApiClient.get("/follows/");
         console.log("Counts response:", res.data);
         setCounts(res.data);
       } catch (error) {
@@ -153,13 +168,13 @@ export default function useConnectionsApi(user) {
           following_count: 0,
           pending_requests_count: 0,
         });
+        throw error;
       }
     };
     const fetchFollowers = async () => {
       try {
-        const headers = getAuthHeaders();
-        console.log("Fetching followers with headers:", headers);
-        const res = await apiClient.get("/follows/followers/", { headers });
+        console.log("Fetching followers...");
+        const res = await AuthApiClient.get("/follows/followers/");
         console.log("Followers response:", res.data);
         const mapped = (res.data.results || []).map(mapFollowerItem);
         setFollowers(mapped);
@@ -169,13 +184,13 @@ export default function useConnectionsApi(user) {
           error.response?.data || error.message
         );
         setFollowers([]);
+        throw error;
       }
     };
     const fetchFollowing = async () => {
       try {
-        const headers = getAuthHeaders();
-        console.log("Fetching following with headers:", headers);
-        const res = await apiClient.get("/follows/following/", { headers });
+        console.log("Fetching following...");
+        const res = await AuthApiClient.get("/follows/following/");
         console.log("Following response:", res.data);
         const mapped = (res.data.results || []).map(mapFollowingItem);
         setFollowing(mapped);
@@ -185,15 +200,13 @@ export default function useConnectionsApi(user) {
           error.response?.data || error.message
         );
         setFollowing([]);
+        throw error;
       }
     };
     const fetchPending = async () => {
       try {
-        const headers = getAuthHeaders();
-        console.log("Fetching pending with headers:", headers);
-        const res = await apiClient.get("/follows/pending_requests/", {
-          headers,
-        });
+        console.log("Fetching pending...");
+        const res = await AuthApiClient.get("/follows/pending_requests/");
         console.log("Pending response:", res.data);
         const mapped = (res.data.results || []).map(mapPendingItem);
         setPending(mapped);
@@ -203,22 +216,15 @@ export default function useConnectionsApi(user) {
           error.response?.data || error.message
         );
         setPending([]);
+        throw error;
       }
     };
-    fetchCounts();
-    fetchFollowers();
-    fetchFollowing();
-    fetchPending();
+
+    fetchAllData();
   }, [user]);
 
   // handleAction(userId, action, requestId?) - requestId is the pending-request record id (if available)
   const handleAction = async (userId, action, requestId = null) => {
-    const getAuthHeaders = () => {
-      const tokensRaw = localStorage.getItem("authTokens");
-      const access = tokensRaw ? JSON.parse(tokensRaw)?.access : null;
-      return access ? { Authorization: `JWT ${access}` } : {};
-    };
-
     // determine target user's privacy from cached lists (followers, following, pending)
     const targetUser =
       followers.find((f) => f.id === userId) ||
@@ -240,7 +246,7 @@ export default function useConnectionsApi(user) {
             is_private: false,
             name: "",
             username: "",
-            avatar: "/user-profile-illustration.png",
+            avatar: getAvatarUrl({ username: "", name: "" }),
           };
           // prepend to following so isFollowing becomes true instantly
           setFollowing((f) => [followObj, ...f]);
@@ -251,12 +257,7 @@ export default function useConnectionsApi(user) {
         }
         // small UX delay and prevent double clicks
         await new Promise((r) => setTimeout(r, 2000));
-        const headers = getAuthHeaders();
-        await apiClient.post(
-          "/follows/follow_user/",
-          { user_id: userId },
-          { headers }
-        );
+        await AuthApiClient.post("/follows/follow_user/", { user_id: userId });
 
         // Use target user's privacy to decide whether the follow is immediate or a request
         if (targetIsPrivate) {
@@ -267,11 +268,10 @@ export default function useConnectionsApi(user) {
           setRequestSent(Object.keys(map).map((k) => Number(k)));
         } else {
           // refresh lists for public follow
-          const headers = getAuthHeaders();
           const [countsRes, followersRes, followingRes] = await Promise.all([
-            apiClient.get("/follows/", { headers }),
-            apiClient.get("/follows/followers/", { headers }),
-            apiClient.get("/follows/following/", { headers }),
+            AuthApiClient.get("/follows/"),
+            AuthApiClient.get("/follows/followers/"),
+            AuthApiClient.get("/follows/following/"),
           ]);
           setCounts(countsRes.data);
           const mappedFollowers = (followersRes.data.results || []).map(
@@ -282,7 +282,7 @@ export default function useConnectionsApi(user) {
                 is_private: !!u.is_private,
                 name: `${u.first_name} ${u.last_name}`.trim() || u.username,
                 username: u.username,
-                avatar: u.profile_picture || "/user-profile-illustration.png",
+                avatar: getAvatarUrl(u),
               };
             }
           );
@@ -295,7 +295,7 @@ export default function useConnectionsApi(user) {
                 is_private: !!u.is_private,
                 name: `${u.first_name} ${u.last_name}`.trim() || u.username,
                 username: u.username,
-                avatar: u.profile_picture || "/user-profile-illustration.png",
+                avatar: getAvatarUrl(u),
               };
             }
           );
@@ -311,7 +311,8 @@ export default function useConnectionsApi(user) {
         } catch {
           // ignore
         }
-        alert("Failed to follow user. Please try again.");
+        console.error("Failed to follow user:", userId);
+        // Removed alert for better UX
       } finally {
         setTimeout(() => setProcessingId(null), 300);
       }
@@ -321,17 +322,14 @@ export default function useConnectionsApi(user) {
     if (action === "Unfollow") {
       setProcessingId(userId);
       try {
-        const headers = getAuthHeaders();
-        await apiClient.post(
-          "/follows/unfollow_user/",
-          { user_id: userId },
-          { headers }
-        );
+        await AuthApiClient.post("/follows/unfollow_user/", {
+          user_id: userId,
+        });
         // Refresh counts, following and followers to keep UI consistent
         const [countsRes, followingRes, followersRes] = await Promise.all([
-          apiClient.get("/follows/", { headers }),
-          apiClient.get("/follows/following/", { headers }),
-          apiClient.get("/follows/followers/", { headers }),
+          AuthApiClient.get("/follows/"),
+          AuthApiClient.get("/follows/following/"),
+          AuthApiClient.get("/follows/followers/"),
         ]);
         setCounts(countsRes.data);
         const mappedFollowing = (followingRes.data.results || []).map(
@@ -339,9 +337,10 @@ export default function useConnectionsApi(user) {
             const u = item.following;
             return {
               id: u.id,
+              is_private: !!u.is_private,
               name: `${u.first_name} ${u.last_name}`.trim() || u.username,
               username: u.username,
-              avatar: u.profile_picture || "/user-profile-illustration.png",
+              avatar: getAvatarUrl(u),
             };
           }
         );
@@ -351,15 +350,17 @@ export default function useConnectionsApi(user) {
             const u = item.follower;
             return {
               id: u.id,
+              is_private: !!u.is_private,
               name: `${u.first_name} ${u.last_name}`.trim() || u.username,
               username: u.username,
-              avatar: u.profile_picture || "/user-profile-illustration.png",
+              avatar: getAvatarUrl(u),
             };
           }
         );
         setFollowers(mappedFollowers);
       } catch {
-        alert("Failed to unfollow user. Please try again.");
+        console.error("Failed to unfollow user:", userId, error);
+        // Removed alert for better UX
       } finally {
         setTimeout(() => setProcessingId(null), 300);
       }
@@ -370,7 +371,6 @@ export default function useConnectionsApi(user) {
     if (action === "Accept" || action === "Reject") {
       setProcessingId(userId);
       try {
-        const headers = getAuthHeaders();
         const actionStr = action === "Accept" ? "Approve" : "Reject";
         const payload = requestId
           ? { id: requestId, action: actionStr }
@@ -416,7 +416,7 @@ export default function useConnectionsApi(user) {
         for (const at of attempts) {
           tried.push(at.url);
           try {
-            await apiClient[at.method](at.url, at.data, { headers });
+            await AuthApiClient[at.method](at.url, at.data);
             succeeded = true;
             break;
           } catch (err) {
@@ -435,9 +435,9 @@ export default function useConnectionsApi(user) {
         }
 
         const [countsRes, followersRes, pendingRes] = await Promise.all([
-          apiClient.get("/follows/", { headers }),
-          apiClient.get("/follows/followers/", { headers }),
-          apiClient.get("/follows/pending_requests/", { headers }),
+          AuthApiClient.get("/follows/"),
+          AuthApiClient.get("/follows/followers/"),
+          AuthApiClient.get("/follows/pending_requests/"),
         ]);
         setCounts(countsRes.data);
         const mappedFollowers = (followersRes.data.results || []).map(
@@ -445,9 +445,10 @@ export default function useConnectionsApi(user) {
             const u = item.follower;
             return {
               id: u.id,
+              is_private: !!u.is_private,
               name: `${u.first_name} ${u.last_name}`.trim() || u.username,
               username: u.username,
-              avatar: u.profile_picture || "/user-profile-illustration.png",
+              avatar: getAvatarUrl(u),
             };
           }
         );
@@ -457,19 +458,21 @@ export default function useConnectionsApi(user) {
           return {
             id: u.id,
             requestId: item.id,
+            is_private: !!u.is_private,
             name: `${u.first_name} ${u.last_name}`.trim() || u.username,
             username: u.username,
-            avatar: u.profile_picture || "/user-profile-illustration.png",
+            avatar: getAvatarUrl(u),
           };
         });
         setPending(mappedPending);
       } catch (err) {
         console.error("Accept/Reject error:", err);
-        alert(
+        console.error(
           `${action} failed. Server returned ${
             err?.response?.status || "an error"
-          }. Check console.`
+          }.`
         );
+        // Removed alert for better UX
       } finally {
         setTimeout(() => setProcessingId(null), 300);
       }
@@ -488,5 +491,7 @@ export default function useConnectionsApi(user) {
     requestSent,
     handleAction,
     processingId,
+    loading,
+    error,
   };
 }

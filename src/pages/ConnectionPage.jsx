@@ -2,6 +2,8 @@ import React from "react";
 import useAuthContext from "../hooks/useAuthContext";
 import useConnectionsApi from "../hooks/useConnectionsApi";
 import UserList from "../components/Connection/UserList";
+import LoadingSpinner from "../components/shared/LoadingSpinner";
+import ErrorAlert from "../components/Alert/ErrorAlert";
 
 const ConnectionsPage = () => {
   const { user } = useAuthContext();
@@ -14,7 +16,28 @@ const ConnectionsPage = () => {
     requestSent,
     handleAction,
     processingId,
+    loading,
+    error,
   } = useConnectionsApi(user);
+
+  // Show login prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-xl p-8">
+        <h2 className="text-3xl font-extrabold mb-4 text-purple-800 tracking-tight">
+          Connections
+        </h2>
+        <div className="text-center py-12">
+          <p className="text-gray-600 mb-4">
+            Please log in to view your connections.
+          </p>
+          <a href="/login" className="btn btn-primary">
+            Log In
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   // Only show Pending Requests tab if user is private
   const tabList = [
@@ -33,6 +56,10 @@ const ConnectionsPage = () => {
   const displayedTab =
     !user?.is_private && activeTab === "pending" ? "followers" : activeTab;
 
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   const getList = () => {
     switch (displayedTab) {
       case "followers":
@@ -45,6 +72,28 @@ const ConnectionsPage = () => {
         return [];
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-xl p-8">
+        <h2 className="text-3xl font-extrabold mb-4 text-purple-800 tracking-tight">
+          Connections
+        </h2>
+        <LoadingSpinner size="lg" text="Loading connections..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-xl p-8">
+        <h2 className="text-3xl font-extrabold mb-4 text-purple-800 tracking-tight">
+          Connections
+        </h2>
+        <ErrorAlert error={error} showRetry={true} onRetry={handleRetry} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-xl p-8">

@@ -1,5 +1,6 @@
 import React from "react";
 import UserProfileLink from "../shared/UserProfileLink";
+import { getAvatarUrl } from "../../utils/avatarUtils";
 
 export default function UserList({
   users,
@@ -10,6 +11,11 @@ export default function UserList({
   processingId,
   isPrivate,
 }) {
+  const handleImageError = (e, user) => {
+    // Fallback to generated avatar on error
+    e.target.src = getAvatarUrl(user);
+  };
+
   return (
     <ul className="divide-y divide-gray-100">
       {users.map((user) => {
@@ -29,6 +35,7 @@ export default function UserList({
                 src={user.avatar}
                 alt={user.name}
                 className="w-14 h-14 rounded-full object-cover border-2 border-purple-100 shadow-sm group-hover:border-purple-400 transition-all"
+                onError={(e) => handleImageError(e, user)}
               />
               <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
             </UserProfileLink>
