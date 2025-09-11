@@ -16,6 +16,7 @@ const Post = ({ post, onLike, onShare }) => {
   const [commentsError, setCommentsError] = useState(null);
   const [loadingReactions, setLoadingReactions] = useState(false);
   const [reactionsError, setReactionsError] = useState(null);
+  const [reactionHelpers, setReactionHelpers] = useState(null);
 
   const { fetchComments, addComment, deleteComment, addReply, error } =
     useComments();
@@ -442,17 +443,35 @@ const Post = ({ post, onLike, onShare }) => {
       {/* Like and Comment Counts - Always show */}
       <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          {/* Total Reaction count on the left */}
-          <div className="text-sm text-gray-600 hover:underline transition-colors font-medium">
-            Total Reaction: {parseInt(postData.reactions_count) || 0}
-          </div>
+          {/* Total Reaction count on the left - Clickable */}
+          <button
+            onClick={() => reactionHelpers?.fetchReactionDetails?.()}
+            disabled={!reactionHelpers}
+            className="group flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600 transition-all duration-200 font-medium disabled:hover:text-gray-600 disabled:cursor-default"
+          >
+            <div className="flex items-center space-x-1">
+              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <span className="text-white text-xs">💝</span>
+              </div>
+              <span className="group-hover:underline">
+                {parseInt(postData.reactions_count) || 0} reactions
+              </span>
+            </div>
+          </button>
 
           {/* Total Comment count on the right */}
           <button
             onClick={handleCommentClick}
-            className="text-sm text-gray-600 hover:underline transition-colors font-medium"
+            className="group flex items-center space-x-2 text-sm text-gray-600 hover:text-green-600 transition-all duration-200 font-medium"
           >
-            Total Comments: {parseInt(postData.comments_count) || 0}
+            <div className="flex items-center space-x-1">
+              <div className="w-5 h-5 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <span className="text-white text-xs">💬</span>
+              </div>
+              <span className="group-hover:underline">
+                {parseInt(postData.comments_count) || 0} comments
+              </span>
+            </div>
           </button>
         </div>
       </div>
@@ -470,6 +489,7 @@ const Post = ({ post, onLike, onShare }) => {
         onFetchReactions={handleFetchReactions}
         loadingReactions={loadingReactions}
         reactionsError={reactionsError}
+        onShowReactionDetails={setReactionHelpers}
       />
 
       {/* Comment Section */}
