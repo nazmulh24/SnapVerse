@@ -19,7 +19,10 @@ const CreatePage = () => {
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
   const [location, setLocation] = useState("");
-  const [privacy, setPrivacy] = useState("public");
+  // Set default privacy based on user's account privacy setting
+  const [privacy, setPrivacy] = useState(
+    user?.is_private ? "followers" : "public"
+  );
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,6 +30,13 @@ const CreatePage = () => {
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
+
+  // Update privacy default when user data changes
+  useEffect(() => {
+    if (user) {
+      setPrivacy(user.is_private ? "followers" : "public");
+    }
+  }, [user]);
 
   // Utility function to get proper image URL from Cloudinary
   const getImageUrl = (imagePath) => {
@@ -190,7 +200,8 @@ const CreatePage = () => {
         setContent("");
         setImages([]);
         setLocation("");
-        setPrivacy("public");
+        // Reset privacy to default based on user's account privacy
+        setPrivacy(user?.is_private ? "followers" : "public");
       } else {
         setError("Failed to create post. Server returned unexpected status.");
       }
@@ -440,18 +451,23 @@ const CreatePage = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Privacy</h3>
               </div>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="privacy"
-                    value="public"
-                    checked={privacy === "public"}
-                    onChange={(e) => setPrivacy(e.target.value)}
-                    className="w-4 h-4 text-purple-600 focus:ring-purple-500"
-                  />
-                  <BiGlobe className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700 font-medium">Public</span>
-                </label>
+                {/* Only show Public option for users with public accounts */}
+                {!user?.is_private && (
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="privacy"
+                      value="public"
+                      checked={privacy === "public"}
+                      onChange={(e) => setPrivacy(e.target.value)}
+                      className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                    />
+                    <BiGlobe className="w-5 h-5 text-gray-600" />
+                    <span className="text-gray-700 font-medium">Public</span>
+                  </label>
+                )}
+
+                {/* Always show Followers option */}
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
@@ -464,6 +480,8 @@ const CreatePage = () => {
                   <BiGroup className="w-5 h-5 text-gray-600" />
                   <span className="text-gray-700 font-medium">Followers</span>
                 </label>
+
+                {/* Always show Private option */}
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
