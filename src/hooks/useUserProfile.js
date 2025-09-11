@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import useAuthContext from "./useAuthContext";
 import usePosts from "./usePosts";
-import { API_BASE_URL } from "../config/api";
+import AuthApiClient from "../services/auth-api-client";
+
+// Simple in-memory cache for user profiles
+const profileCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const useUserProfile = (username) => {
   const { user: currentUser } = useAuthContext();
@@ -27,8 +31,17 @@ const useUserProfile = (username) => {
   const [userSpecificPosts, setUserSpecificPosts] = useState([]);
   const [loadingUserPosts, setLoadingUserPosts] = useState(false);
 
-  // Check if viewing own profile
+  // Check if viewing own profile - use username directly
   const isOwnProfile = currentUser?.username === username;
+
+  // Check cache first
+  const getCachedProfile = (username) => {
+    const cached = profileCache.get(username);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+    return null;
+  };
 
   // Load user profile and posts
   useEffect(() => {
@@ -37,53 +50,38 @@ const useUserProfile = (username) => {
         return;
       }
 
-      setIsLoadingProfile(true);
-      setApiError(null);
+      console.log('Username:', username);
+
+      // Check cache first for faster loading
+      const cachedProfile = getCachedProfile(username);
+      if (cachedProfile) {
+        console.log(`📋 Using cached profile for: ${username}`);
+        setApiResponse(cachedProfile.data);
+        setApiError(null);
+        setIsLoadingProfile(false);
+        return;
+      }
 
       try {
-        // Create different possible username formats to try
-        const possibleUsernames = [
-          username, // Original as-is
-          username.toLowerCase(), // lowercase
-          username
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, "_")
-            .replace(/_+/g, "_")
-            .replace(/^_|_$/g, ""), // converted from full name
-          username.toLowerCase().replace(/\s+/g, "_"), // spaces to underscores
-          username.toLowerCase().replace(/\s+/g, ""), // remove spaces
-        ];
-
-        // Remove duplicates
-        const uniqueUsernames = [...new Set(possibleUsernames)];
-
-        let realUserData = null;
-
-        // Try each username format
-        for (const tryUsername of uniqueUsernames) {
-          const encodedUsername = encodeURIComponent(tryUsername);
-          const apiEndpoint = `${API_BASE_URL}/users/${encodedUsername}/`;
-
-          try {
-            const response = await fetch(apiEndpoint, {
-              headers: {
-                Authorization: `JWT ${
-                  JSON.parse(localStorage.getItem("authTokens"))?.access
-                }`,
-                "Content-Type": "application/json",
-              },
-            });
-
-            if (response.ok) {
-              realUserData = await response.json();
-              break; // Stop trying once we find a successful one
-            }
-          } catch {
-            // Continue to next username variant
-          }
-        }
-
-        if (realUserData) {
+        setIsLoadingProfile(true);
+        setApiError(null);
+        
+        console.log(`🔍 Fetching user profile for: ${username}`);
+        
+        // Make API call to get user profile
+        const apiEndpoint = `/users/${username}/`;
+        const response = await AuthApiClient.get(apiEndpoint);
+        
+        if (response.data) {
+          const realUserData = response.data;
+          console.log(`✅ Successfully found user data for: ${username}`);
+          
+          // Cache the profile data
+          profileCache.set(username, {
+            data: realUserData,
+            timestamp: Date.now()
+          });
+          
           setApiResponse(realUserData);
           setProfileUser(realUserData);
           setFollowersCount(realUserData.followers_count || 0);
@@ -101,59 +99,7 @@ const useUserProfile = (username) => {
           } else {
             await loadPostsForUser(realUserData);
           }
-        } else {
-          // All attempts failed
-          setApiError(`All API attempts failed for username: ${username}`);
-          console.log(
-            "❌ All API endpoints failed, falling back to simulated data"
-          );
-          createSimulatedData();
-
-          // Load posts for simulated user
-          if (isOwnProfile) {
-            const result = await loadMyPosts({}, { pageSize: 10 });
-            if (!result.success) {
-              console.error(
-                "[UserProfile] Failed to load posts:",
-                result.error
-              );
-            }
-          } else {
-            console.log(
-              "[UserProfile] Using simulated user - loading posts for filtering"
-            );
-            await loadPosts({}, { pageSize: 50 });
-          }
         }
-
-        function createSimulatedData() {
-          console.log("🔄 Using simulated data as fallback");
-          const userData = {
-            id: `user_${username}`,
-            username: username,
-            full_name:
-              username.charAt(0).toUpperCase() + username.slice(1) + " User",
-            bio: "This is a sample bio for the user profile. Welcome to SnapVerse!",
-            email: `${username}@example.com`,
-            followers_count: Math.floor(Math.random() * 1000) + 100,
-            following_count: Math.floor(Math.random() * 500) + 50,
-            posts_count: Math.floor(Math.random() * 200) + 20,
-            date_joined: new Date(
-              Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-            location: "New York, NY",
-            website: "https://example.com",
-            is_verified: Math.random() > 0.8,
-            is_private: Math.random() > 0.7,
-            profile_picture: null,
-            cover_photo: null,
-          };
-          setProfileUser(userData);
-          setFollowersCount(userData.followers_count);
-          return userData;
-        }
-
-        setIsFollowing(Math.random() > 0.5); // Random follow status for demo
       } catch (error) {
         console.error("[UserProfile] Error loading user profile:", error);
         setApiError(`Error: ${error.message}`);
@@ -163,7 +109,7 @@ const useUserProfile = (username) => {
     };
 
     const loadPostsForUser = async (realUserData) => {
-      // If user profile has posts array with IDs, fetch them individually
+      // If user profile has posts array with IDs, fetch them in parallel
       if (
         realUserData.posts &&
         Array.isArray(realUserData.posts) &&
@@ -172,38 +118,24 @@ const useUserProfile = (username) => {
         setLoadingUserPosts(true);
 
         try {
-          const postIds = realUserData.posts;
-          const fetchedPosts = [];
-
-          // Fetch each post individually
-          for (const postId of postIds) {
+          const postIds = realUserData.posts.slice(0, 10); // Limit to first 10 posts for performance
+          
+          // Fetch all posts in parallel instead of sequentially
+          const postPromises = postIds.map(async (postId) => {
             try {
-              const authTokens = JSON.parse(localStorage.getItem("authTokens"));
-              const accessToken = authTokens?.access;
-
-              if (!accessToken) {
-                continue;
-              }
-
-              const response = await fetch(`${API_BASE_URL}/posts/${postId}/`, {
-                headers: {
-                  Authorization: `JWT ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-              });
-
-              if (response.ok) {
-                const post = await response.json();
-                fetchedPosts.push(post);
-              }
-            } catch {
-              // Continue with next post if one fails
-              continue;
+              const response = await AuthApiClient.get(`/posts/${postId}/`);
+              return response.data;
+            } catch (error) {
+              console.warn(`Failed to fetch post ${postId}:`, error);
+              return null;
             }
-          }
+          });
 
-          if (fetchedPosts.length > 0) {
-            setUserSpecificPosts(fetchedPosts);
+          const fetchedPosts = await Promise.all(postPromises);
+          const validPosts = fetchedPosts.filter(post => post !== null);
+
+          if (validPosts.length > 0) {
+            setUserSpecificPosts(validPosts);
           }
         } catch (error) {
           console.error("Error fetching user posts:", error);

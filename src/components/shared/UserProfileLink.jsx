@@ -29,7 +29,7 @@ const UserProfileLink = ({
 
     if (userIdentifier) {
       console.log("🔍 Full user object being passed:", user);
-      // Navigate to user profile page with the identifier
+      // Navigate to user profile page with the identifier (no encoding needed)
       navigate(`/profile/${userIdentifier}`);
     }
   };
