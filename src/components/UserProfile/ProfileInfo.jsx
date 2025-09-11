@@ -10,6 +10,7 @@ import {
   MdMessage,
   MdMoreVert,
   MdEdit,
+  MdKey,
 } from "react-icons/md";
 import { useNavigate } from "react-router";
 // import { getAvatarUrl } from "../Account/accountUtils";
@@ -30,6 +31,10 @@ const ProfileInfo = ({
 
   const handleEditProfile = () => {
     navigate("/edit-profile");
+  };
+
+  const handleEditPassword = () => {
+    navigate("/edit-password");
   };
 
   // Return early if profileUser is null
@@ -176,6 +181,13 @@ const ProfileInfo = ({
                     <MdEdit className="w-4 h-4" />
                     <span>Edit Profile</span>
                   </button>
+                  <button
+                    onClick={handleEditPassword}
+                    className="group bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <MdKey className="w-4 h-4" />
+                    <span>Edit Password</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -263,6 +275,13 @@ const ProfileInfo = ({
               >
                 <MdEdit className="w-4 h-4" />
                 <span>Edit Profile</span>
+              </button>
+              <button
+                onClick={handleEditPassword}
+                className="group bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+              >
+                <MdKey className="w-4 h-4" />
+                <span>Edit Password</span>
               </button>
             </div>
           )}

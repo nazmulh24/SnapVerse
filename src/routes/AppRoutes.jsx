@@ -28,6 +28,7 @@ import ActivityPage from "../pages/ActivityPage";
 import AccountPage from "../pages/AccountPage";
 import UserProfile from "../pages/UserProfile";
 import EditProfile from "../pages/EditProfile";
+import EditPasswordForm from "../pages/EditPasswordForm";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -86,6 +87,7 @@ const AppRoutes = () => {
 
           <Route path="/profile/:username" element={<UserProfile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/edit-password" element={<EditPasswordForm />} />
 
           <Route path="payment/success" element={<PaymentSuccess />} />
         </Route>
