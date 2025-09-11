@@ -332,7 +332,24 @@ const useUserProfile = (username) => {
           status: error.response?.status,
           url: error.config?.url,
         });
-        setApiError(`Error: ${error.message}`);
+
+        // Handle specific error cases with user-friendly messages
+        let errorMessage = "Error loading profile";
+        if (error.response?.status === 404) {
+          errorMessage = `Username "${username}" is not valid or does not exist`;
+        } else if (error.response?.status === 403) {
+          errorMessage = "You don't have permission to view this profile";
+        } else if (error.response?.status >= 500) {
+          errorMessage = "Server error. Please try again later";
+        } else if (error.message?.includes("Network Error")) {
+          errorMessage = "Network error. Please check your connection";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+
+        setApiError(errorMessage);
+        setProfileUser(null);
+        setApiResponse(null);
       } finally {
         setIsLoadingProfile(false);
       }
