@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import useAuthContext from "./useAuthContext";
 import usePosts from "./usePosts";
 import AuthApiClient from "../services/auth-api-client";
@@ -43,6 +43,210 @@ const useUserProfile = (username) => {
     return null;
   };
 
+  // Check if current user is following the profile user
+  const checkFollowStatus = async (profileUserId) => {
+    try {
+      console.log("🔍 Checking follow status for user ID:", profileUserId);
+      const response = await AuthApiClient.get("/follows/following/");
+      const followingList = response.data.results || [];
+      console.log(
+        "📋 Following list:",
+        followingList.map((item) => ({
+          id: item.following.id,
+          username: item.following.username,
+        }))
+      );
+
+      const isUserFollowing = followingList.some(
+        (item) => item.following.id === profileUserId
+      );
+      console.log(
+        `${isUserFollowing ? "✅" : "❌"} Follow status:`,
+        isUserFollowing
+      );
+      setIsFollowing(isUserFollowing);
+      return isUserFollowing; // Return the result for immediate use
+    } catch (error) {
+      console.error("❌ Failed to check follow status:", error);
+      setIsFollowing(false);
+      return false;
+    }
+  };
+
+  // Function to load posts for a user with explicit follow status
+  const loadPostsForUserWithStatus = useCallback(
+    async (realUserData, followStatus) => {
+      console.log("🔍 Loading posts with follow status:", followStatus);
+      // Check if user can view private content first
+      const canView = isOwnProfile || !realUserData.is_private || followStatus;
+
+      if (!canView) {
+        console.log(
+          "Cannot view posts for private account - follow status:",
+          followStatus
+        );
+        setUserSpecificPosts([]);
+        setLoadingUserPosts(false);
+        return;
+      }
+
+      // If user profile has posts array with IDs, fetch them in parallel
+      if (
+        realUserData.posts &&
+        Array.isArray(realUserData.posts) &&
+        realUserData.posts.length > 0
+      ) {
+        setLoadingUserPosts(true);
+        console.log("📝 Found posts to load:", realUserData.posts.length);
+
+        try {
+          const postIds = realUserData.posts.slice(0, 10); // Limit to first 10 posts for performance
+
+          // Fetch all posts in parallel instead of sequentially
+          const postPromises = postIds.map(async (postId) => {
+            try {
+              const response = await AuthApiClient.get(`/posts/${postId}/`);
+              return response.data;
+            } catch (error) {
+              console.warn(`Failed to fetch post ${postId}:`, error);
+              return null;
+            }
+          });
+
+          const fetchedPosts = await Promise.all(postPromises);
+          const validPosts = fetchedPosts.filter((post) => post !== null);
+          console.log("✅ Successfully loaded posts:", validPosts.length);
+
+          // Filter posts based on privacy levels
+          const filteredPosts = validPosts.filter((post) => {
+            // If it's the user's own profile, show all posts
+            if (isOwnProfile) {
+              return true;
+            }
+
+            // Check privacy field (new logic)
+            if (post.privacy) {
+              switch (post.privacy) {
+                case "public":
+                  return true; // Anyone can see
+                case "followers":
+                  return followStatus; // Only followers can see
+                case "private":
+                  return false; // Only owner can see (already handled above)
+                default:
+                  return true; // Default to public if unknown privacy value
+              }
+            }
+
+            // Fallback to old is_private field for backwards compatibility
+            return !post.is_private;
+          });
+
+          console.log("🔒 After privacy filter:", {
+            totalPosts: validPosts.length,
+            filteredPosts: filteredPosts.length,
+            followStatus: followStatus,
+            isOwnProfile: isOwnProfile,
+            postPrivacyLevels: validPosts.map((p) => ({
+              id: p.id,
+              privacy: p.privacy || "is_private:" + p.is_private,
+            })),
+          });
+
+          setUserSpecificPosts(filteredPosts);
+        } catch (error) {
+          console.error("Error loading posts for user:", error);
+          setUserSpecificPosts([]);
+        } finally {
+          setLoadingUserPosts(false);
+        }
+      } else {
+        console.log("❌ No posts found in user profile");
+        setUserSpecificPosts([]);
+        setLoadingUserPosts(false);
+      }
+    },
+    [isOwnProfile]
+  );
+
+  // Function to load posts for a user
+  const loadPostsForUser = useCallback(
+    async (realUserData) => {
+      // Check if user can view private content first
+      const canView = isOwnProfile || !realUserData.is_private || isFollowing;
+
+      if (!canView) {
+        console.log("Cannot view posts for private account");
+        setUserSpecificPosts([]);
+        setLoadingUserPosts(false);
+        return;
+      }
+
+      // If user profile has posts array with IDs, fetch them in parallel
+      if (
+        realUserData.posts &&
+        Array.isArray(realUserData.posts) &&
+        realUserData.posts.length > 0
+      ) {
+        setLoadingUserPosts(true);
+
+        try {
+          const postIds = realUserData.posts.slice(0, 10); // Limit to first 10 posts for performance
+
+          // Fetch all posts in parallel instead of sequentially
+          const postPromises = postIds.map(async (postId) => {
+            try {
+              const response = await AuthApiClient.get(`/posts/${postId}/`);
+              return response.data;
+            } catch (error) {
+              console.warn(`Failed to fetch post ${postId}:`, error);
+              return null;
+            }
+          });
+
+          const fetchedPosts = await Promise.all(postPromises);
+          const validPosts = fetchedPosts.filter((post) => post !== null);
+
+          // Filter posts based on privacy levels
+          const filteredPosts = validPosts.filter((post) => {
+            // If it's the user's own profile, show all posts
+            if (isOwnProfile) {
+              return true;
+            }
+
+            // Check privacy field (new logic)
+            if (post.privacy) {
+              switch (post.privacy) {
+                case "public":
+                  return true; // Anyone can see
+                case "followers":
+                  return isFollowing; // Only followers can see
+                case "private":
+                  return false; // Only owner can see (already handled above)
+                default:
+                  return true; // Default to public if unknown privacy value
+              }
+            }
+
+            // Fallback to old is_private field for backwards compatibility
+            return !post.is_private;
+          });
+
+          setUserSpecificPosts(filteredPosts);
+        } catch (error) {
+          console.error("Error loading posts for user:", error);
+          setUserSpecificPosts([]);
+        } finally {
+          setLoadingUserPosts(false);
+        }
+      } else {
+        setUserSpecificPosts([]);
+        setLoadingUserPosts(false);
+      }
+    },
+    [isOwnProfile, isFollowing]
+  );
+
   // Load user profile and posts
   useEffect(() => {
     const loadUserData = async () => {
@@ -50,7 +254,9 @@ const useUserProfile = (username) => {
         return;
       }
 
-      console.log('Username:', username);
+      console.log("Username:", username);
+      console.log("Username type:", typeof username);
+      console.log("Username encoded:", encodeURIComponent(username));
 
       // Check cache first for faster loading
       const cachedProfile = getCachedProfile(username);
@@ -65,27 +271,43 @@ const useUserProfile = (username) => {
       try {
         setIsLoadingProfile(true);
         setApiError(null);
-        
+
         console.log(`🔍 Fetching user profile for: ${username}`);
-        
-        // Make API call to get user profile
+
+        // Make API call to get user profile - username should be used as-is
         const apiEndpoint = `/users/${username}/`;
+        console.log(`🌐 API endpoint: ${apiEndpoint}`);
         const response = await AuthApiClient.get(apiEndpoint);
-        
+
         if (response.data) {
           const realUserData = response.data;
           console.log(`✅ Successfully found user data for: ${username}`);
-          
+
           // Cache the profile data
           profileCache.set(username, {
             data: realUserData,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
-          
+
+          // Check follow status BEFORE setting profile data for other users
+          let followStatus = false;
+          if (!isOwnProfile && currentUser) {
+            followStatus = await checkFollowStatus(realUserData.id);
+          }
+
           setApiResponse(realUserData);
           setProfileUser(realUserData);
           setFollowersCount(realUserData.followers_count || 0);
           setApiError(null);
+
+          // Debug the user data structure
+          console.log("👤 Profile User Data:", {
+            username: realUserData.username,
+            isPrivate: realUserData.is_private,
+            postsArray: realUserData.posts,
+            postsLength: realUserData.posts?.length,
+            allFields: Object.keys(realUserData),
+          });
 
           // Load posts for this user after profile is set
           if (isOwnProfile) {
@@ -97,56 +319,35 @@ const useUserProfile = (username) => {
               );
             }
           } else {
-            await loadPostsForUser(realUserData);
+            // For other users, load posts now that follow status is determined
+            // Pass the follow status directly instead of relying on state
+            await loadPostsForUserWithStatus(realUserData, followStatus);
           }
         }
       } catch (error) {
         console.error("[UserProfile] Error loading user profile:", error);
+        console.error("[UserProfile] Error details:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url,
+        });
         setApiError(`Error: ${error.message}`);
       } finally {
         setIsLoadingProfile(false);
       }
     };
 
-    const loadPostsForUser = async (realUserData) => {
-      // If user profile has posts array with IDs, fetch them in parallel
-      if (
-        realUserData.posts &&
-        Array.isArray(realUserData.posts) &&
-        realUserData.posts.length > 0
-      ) {
-        setLoadingUserPosts(true);
-
-        try {
-          const postIds = realUserData.posts.slice(0, 10); // Limit to first 10 posts for performance
-          
-          // Fetch all posts in parallel instead of sequentially
-          const postPromises = postIds.map(async (postId) => {
-            try {
-              const response = await AuthApiClient.get(`/posts/${postId}/`);
-              return response.data;
-            } catch (error) {
-              console.warn(`Failed to fetch post ${postId}:`, error);
-              return null;
-            }
-          });
-
-          const fetchedPosts = await Promise.all(postPromises);
-          const validPosts = fetchedPosts.filter(post => post !== null);
-
-          if (validPosts.length > 0) {
-            setUserSpecificPosts(validPosts);
-          }
-        } catch (error) {
-          console.error("Error fetching user posts:", error);
-        } finally {
-          setLoadingUserPosts(false);
-        }
-      }
-    };
-
     loadUserData();
-  }, [username, currentUser, isOwnProfile, loadMyPosts, loadPosts]);
+  }, [
+    username,
+    currentUser,
+    isOwnProfile,
+    loadMyPosts,
+    loadPosts,
+    loadPostsForUser,
+    loadPostsForUserWithStatus,
+  ]);
 
   // Return filtered posts - use userSpecificPosts if available, otherwise filter general posts
   const userPosts =
@@ -163,7 +364,31 @@ const useUserProfile = (username) => {
               Array.isArray(profileUser.posts) &&
               profileUser.posts.includes(post.id));
 
-          return isUserPost;
+          // Also filter posts based on privacy levels
+          let canViewPost = false;
+          if (isOwnProfile) {
+            canViewPost = true; // Owner can see all posts
+          } else if (post.privacy) {
+            // Use new privacy field
+            switch (post.privacy) {
+              case "public":
+                canViewPost = true;
+                break;
+              case "followers":
+                canViewPost = isFollowing;
+                break;
+              case "private":
+                canViewPost = false;
+                break;
+              default:
+                canViewPost = true; // Default to public
+            }
+          } else {
+            // Fallback to old is_private field
+            canViewPost = !post.is_private;
+          }
+
+          return isUserPost && canViewPost;
         }) || [];
 
   const handleFollow = async () => {

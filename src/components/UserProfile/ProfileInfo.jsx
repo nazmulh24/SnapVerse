@@ -24,12 +24,24 @@ const ProfileInfo = ({
   followersCount,
   isFollowing,
   isOwnProfile,
+  canViewPrivateContent,
 }) => {
   const navigate = useNavigate();
 
   const handleEditProfile = () => {
     navigate("/edit-profile");
   };
+
+  // Return early if profileUser is null
+  if (!profileUser) {
+    return (
+      <div className="relative px-8 pb-8 bg-white">
+        <div className="text-center py-8">
+          <div className="text-gray-500">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     //--> Profile Info Section
@@ -173,7 +185,11 @@ const ProfileInfo = ({
               {/* Posts */}
               <div className="text-center min-w-0">
                 <div className="text-xl font-bold text-slate-900">
-                  {(profileUser.posts_count || 0).toLocaleString()}
+                  {canViewPrivateContent
+                    ? (profileUser.posts_count || 0).toLocaleString()
+                    : profileUser.is_private && !isOwnProfile
+                    ? "—"
+                    : (profileUser.posts_count || 0).toLocaleString()}
                 </div>
                 <div className="text-sm text-slate-600">Posts</div>
               </div>
@@ -181,7 +197,11 @@ const ProfileInfo = ({
               {/* Followers */}
               <div className="text-center min-w-0 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
                 <div className="text-xl font-bold text-slate-900">
-                  {followersCount.toLocaleString()}
+                  {canViewPrivateContent
+                    ? followersCount.toLocaleString()
+                    : profileUser.is_private && !isOwnProfile
+                    ? "—"
+                    : followersCount.toLocaleString()}
                 </div>
                 <div className="text-sm text-slate-600">Followers</div>
               </div>
@@ -189,7 +209,11 @@ const ProfileInfo = ({
               {/* Following */}
               <div className="text-center min-w-0 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-1 transition-colors">
                 <div className="text-xl font-bold text-slate-900">
-                  {(profileUser.following_count || 0).toLocaleString()}
+                  {canViewPrivateContent
+                    ? (profileUser.following_count || 0).toLocaleString()
+                    : profileUser.is_private && !isOwnProfile
+                    ? "—"
+                    : (profileUser.following_count || 0).toLocaleString()}
                 </div>
                 <div className="text-sm text-slate-600">Following</div>
               </div>

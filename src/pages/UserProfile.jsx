@@ -42,6 +42,46 @@ const UserProfile = () => {
     );
   }
 
+  // Helper function to check if user can view private content
+  const canViewPrivateContent = () => {
+    console.log("🔍 Privacy Check:", {
+      isOwnProfile,
+      isPrivate: profileUser?.is_private,
+      isFollowing,
+      username: profileUser?.username,
+    });
+
+    // Own profile - can always view
+    if (isOwnProfile) {
+      console.log("✅ Own profile - can view");
+      return true;
+    }
+
+    // Public account - anyone can view
+    if (!profileUser?.is_private) {
+      console.log("✅ Public account - can view");
+      return true;
+    }
+
+    // Private account - only followers can view
+    const canView = isFollowing;
+    console.log(
+      `${canView ? "✅" : "❌"} Private account - ${
+        canView ? "following" : "not following"
+      }`
+    );
+    return canView;
+  };
+
+  // Debug userPosts
+  console.log("🔍 UserProfile Debug:", {
+    userPostsLength: userPosts?.length,
+    userPosts: userPosts,
+    loadingUserPosts,
+    isLoadingProfile,
+    profileUser: profileUser?.username,
+  });
+
   // Helper function to get user's full name
   const getFullName = () => {
     if (!profileUser) return "Loading...";
@@ -82,6 +122,37 @@ const UserProfile = () => {
 
   // Render tab content based on active tab
   const renderTabContent = () => {
+    // Check privacy before rendering content
+    if (!canViewPrivateContent()) {
+      return (
+        <div className="p-8 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="mb-4">
+              <svg
+                className="w-16 h-16 mx-auto text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-5V9m0 0V7m0 2h2m-2 0H10M7 12a5 5 0 1110 0v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              This Account is Private
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Follow this account to see their posts and other content.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case "posts":
         return (
@@ -134,6 +205,7 @@ const UserProfile = () => {
             onFollow={handleFollow}
             userPosts={userPosts}
             joinDate={joinDate}
+            canViewPrivateContent={canViewPrivateContent()}
           />
 
           {/* Tabs */}
