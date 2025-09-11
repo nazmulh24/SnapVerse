@@ -31,6 +31,7 @@ const EditPost = () => {
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
 
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
@@ -190,6 +191,7 @@ const EditPost = () => {
 
     setImages([first]);
     setError(""); // Clear any previous errors
+    setRemoveExistingImage(false); // Reset removal flag when new image selected
   };
 
   // Handle drag and drop
@@ -225,6 +227,7 @@ const EditPost = () => {
 
       setImages([img]);
       setError(""); // Clear any previous errors
+      setRemoveExistingImage(false); // Reset removal flag when new image selected
     }
   };
 
@@ -262,23 +265,45 @@ const EditPost = () => {
       setError("");
 
       const formData = new FormData();
+      // Use both 'caption' and 'content' to ensure compatibility
+      formData.append("caption", content);
       formData.append("content", content);
       formData.append("location", location);
       formData.append("privacy", privacy || "public");
 
-      // Only append image if a new one was selected
+      // Handle image field
       if (images.length > 0) {
+        // New image selected
         formData.append("image", images[0]);
+        console.log("Uploading new image:", images[0].name);
+      } else if (removeExistingImage) {
+        // User wants to remove existing image - send an empty blob that will be treated as None
+        const emptyBlob = new Blob([""], { type: "text/plain" });
+        const emptyFile = new File([emptyBlob], "", { type: "text/plain" });
+        formData.append("image", emptyFile);
+        console.log("Removing existing image - sending empty file");
       }
+      // If neither condition, don't send image field (preserve existing)
 
       console.log("Updating post with data:", {
         postId,
-        content,
+        caption: content, // Log as caption since that's what we're sending
         location,
         privacy,
         hasNewImage: images.length > 0,
+        removeExistingImage: removeExistingImage,
         endpoint: `/posts/${postId}/`,
       });
+
+      // Log FormData contents for debugging
+      console.log("FormData being sent:");
+      for (let [key, value] of formData.entries()) {
+        if (key === "image") {
+          console.log(`${key}: ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
 
       // Use correct endpoint format with postId in URL
       const response = await AuthApiClient.put(`/posts/${postId}/`, formData, {
@@ -288,6 +313,11 @@ const EditPost = () => {
       });
 
       console.log("PUT Response:", response);
+      console.log("PUT Response data:", response.data);
+      console.log("Updated post caption:", response.data?.caption);
+      console.log("Updated post content:", response.data?.content);
+      console.log("Updated post image:", response.data?.image);
+      console.log("Updated post is_edited:", response.data?.is_edited);
 
       if (response.status === 200 || response.status === 201) {
         setSuccess(true);
@@ -556,6 +586,7 @@ const EditPost = () => {
                         setImages([]);
                         setPreviewUrl(null);
                         setImageLoading(false);
+                        setRemoveExistingImage(true);
                       }}
                       className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
                     >
