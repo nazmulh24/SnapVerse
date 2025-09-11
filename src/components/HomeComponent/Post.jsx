@@ -417,6 +417,7 @@ const Post = ({ post, onLike, onShare }) => {
         timeAgo={timeAgo}
         location={postData.location}
         isEdited={postData.is_edited}
+        privacy={postData.privacy}
       />
 
       {/* Post Caption/Content - Show before image */}
