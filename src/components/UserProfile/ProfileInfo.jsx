@@ -11,8 +11,10 @@ import {
   MdMoreVert,
   MdEdit,
   MdKey,
+  MdAdminPanelSettings,
 } from "react-icons/md";
 import { useNavigate } from "react-router";
+import useAuthContext from "../../hooks/useAuthContext";
 // import { getAvatarUrl } from "../Account/accountUtils";
 
 const ProfileInfo = ({
@@ -28,9 +30,18 @@ const ProfileInfo = ({
   canViewPrivateContent,
 }) => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuthContext();
 
+  // Check if current user is admin
+  const isAdmin = currentUser && currentUser.is_staff === true;
+  
   const handleEditProfile = () => {
     navigate("/edit-profile");
+  };
+
+  const handleAdminEditProfile = () => {
+    // Navigate to edit profile with username parameter for admin editing
+    navigate(`/edit-profile?user=${profileUser.username}`);
   };
 
   const handleEditPassword = () => {
@@ -170,6 +181,17 @@ const ProfileInfo = ({
                     <MdMessage className="w-4 h-4" />
                     <span>Message</span>
                   </button>
+                  
+                  {/* Admin Edit Button - Mobile */}
+                  {isAdmin && (
+                    <button
+                      onClick={handleAdminEditProfile}
+                      className="group bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base"
+                    >
+                      <MdAdminPanelSettings className="w-4 h-4" />
+                      <span>Admin Edit</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -269,6 +291,17 @@ const ProfileInfo = ({
                 <MdMessage className="w-4 h-4" />
                 <span>Message</span>
               </button>
+              
+              {/* Admin Edit Button - Desktop */}
+              {isAdmin && (
+                <button
+                  onClick={handleAdminEditProfile}
+                  className="group bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                >
+                  <MdAdminPanelSettings className="w-4 h-4" />
+                  <span>Admin Edit</span>
+                </button>
+              )}
             </div>
           )}
 

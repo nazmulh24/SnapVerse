@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import useUserProfile from "../hooks/useUserProfile";
+import useAuthContext from "../hooks/useAuthContext";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 
 // Modular components
@@ -14,6 +15,7 @@ import PhotosTab from "../components/UserProfile/PhotosTab";
 
 const UserProfile = () => {
   const { username } = useParams();
+  const { user: currentUser } = useAuthContext();
   const [activeTab, setActiveTab] = useState("posts");
   const [isPrivacyCheckComplete, setIsPrivacyCheckComplete] = useState(false);
 
@@ -98,11 +100,15 @@ const UserProfile = () => {
 
   // Helper function to check if user can view private content
   const canViewPrivateContent = () => {
+    // Check if current user is admin
+    const isAdmin = currentUser && currentUser.is_staff === true;
+
     // Add more detailed debugging
     console.log("🔍 Privacy Check Details:", {
       isOwnProfile,
       isPrivate: profileUser?.is_private,
       isFollowing,
+      isAdmin,
       username: profileUser?.username,
       profileUserExists: !!profileUser,
       isLoadingProfile,
@@ -118,6 +124,12 @@ const UserProfile = () => {
     // Own profile - can always view
     if (isOwnProfile) {
       console.log("✅ Own profile - can view");
+      return true;
+    }
+
+    // Admin can view any profile (including private ones)
+    if (isAdmin) {
+      console.log("✅ Admin access - can view any profile");
       return true;
     }
 

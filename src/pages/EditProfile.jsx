@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import useAuthContext from "../hooks/useAuthContext";
+import useApi from "../hooks/useApi";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import {
   MdArrowBack,
@@ -16,11 +17,18 @@ import {
   MdFavorite,
   MdLock,
   MdVisibility,
+  MdAdminPanelSettings,
 } from "react-icons/md";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, updateUserProfile } = useAuthContext();
+  const { get, put } = useApi();
+
+  // Check if admin is editing another user
+  const targetUsername = searchParams.get('user');
+  const isAdminEditing = targetUsername && user?.is_staff === true;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,29 +54,64 @@ const EditProfile = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [targetUser, setTargetUser] = useState(null); // For admin editing
 
-  // Initialize form with user data from context
+  // Initialize form with user data from context or fetched user data
   useEffect(() => {
+    const initializeForm = async () => {
+      // Permission check - only allow admin to edit other users
+      if (targetUsername && !user?.is_staff) {
+        setErrors({ general: "Unauthorized: Only admins can edit other users' profiles" });
+        setIsLoading(false);
+        return;
+      }
+
+      let userData = user;
+      
+      // If admin is editing another user, fetch that user's data
+      if (isAdminEditing) {
+        try {
+          const result = await get(`/users/${targetUsername}/`);
+          if (result.success) {
+            userData = result.data;
+            setTargetUser(userData);
+          } else {
+            setErrors({ general: "Failed to load user data" });
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          setErrors({ general: "Error fetching user data" });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (userData) {
+        setFormData({
+          cover_photo: userData.cover_photo || "",
+          profile_picture: userData.profile_picture || "",
+          username: userData.username || "",
+          first_name: userData.first_name || "",
+          last_name: userData.last_name || "",
+          email: userData.email || "",
+          bio: userData.bio || "",
+          location: userData.location || "",
+          website: userData.website || "",
+          phone_number: userData.phone_number || userData.phone || "",
+          date_of_birth: userData.date_of_birth || "",
+          gender: userData.gender || "",
+          relationship_status: userData.relationship_status || "",
+          is_private: userData.is_private === true || userData.is_private === "true",
+        });
+        setIsLoading(false);
+      }
+    };
+
     if (user) {
-      setFormData({
-        cover_photo: user.cover_photo || "",
-        profile_picture: user.profile_picture || "",
-        username: user.username || "",
-        first_name: user.first_name || "",
-        last_name: user.last_name || "",
-        email: user.email || "",
-        bio: user.bio || "",
-        location: user.location || "",
-        website: user.website || "",
-        phone_number: user.phone_number || user.phone || "",
-        date_of_birth: user.date_of_birth || "",
-        gender: user.gender || "",
-        relationship_status: user.relationship_status || "",
-        is_private: user.is_private === true || user.is_private === "true",
-      });
-      setIsLoading(false);
+      initializeForm();
     }
-  }, [user]);
+  }, [user, isAdminEditing, targetUsername, get]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -253,14 +296,23 @@ const EditProfile = () => {
         }
       }
 
-      const result = await updateUserProfile(formDataToSend);
+      let result;
+      
+      if (isAdminEditing) {
+        // Admin editing another user - use direct API call
+        result = await put(`/auth/users/${targetUser.id}/`, formDataToSend);
+      } else {
+        // Regular user editing their own profile
+        result = await updateUserProfile(formDataToSend);
+      }
 
       if (result.success) {
         setSuccessMessage(result.message || "Profile updated successfully!");
 
         // Show success message for 2 seconds then navigate
         setTimeout(() => {
-          navigate(`/profile/${user.username}`);
+          const navigationUsername = isAdminEditing ? targetUsername : user.username;
+          navigate(`/profile/${navigationUsername}`);
         }, 2000);
       } else {
         setErrors({
@@ -287,7 +339,13 @@ const EditProfile = () => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate(`/profile/${user?.username}`);
+    const navigationUsername = isAdminEditing ? targetUsername : user?.username;
+    navigate(`/profile/${navigationUsername}`);
+  };
+
+  // Get the current user data being edited (either own profile or target user for admin)
+  const getCurrentUserData = () => {
+    return isAdminEditing ? targetUser : user;
   };
 
   // Get image preview URL
@@ -332,11 +390,21 @@ const EditProfile = () => {
             </button>
             <div className="text-center">
               <h1 className="text-lg sm:text-xl font-bold text-gray-900">
-                Edit Profile
+                {isAdminEditing ? `Edit ${targetUser?.first_name || targetUser?.username || 'User'}'s Profile` : 'Edit Profile'}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
-                Update your personal information
-              </p>
+              {isAdminEditing && (
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <MdAdminPanelSettings className="w-4 h-4 text-red-600" />
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">
+                    Admin Mode - Editing as {targetUser?.username}
+                  </p>
+                </div>
+              )}
+              {!isAdminEditing && (
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                  Update your personal information
+                </p>
+              )}
             </div>
             <div className="w-16 sm:w-32"></div>
           </div>
@@ -355,9 +423,9 @@ const EditProfile = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-lg sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden">
             {/* Cover Photo Section */}
             <div className="relative h-48 sm:h-64 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800">
-              {getImagePreview(coverPhoto, user.cover_photo) && (
+              {getImagePreview(coverPhoto, getCurrentUserData()?.cover_photo) && (
                 <img
-                  src={getImagePreview(coverPhoto, user.cover_photo)}
+                  src={getImagePreview(coverPhoto, getCurrentUserData()?.cover_photo)}
                   alt="Cover"
                   className="w-full h-full object-cover"
                 />
@@ -383,11 +451,11 @@ const EditProfile = () => {
               <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-0 -mt-8 sm:-mt-12">
                 <div className="relative">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200">
-                    {getImagePreview(profilePicture, user.profile_picture) ? (
+                    {getImagePreview(profilePicture, getCurrentUserData()?.profile_picture) ? (
                       <img
                         src={getImagePreview(
                           profilePicture,
-                          user.profile_picture
+                          getCurrentUserData()?.profile_picture
                         )}
                         alt="Profile"
                         className="w-full h-full object-cover"

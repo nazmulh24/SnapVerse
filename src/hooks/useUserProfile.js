@@ -63,8 +63,12 @@ const useUserProfile = (username) => {
   const loadPostsForUserWithStatus = useCallback(
     async (realUserData, followStatus) => {
       console.log("🔍 Loading posts with follow status:", followStatus);
+      
+      // Check if current user is admin
+      const isAdmin = currentUser && currentUser.is_staff === true;
+      
       // Check if user can view private content first
-      const canView = isOwnProfile || !realUserData.is_private || followStatus;
+      const canView = isOwnProfile || !realUserData.is_private || followStatus || isAdmin;
 
       if (!canView) {
         console.log(
@@ -152,7 +156,7 @@ const useUserProfile = (username) => {
         setLoadingUserPosts(false);
       }
     },
-    [isOwnProfile]
+    [isOwnProfile, currentUser]
   );
 
   // Load user profile and posts
@@ -277,8 +281,10 @@ const useUserProfile = (username) => {
 
           // Also filter posts based on privacy levels
           let canViewPost = false;
-          if (isOwnProfile) {
-            canViewPost = true; // Owner can see all posts
+          const isAdmin = currentUser && currentUser.is_staff === true;
+          
+          if (isOwnProfile || isAdmin) {
+            canViewPost = true; // Owner and admin can see all posts
           } else if (post.privacy) {
             // Use new privacy field
             switch (post.privacy) {
