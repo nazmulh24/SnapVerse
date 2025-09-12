@@ -83,6 +83,16 @@ const usePosts = () => {
             `[usePosts] Total count: ${count}, Has next: ${!!nextPage}`
           );
 
+          // Debug: Log first post's reaction data
+          if (newPosts.length > 0) {
+            console.log("[usePosts] Sample post reaction data:", {
+              post_id: newPosts[0].id,
+              reactions_count: newPosts[0].reactions_count,
+              reactions: newPosts[0].reactions,
+              user_reaction: newPosts[0].user_reaction,
+            });
+          }
+
           let processedPosts = newPosts;
 
           // Shuffle posts if requested (usually on refresh)

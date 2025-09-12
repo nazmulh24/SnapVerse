@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   MdChatBubbleOutline,
   MdShare,
@@ -18,116 +24,115 @@ const PostActions = ({
   onReactionClick,
   loadingReactions = false,
   onShowReactionDetails, // New prop to pass the function up to Post
+  onReactionCountChange, // New prop to notify when reaction count changes
 }) => {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [userReaction, setUserReaction] = useState(currentUserReaction);
+  const [userReaction, setUserReaction] = useState(() =>
+    currentUserReaction === "" ? null : currentUserReaction
+  );
   const [reactions, setReactions] = useState(initialReactions);
   const [showReactionModal, setShowReactionModal] = useState(false);
   const [reactionDetails, setReactionDetails] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  // Prevent infinite loops with refs
+  const previousReactionsRef = useRef();
+  const isInitializedRef = useRef(false);
+
   const { addReaction, removeReaction, loading } = useReactions();
   const isLoading = loadingReactions || loading;
 
   // Enhanced reaction mappings with background colors
-  const reactionConfig = {
-    like: {
-      emoji: "👍",
-      label: "Like",
-      name: "like",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      hoverBg: "hover:bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    dislike: {
-      emoji: "👎",
-      label: "Dislike",
-      name: "dislike",
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-      hoverBg: "hover:bg-red-100",
-      iconColor: "text-red-600",
-    },
-    love: {
-      emoji: "❤️",
-      label: "Love",
-      name: "love",
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      hoverBg: "hover:bg-red-100",
-      iconColor: "text-red-500",
-    },
-    haha: {
-      emoji: "😂",
-      label: "Haha",
-      name: "haha",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50",
-      hoverBg: "hover:bg-yellow-100",
-      iconColor: "text-yellow-600",
-    },
-    wow: {
-      emoji: "😮",
-      label: "Wow",
-      name: "wow",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      hoverBg: "hover:bg-purple-100",
-      iconColor: "text-purple-600",
-    },
-    sad: {
-      emoji: "😢",
-      label: "Sad",
-      name: "sad",
-      color: "text-gray-600",
-      bgColor: "bg-gray-50",
-      hoverBg: "hover:bg-gray-100",
-      iconColor: "text-gray-600",
-    },
-    angry: {
-      emoji: "😠",
-      label: "Angry",
-      name: "angry",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      hoverBg: "hover:bg-orange-100",
-      iconColor: "text-orange-600",
-    },
-  };
+  const reactionConfig = useMemo(
+    () => ({
+      like: {
+        emoji: "👍",
+        label: "Like",
+        name: "like",
+        color: "text-blue-600",
+        bgColor: "bg-blue-50",
+        hoverBg: "hover:bg-blue-100",
+        iconColor: "text-blue-600",
+      },
+      dislike: {
+        emoji: "👎",
+        label: "Dislike",
+        name: "dislike",
+        color: "text-red-600",
+        bgColor: "bg-red-50",
+        hoverBg: "hover:bg-red-100",
+        iconColor: "text-blue-600",
+      },
+      love: {
+        emoji: "❤️",
+        label: "Love",
+        name: "love",
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+        hoverBg: "hover:bg-red-100",
+        iconColor: "text-red-500",
+      },
+      haha: {
+        emoji: "😂",
+        label: "Haha",
+        name: "haha",
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-50",
+        hoverBg: "hover:bg-yellow-100",
+        iconColor: "text-yellow-600",
+      },
+      wow: {
+        emoji: "😮",
+        label: "Wow",
+        name: "wow",
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        hoverBg: "hover:bg-purple-100",
+        iconColor: "text-purple-600",
+      },
+      sad: {
+        emoji: "😢",
+        label: "Sad",
+        name: "sad",
+        color: "text-gray-600",
+        bgColor: "bg-gray-50",
+        hoverBg: "hover:bg-gray-100",
+        iconColor: "text-gray-600",
+      },
+      angry: {
+        emoji: "😠",
+        label: "Angry",
+        name: "angry",
+        color: "text-orange-600",
+        bgColor: "bg-orange-50",
+        hoverBg: "hover:bg-orange-100",
+        iconColor: "text-orange-600",
+      },
+    }),
+    []
+  );
 
+  // Update user reaction when prop changes
   useEffect(() => {
-    // Convert empty string to null for proper state management
     const normalizedReaction =
       currentUserReaction === "" ? null : currentUserReaction;
     setUserReaction(normalizedReaction);
+  }, [currentUserReaction]);
 
-    // Load reactions from localStorage and merge with initial
-    const localStorageKey = `post_reactions_${postId}`;
-    const savedReactions = localStorage.getItem(localStorageKey);
+  // Update reactions when initialReactions change
+  useEffect(() => {
+    const reactionsString = JSON.stringify(initialReactions);
+    const previousString = JSON.stringify(previousReactionsRef.current);
 
-    console.log(`[PostActions] Loading reactions for post ${postId}:`, {
-      initialReactions,
-      savedReactions,
-      currentUserReaction,
-      normalizedReaction,
-    });
-
-    if (savedReactions) {
-      try {
-        const parsedReactions = JSON.parse(savedReactions);
-        const mergedReactions = { ...initialReactions, ...parsedReactions };
-        console.log(`[PostActions] Using merged reactions:`, mergedReactions);
-        setReactions(mergedReactions);
-      } catch (error) {
-        console.error("Error parsing saved reactions:", error);
-        setReactions(initialReactions);
-      }
-    } else {
-      console.log(`[PostActions] Using initial reactions:`, initialReactions);
+    if (reactionsString !== previousString) {
+      previousReactionsRef.current = initialReactions;
       setReactions(initialReactions);
+
+      // Save to localStorage
+      const localStorageKey = `post_reactions_${postId}`;
+      localStorage.setItem(localStorageKey, JSON.stringify(initialReactions));
     }
-  }, [currentUserReaction, initialReactions, postId]);
+  }, [initialReactions, postId]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -145,16 +150,42 @@ const PostActions = ({
     }
   }, [showReactionModal]);
 
+  // Calculate total reaction count with memoization
+  const getTotalReactionCount = useCallback(() => {
+    const total = Object.values(reactions).reduce((sum, count) => {
+      const numericCount = parseInt(count) || 0;
+      return sum + numericCount;
+    }, 0);
+    return total;
+  }, [reactions]);
+
+  // Get top 3 reaction types for display with memoization
+  const getTopReactions = useCallback(() => {
+    const sortedReactions = Object.entries(reactions)
+      .filter(([, count]) => count > 0)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3);
+    return sortedReactions;
+  }, [reactions]);
+
+  // Notify parent when reactions change (throttled to prevent loops)
+  useEffect(() => {
+    if (onReactionCountChange && isInitializedRef.current) {
+      const totalCount = getTotalReactionCount();
+      onReactionCountChange(totalCount);
+    } else if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+    }
+  }, [reactions, onReactionCountChange, getTotalReactionCount]);
+
   // Function to save reactions to localStorage
-  const saveReactionsToLocalStorage = (newReactions) => {
-    const localStorageKey = `post_reactions_${postId}`;
-    console.log(
-      `[PostActions] Saving reactions to localStorage:`,
-      localStorageKey,
-      newReactions
-    );
-    localStorage.setItem(localStorageKey, JSON.stringify(newReactions));
-  };
+  const saveReactionsToLocalStorage = useCallback(
+    (newReactions) => {
+      const localStorageKey = `post_reactions_${postId}`;
+      localStorage.setItem(localStorageKey, JSON.stringify(newReactions));
+    },
+    [postId]
+  );
 
   // Function to fetch reaction details from API
   const fetchReactionDetails = useCallback(async () => {
@@ -181,29 +212,6 @@ const PostActions = ({
     }
   }, [loadingDetails, postId]);
 
-  // Calculate total reaction count
-  const getTotalReactionCount = useCallback(() => {
-    const total = Object.values(reactions).reduce(
-      (sum, count) => sum + (count || 0),
-      0
-    );
-    console.log(
-      `[PostActions] Total reactions for post ${postId}:`,
-      total,
-      reactions
-    );
-    return total;
-  }, [reactions, postId]);
-
-  // Get top 3 reaction types for display
-  const getTopReactions = useCallback(() => {
-    const sortedReactions = Object.entries(reactions)
-      .filter(([, count]) => count > 0)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3);
-    return sortedReactions;
-  }, [reactions]);
-
   // Pass functions to parent component
   useEffect(() => {
     if (onShowReactionDetails) {
@@ -223,80 +231,95 @@ const PostActions = ({
     getTopReactions,
   ]);
 
-  const handleReactionSelect = async (reactionType) => {
-    if (isLoading) return;
+  const handleReactionSelect = useCallback(
+    async (reactionType) => {
+      if (isLoading) return;
 
-    setShowReactionPicker(false);
+      setShowReactionPicker(false);
 
-    try {
-      const oldReaction = userReaction;
+      try {
+        const oldReaction = userReaction;
+        const isRemovingReaction = oldReaction === reactionType;
 
-      // Optimistically update local state
-      let newReactions = { ...reactions };
+        // Optimistically update local state
+        let newReactions = { ...reactions };
+        let newUserReaction = null;
 
-      if (oldReaction === reactionType) {
-        // Remove reaction
-        if (newReactions[oldReaction]) {
-          newReactions[oldReaction] = Math.max(
-            0,
-            newReactions[oldReaction] - 1
-          );
-        }
-        setUserReaction(null);
-      } else {
-        // Add new reaction
+        // Remove old reaction if exists
         if (oldReaction && newReactions[oldReaction]) {
           newReactions[oldReaction] = Math.max(
             0,
             newReactions[oldReaction] - 1
           );
         }
-        newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
-        setUserReaction(reactionType);
-      }
 
-      setReactions(newReactions);
-      saveReactionsToLocalStorage(newReactions);
-
-      if (onReactionClick) {
-        await onReactionClick(reactionType);
-      } else {
-        // Fallback to direct useReactions hook calls
-        if (oldReaction === reactionType) {
-          await removeReaction(postId);
-        } else {
-          await addReaction(postId, reactionType);
+        // Add new reaction if not removing the same one
+        if (!isRemovingReaction) {
+          newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
+          newUserReaction = reactionType;
         }
-      }
-    } catch (error) {
-      console.error("Failed to update reaction:", error);
-      // Revert optimistic update on error
-      setUserReaction(userReaction);
-      setReactions(reactions);
-    }
-  };
 
-  const handleDirectLike = async () => {
+        // Update state optimistically
+        setReactions(newReactions);
+        setUserReaction(newUserReaction);
+        saveReactionsToLocalStorage(newReactions);
+
+        // Call parent reaction handler
+        if (onReactionClick) {
+          await onReactionClick(reactionType);
+        } else {
+          // Fallback to direct useReactions hook calls
+          if (isRemovingReaction) {
+            await removeReaction(postId);
+          } else {
+            await addReaction(postId, reactionType);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to update reaction:", error);
+        // Revert optimistic update on error
+        setUserReaction(userReaction);
+        setReactions(reactions);
+      }
+    },
+    [
+      isLoading,
+      userReaction,
+      reactions,
+      saveReactionsToLocalStorage,
+      onReactionClick,
+      removeReaction,
+      addReaction,
+      postId,
+    ]
+  );
+
+  const handleDirectLike = useCallback(async () => {
     if (isLoading) return;
     await handleReactionSelect("like");
-  };
+  }, [isLoading, handleReactionSelect]);
 
-  const handleComment = () => onComment?.();
-  const handleShare = () => onShare?.();
+  const handleComment = useCallback(() => {
+    onComment?.();
+  }, [onComment]);
 
-  const toggleReactionPicker = () => {
-    setShowReactionPicker(!showReactionPicker);
-  };
+  const handleShare = useCallback(() => {
+    onShare?.();
+  }, [onShare]);
 
-  const showReactionPickerOnHover = () => {
+  const toggleReactionPicker = useCallback(() => {
+    setShowReactionPicker((prev) => !prev);
+  }, []);
+
+  const showReactionPickerOnHover = useCallback(() => {
     if (!showReactionPicker && !isLoading) {
       setShowReactionPicker(true);
     }
-  };
+  }, [showReactionPicker, isLoading]);
 
-  const hideReactionPicker = () => {
+  const hideReactionPicker = useCallback(() => {
     setShowReactionPicker(false);
-  };
+  }, []);
 
   return (
     <div className="px-4 py-3 border-t border-gray-100">
@@ -382,12 +405,6 @@ const PostActions = ({
                     Be the first person to react to this post and show your
                     support!
                   </p>
-                  <button
-                    onClick={() => setShowReactionModal(false)}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    Close
-                  </button>
                 </div>
               )}
             </div>
@@ -400,9 +417,14 @@ const PostActions = ({
         {/* Reaction Button */}
         <div className="relative flex-1">
           <button
-            onClick={handleDirectLike}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDirectLike();
+            }}
             onContextMenu={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               toggleReactionPicker();
             }}
             onMouseEnter={showReactionPickerOnHover}
@@ -449,7 +471,11 @@ const PostActions = ({
 
         {/* Comment Button */}
         <button
-          onClick={handleComment}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleComment();
+          }}
           className="flex items-center justify-center space-x-2 flex-1 py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           <MdChatBubbleOutline className="text-xl" />
@@ -458,7 +484,11 @@ const PostActions = ({
 
         {/* Share Button */}
         <button
-          onClick={handleShare}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleShare();
+          }}
           className="flex items-center justify-center space-x-2 flex-1 py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           <MdShare className="text-xl" />

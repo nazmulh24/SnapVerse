@@ -17,6 +17,19 @@ const Post = ({ post, onLike, onShare }) => {
   const [loadingReactions, setLoadingReactions] = useState(false);
   const [reactionsError, setReactionsError] = useState(null);
   const [reactionHelpers, setReactionHelpers] = useState(null);
+  const [liveReactionCount, setLiveReactionCount] = useState(() => {
+    const count = parseInt(postData.reactions_count) || 0;
+    return count;
+  });
+
+  // Update live reaction count when postData changes (only from backend)
+  useEffect(() => {
+    const backendCount = parseInt(postData.reactions_count) || 0;
+    if (!reactionHelpers) {
+      // Only use backend count if we don't have live helpers yet
+      setLiveReactionCount(backendCount);
+    }
+  }, [postData.reactions_count, reactionHelpers]);
 
   const { fetchComments, addComment, deleteComment, addReply, error } =
     useComments();
@@ -136,14 +149,7 @@ const Post = ({ post, onLike, onShare }) => {
       setLoadingComments(true);
       setCommentsError(null);
       try {
-        console.log("🚀 Starting to fetch comments for post:", postData.id);
         const commentsData = await fetchComments(postData.id);
-        console.log("📦 Received comments data:", commentsData);
-        console.log("📊 Comments data type:", typeof commentsData);
-        console.log(
-          "🔍 Comments data structure:",
-          Object.keys(commentsData || {})
-        );
 
         const commentsArray = commentsData.results || commentsData || [];
         console.log("📝 Final comments array:", commentsArray);
@@ -240,6 +246,7 @@ const Post = ({ post, onLike, onShare }) => {
 
       setPostData((prev) => {
         const newReactions = { ...prev.reactions };
+        let newReactionsCount = parseInt(prev.reactions_count) || 0;
 
         // Remove old reaction if exists
         if (prev.user_reaction) {
@@ -247,16 +254,19 @@ const Post = ({ post, onLike, onShare }) => {
             0,
             (newReactions[prev.user_reaction] || 0) - 1
           );
+          newReactionsCount = Math.max(0, newReactionsCount - 1);
         }
 
         // If toggling the same reaction, don't add it back
         if (!isTogglingSame) {
           newReactions[reactionType] = (newReactions[reactionType] || 0) + 1;
+          newReactionsCount = newReactionsCount + 1;
         }
 
         return {
           ...prev,
           reactions: newReactions,
+          reactions_count: newReactionsCount.toString(),
           user_reaction: isTogglingSame ? null : reactionType,
         };
       });
@@ -267,21 +277,14 @@ const Post = ({ post, onLike, onShare }) => {
       const result = await addReaction(postData.id, reactionType);
 
       if (result.success) {
-        console.log("😊 Reaction handled successfully:", result.data);
-
         // Handle API response based on action type
         if (result.data) {
           const { action, reaction_type } = result.data;
-          console.log(
-            "😊 API action:",
-            action,
-            "reaction_type:",
-            reaction_type
-          );
 
           setPostData((prev) => {
             // Reset to original state first
             const originalReactions = { ...postData.reactions };
+            let newReactionsCount = parseInt(postData.reactions_count) || 0;
 
             // Remove old user reaction from original state
             if (oldUserReaction) {
@@ -289,15 +292,18 @@ const Post = ({ post, onLike, onShare }) => {
                 0,
                 (originalReactions[oldUserReaction] || 0) - 1
               );
+              newReactionsCount = Math.max(0, newReactionsCount - 1);
             }
 
             if (action === "added") {
               // Reaction was added
               originalReactions[reaction_type] =
                 (originalReactions[reaction_type] || 0) + 1;
+              newReactionsCount = newReactionsCount + 1;
               return {
                 ...prev,
                 reactions: originalReactions,
+                reactions_count: newReactionsCount.toString(),
                 user_reaction: reaction_type || reactionType, // Fallback to reactionType if reaction_type is missing
               };
             } else if (action === "removed") {
@@ -305,6 +311,7 @@ const Post = ({ post, onLike, onShare }) => {
               return {
                 ...prev,
                 reactions: originalReactions,
+                reactions_count: newReactionsCount.toString(),
                 user_reaction: null, // Always set to null, never empty string
               };
             }
@@ -406,6 +413,7 @@ const Post = ({ post, onLike, onShare }) => {
   };
 
   const formattedUser = formatUserData(postData);
+
   const timeAgo = postData.created_at
     ? formatTimeAgo(postData.created_at)
     : "Unknown time";
@@ -454,7 +462,7 @@ const Post = ({ post, onLike, onShare }) => {
                 <span className="text-white text-xs">💝</span>
               </div>
               <span className="group-hover:underline">
-                {parseInt(postData.reactions_count) || 0} reactions
+                {liveReactionCount} reactions
               </span>
             </div>
           </button>
@@ -490,6 +498,10 @@ const Post = ({ post, onLike, onShare }) => {
         loadingReactions={loadingReactions}
         reactionsError={reactionsError}
         onShowReactionDetails={setReactionHelpers}
+        onReactionCountChange={(count) => {
+          // Simple reaction count update without loops
+          setLiveReactionCount(count);
+        }}
       />
 
       {/* Comment Section */}
