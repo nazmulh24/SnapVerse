@@ -7,8 +7,9 @@ import CommentSection from "./CommentSection";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import useComments from "../../hooks/useComments";
 import useReactions from "../../hooks/useReactions";
+import AuthApiClient from "../../services/auth-api-client";
 
-const Post = ({ post, onLike, onShare }) => {
+const Post = ({ post, onLike, onShare, onDelete }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [postData, setPostData] = useState(post);
@@ -169,7 +170,35 @@ const Post = ({ post, onLike, onShare }) => {
     }
   };
 
-  // Handle comment button click
+  // Handle post deletion
+  const handleDeletePost = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this post? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await AuthApiClient.delete(`/posts/${postData.id}/`);
+
+      if (response.status === 200 || response.status === 204) {
+        // Call parent delete handler if provided
+        if (onDelete) {
+          onDelete(postData.id);
+        } else {
+          // If no parent handler, remove the post from the UI by hiding it
+          setPostData({ ...postData, deleted: true });
+        }
+      } else {
+        throw new Error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete post. Please try again.");
+    }
+  }; // Handle comment button click
   const handleCommentClick = async () => {
     if (!showComments) {
       // Load comments when opening comment section
@@ -445,6 +474,11 @@ const Post = ({ post, onLike, onShare }) => {
     ? formatTimeAgo(postData.created_at)
     : "Unknown time";
 
+  // Don't render if post is deleted
+  if (postData.deleted) {
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
       {/* Post Header - Profile picture, full_name, time, location and edited status on right */}
@@ -455,6 +489,7 @@ const Post = ({ post, onLike, onShare }) => {
         isEdited={postData.is_edited}
         privacy={postData.privacy}
         postId={postData.id}
+        onDelete={handleDeletePost}
       />
 
       {/* Post Caption/Content - Show before image */}

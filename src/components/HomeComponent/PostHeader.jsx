@@ -1,11 +1,19 @@
 import React from "react";
 import { MdLocationOn } from "react-icons/md";
-import { BiGlobe, BiGroup, BiLock, BiEdit } from "react-icons/bi";
+import { BiGlobe, BiGroup, BiLock, BiEdit, BiTrash } from "react-icons/bi";
 import { useNavigate } from "react-router";
 import UserProfileLink from "../shared/UserProfileLink";
 import useAuthContext from "../../hooks/useAuthContext";
 
-const PostHeader = ({ user, timeAgo, location, isEdited, privacy, postId }) => {
+const PostHeader = ({
+  user,
+  timeAgo,
+  location,
+  isEdited,
+  privacy,
+  postId,
+  onDelete,
+}) => {
   const { user: currentUser } = useAuthContext();
   const navigate = useNavigate();
 
@@ -108,14 +116,25 @@ const PostHeader = ({ user, timeAgo, location, isEdited, privacy, postId }) => {
 
       <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
         {isOwnPost && (
-          <button
-            onClick={handleEditPost}
-            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
-            title="Edit post"
-          >
-            <BiEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Edit</span>
-          </button>
+          <>
+            <button
+              onClick={handleEditPost}
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
+              title="Edit post"
+            >
+              <BiEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-red-200"
+              title="Delete post"
+            >
+              <BiTrash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          </>
         )}
       </div>
     </div>
