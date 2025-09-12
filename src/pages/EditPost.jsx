@@ -11,6 +11,7 @@ import {
   BiLoader,
   BiArrowBack,
   BiSmile,
+  BiEdit,
 } from "react-icons/bi";
 import { HiOutlineCamera, HiOutlineLocationMarker } from "react-icons/hi";
 import AuthApiClient from "../services/auth-api-client";
@@ -375,38 +376,47 @@ const EditPost = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm"
-            >
-              <BiArrowBack className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Edit Post</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Update your post content and settings
-              </p>
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 mb-4 sm:mb-6">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <button
+                onClick={handleBack}
+                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 flex-shrink-0"
+              >
+                <BiArrowBack className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+              </button>
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <BiEdit className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                    Edit Post
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-0">
+                    Update your content
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <BiCheck className="w-5 h-5 text-white" />
+          <div className="bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <BiCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <h4 className="text-green-800 font-semibold">
+                <h4 className="text-green-800 font-semibold text-sm sm:text-base">
                   Post updated successfully!
                 </h4>
-                <p className="text-green-600 text-sm">
+                <p className="text-green-600 text-xs sm:text-sm">
                   Your changes have been saved. Redirecting...
                 </p>
               </div>
@@ -416,8 +426,8 @@ const EditPost = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                 <BiX className="w-5 h-5 text-white" />
               </div>
@@ -429,12 +439,12 @@ const EditPost = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Main Content Section - Like CreatePage */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border-2 border-purple-200">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 overflow-hidden border-2 border-purple-200">
                   {getUserProfileImage() ? (
                     <img
                       src={getUserProfileImage()}
@@ -452,7 +462,7 @@ const EditPost = () => {
                       getUserProfileImage() ? "hidden" : "flex"
                     }`}
                   >
-                    <span className="text-white font-semibold text-sm">
+                    <span className="text-white font-semibold text-xs sm:text-sm">
                       {user?.first_name?.charAt(0) ||
                         user?.username?.charAt(0) ||
                         "U"}
@@ -461,14 +471,14 @@ const EditPost = () => {
                 </div>
                 <div className="flex-1">
                   <div className="mb-2">
-                    <span className="text-gray-700 font-medium text-sm">
+                    <span className="text-gray-700 font-medium text-xs sm:text-sm">
                       {user?.first_name && user?.last_name
                         ? `${user.first_name} ${user.last_name}`
                         : user?.username || "User"}
                     </span>
                   </div>
                   <textarea
-                    className="w-full border-0 resize-none text-gray-900 placeholder-gray-500 focus:outline-none text-lg leading-relaxed"
+                    className="w-full border-0 resize-none text-gray-900 placeholder-gray-500 focus:outline-none text-base sm:text-lg leading-relaxed"
                     rows={4}
                     placeholder="What's on your mind?"
                     value={content}
@@ -477,31 +487,25 @@ const EditPost = () => {
                   />
 
                   {/* Character count */}
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-4">
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 gap-3 sm:gap-0">
+                    <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto">
                       <button
                         type="button"
-                        className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors"
+                        className="flex items-center gap-1.5 sm:gap-2 text-gray-500 hover:text-purple-600 transition-colors whitespace-nowrap"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        <BiImageAdd className="w-5 h-5" />
-                        <span className="text-sm font-medium">Photo</span>
+                        <BiImageAdd className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="text-xs sm:text-sm font-medium">
+                          Photo
+                        </span>
                       </button>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <BiSmile className="w-5 h-5" />
-                        <span className="text-sm font-medium">Feeling</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <HiOutlineLocationMarker className="w-5 h-5" />
-                        <span className="text-sm font-medium">Location</span>
-                      </div>
                     </div>
                     <span
-                      className={`text-sm ${
-                        content.length > 280 ? "text-red-500" : "text-gray-400"
+                      className={`text-xs sm:text-sm ${
+                        content.length > 2000 ? "text-red-500" : "text-gray-400"
                       }`}
                     >
-                      {content.length}/500
+                      {content.length}/2000
                     </span>
                   </div>
                 </div>
@@ -510,10 +514,10 @@ const EditPost = () => {
           </div>
 
           {/* Image Upload Section - Like CreatePage */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                   Add Photos
                 </h3>
               </div>
@@ -679,9 +683,9 @@ const EditPost = () => {
           </div>
 
           {/* Submit Button - Like CreatePage */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-500">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="text-xs sm:text-sm text-gray-500">
                 Your post will be visible to{" "}
                 <span className="font-medium text-gray-700">
                   {privacy === "public"
@@ -694,7 +698,7 @@ const EditPost = () => {
               <button
                 type="submit"
                 disabled={loading || !content.trim()}
-                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+                className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                   loading || !content.trim()
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -702,12 +706,12 @@ const EditPost = () => {
               >
                 {loading ? (
                   <>
-                    <BiLoader className="w-5 h-5 animate-spin" />
+                    <BiLoader className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     Updating...
                   </>
                 ) : (
                   <>
-                    <BiCheck className="w-5 h-5" />
+                    <BiCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                     Update Post
                   </>
                 )}

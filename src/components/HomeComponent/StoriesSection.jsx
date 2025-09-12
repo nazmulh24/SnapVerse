@@ -58,8 +58,8 @@ const StoriesSection = ({ stories = [] }) => {
   const displayStories = stories.length > 0 ? stories : defaultStories;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
+      <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2 scrollbar-hide">
         {displayStories.map((story) => (
           <div
             key={story.id}
@@ -68,7 +68,7 @@ const StoriesSection = ({ stories = [] }) => {
             <div className="relative">
               {/* Story Ring */}
               <div
-                className={`w-16 h-16 rounded-full p-0.5 ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 ${
                   story.hasNewStory
                     ? "bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500"
                     : story.isOwnStory
@@ -90,14 +90,14 @@ const StoriesSection = ({ stories = [] }) => {
 
               {/* Plus icon for own story */}
               {story.isOwnStory && (
-                <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-white">
-                  <BiPlus className="text-white text-sm" />
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center border-2 border-white">
+                  <BiPlus className="text-white text-xs sm:text-sm" />
                 </div>
               )}
             </div>
 
             {/* Username */}
-            <p className="text-xs mt-2 truncate w-16 text-gray-800 font-medium">
+            <p className="text-xs mt-1.5 sm:mt-2 truncate w-14 sm:w-16 text-gray-800 font-medium">
               {story.username}
             </p>
 

@@ -37,18 +37,22 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-0">
       <PullToRefresh onRefresh={refreshPosts} isRefreshing={isRefreshing}>
         {/* Error State */}
         {error && (
-          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-red-600 text-sm font-medium">!</span>
+          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-red-600 text-xs sm:text-sm font-medium">
+                  !
+                </span>
               </div>
-              <div className="flex-1">
-                <p className="text-red-800 font-medium">Failed to load posts</p>
-                <p className="text-red-600 text-sm mt-1">
+              <div className="flex-1 min-w-0">
+                <p className="text-red-800 font-medium text-sm sm:text-base">
+                  Failed to load posts
+                </p>
+                <p className="text-red-600 text-xs sm:text-sm mt-1">
                   {typeof error === "string"
                     ? error
                     : error?.message || "An unexpected error occurred"}
@@ -56,7 +60,7 @@ const Home = () => {
               </div>
               <button
                 onClick={refreshPosts}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-shrink-0"
                 aria-label="Retry loading posts"
               >
                 Retry

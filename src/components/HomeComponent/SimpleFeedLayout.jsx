@@ -38,20 +38,20 @@ const SimpleFeedLayout = ({
 
   if (loading && posts.length === 0) {
     return (
-      <div className="py-8">
+      <div className="py-6 sm:py-8">
         <LoadingSpinner size="large" text="Loading your feed..." />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stories Section - Always at top */}
       <StoriesSection />
 
       {/* Refresh indicator */}
       {isRefreshing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 text-center">
           <LoadingSpinner
             size="small"
             color="blue"
@@ -62,7 +62,7 @@ const SimpleFeedLayout = ({
 
       {/* Render post groups with sponsors and suggestions */}
       {postGroups.map((group, groupIndex) => (
-        <div key={`group-${groupIndex}`} className="space-y-6">
+        <div key={`group-${groupIndex}`} className="space-y-4 sm:space-y-6">
           {/* Posts Group */}
           <FeedSection
             posts={group}
@@ -94,21 +94,25 @@ const SimpleFeedLayout = ({
 
       {/* Loading More Indicator */}
       {isLoadingMore && (
-        <div className="py-8">
+        <div className="py-6 sm:py-8">
           <LoadingSpinner size="medium" text="Loading more posts..." />
         </div>
       )}
 
       {/* End of Feed */}
       {!hasNextPage && posts.length > 0 && (
-        <div className="text-center py-8">
-          <div className="bg-gray-50 rounded-lg p-6 text-gray-600">
+        <div className="text-center py-6 sm:py-8">
+          <div className="bg-gray-50 rounded-lg p-4 sm:p-6 text-gray-600">
             <div className="text-lg mb-2">🎉</div>
-            <p className="font-medium">You've reached the end!</p>
-            <p className="text-sm text-gray-500 mt-1">No more posts to load</p>
+            <p className="font-medium text-sm sm:text-base">
+              You've reached the end!
+            </p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              No more posts to load
+            </p>
             <button
               onClick={onRefresh}
-              className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors text-sm"
+              className="mt-3 sm:mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm"
             >
               Refresh feed
             </button>
@@ -118,18 +122,20 @@ const SimpleFeedLayout = ({
 
       {/* Empty state */}
       {!loading && posts.length === 0 && (
-        <div className="text-center py-12">
-          <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
-            <div className="text-gray-400 text-4xl mb-4">📱</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        <div className="text-center py-8 sm:py-12">
+          <div className="bg-white rounded-lg p-6 sm:p-8 shadow-sm border border-gray-200">
+            <div className="text-gray-400 text-3xl sm:text-4xl mb-3 sm:mb-4">
+              📱
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
               No posts yet
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">
               Be the first to share something!
             </p>
             <button
               onClick={onRefresh}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
             >
               Refresh
             </button>
