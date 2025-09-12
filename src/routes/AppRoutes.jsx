@@ -7,6 +7,7 @@ import CreatePage from "../pages/CreatePage";
 import ConnectionPage from "../pages/ConnectionPage";
 import ReelsPage from "../pages/ReelsPage";
 import MonetizationPage from "../pages/MonetizationPage";
+import PurchaseHistoryPage from "../pages/PurchaseHistoryPage";
 import ExplorePage from "../pages/ExplorePage";
 import SavedPage from "../pages/SavedPage";
 import TrendingPage from "../pages/TrendingPage";
@@ -62,6 +63,7 @@ const AppRoutes = () => {
           <Route path="/connections" element={<ConnectionPage />} />
           <Route path="/reels" element={<ReelsPage />} />
           <Route path="/monetization" element={<MonetizationPage />} />
+          <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
 
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/saved" element={<SavedPage />} />
