@@ -4,7 +4,7 @@ import { MdChevronRight, MdSwitchAccount, MdLogout } from "react-icons/md";
 
 const SettingsSection = ({ settingsItems }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-4">
       <h2 className="text-2xl font-bold text-slate-900">Settings & Support</h2>
 
       {/* Settings Section */}

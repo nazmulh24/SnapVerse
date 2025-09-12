@@ -4,7 +4,7 @@ import { MdChevronRight } from "react-icons/md";
 
 const BusinessSection = ({ businessItems }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-4">
       <h2 className="text-2xl font-bold text-slate-900">Business Tools</h2>
       <div className="grid gap-4">
         {businessItems.map((item, index) => (
