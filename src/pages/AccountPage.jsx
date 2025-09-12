@@ -118,7 +118,7 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen sm:-mt-40 bg-gray-50">
       <AccountHeader onBack={handleBack} />
 
       <div className="max-w-5xl mx-auto">
@@ -128,7 +128,7 @@ const AccountPage = () => {
           onTabChange={setActiveTab}
         />
 
-        <div className="p-6">
+        <div className=" sm:p-0 md:p-4 lg:p-6">
           {activeTab === "profile" && (
             <ProfileSection
               user={user}
