@@ -118,8 +118,11 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen sm:-mt-40 bg-gray-50">
-      <AccountHeader onBack={handleBack} />
+    <div className="min-h-screen bg-gray-50">
+      {/* Hide AccountHeader on small devices */}
+      <div className="hidden sm:block">
+        <AccountHeader onBack={handleBack} />
+      </div>
 
       <div className="max-w-5xl mx-auto">
         <TabNavigation

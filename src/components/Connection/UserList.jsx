@@ -23,26 +23,26 @@ export default function UserList({
         return (
           <li
             key={user.id}
-            className="flex items-center gap-5 py-5 group rounded-xl transition-colors"
+            className="flex items-center gap-3 sm:gap-5 py-3 sm:py-5 group rounded-xl transition-colors"
           >
             {/* Clickable Avatar */}
             <UserProfileLink
               username={user.username}
               asDiv={true}
-              className="relative hover:opacity-80 transition-opacity"
+              className="relative hover:opacity-80 transition-opacity flex-shrink-0"
             >
               <img
                 src={user.avatar}
                 alt={user.name}
-                className="w-14 h-14 rounded-full object-cover border-2 border-purple-100 shadow-sm group-hover:border-purple-400 transition-all"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-purple-100 shadow-sm group-hover:border-purple-400 transition-all"
                 onError={(e) => handleImageError(e, user)}
               />
-              <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+              <span className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 border-2 border-white rounded-full"></span>
             </UserProfileLink>
 
             <div className="flex-1 min-w-0">
               {/* Clickable Name */}
-              <div className="font-semibold text-gray-900 text-lg truncate">
+              <div className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                 <UserProfileLink
                   username={user.username}
                   className="hover:text-blue-600 transition-colors text-left"
@@ -50,19 +50,19 @@ export default function UserList({
                   {user.name}
                 </UserProfileLink>
               </div>
-              <div className="text-sm text-gray-500 truncate">
+              <div className="text-xs sm:text-sm text-gray-500 truncate">
                 {user.username}
               </div>
             </div>
             {activeTab === "followers" &&
               !isFollowing &&
               (isPrivate && requestSent.includes(user.id) ? (
-                <span className="px-5 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold shadow-sm border border-yellow-200">
+                <span className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold shadow-sm border border-yellow-200 text-xs sm:text-sm">
                   Request Sent
                 </span>
               ) : (
                 <button
-                  className={`px-5 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full font-semibold transition-colors shadow-sm text-xs sm:text-sm whitespace-nowrap ${
                     processingId === user.id
                       ? "bg-gray-200 text-gray-500"
                       : "bg-purple-100 text-purple-700 hover:bg-purple-200"
@@ -75,7 +75,7 @@ export default function UserList({
               ))}
             {activeTab === "following" && (
               <button
-                className={`px-5 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full font-semibold transition-colors shadow-sm text-xs sm:text-sm whitespace-nowrap ${
                   processingId === user.id
                     ? "bg-gray-200 text-gray-500"
                     : "bg-red-100 text-red-600 hover:bg-red-200"
@@ -87,9 +87,9 @@ export default function UserList({
               </button>
             )}
             {activeTab === "pending" && isPrivate && (
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                  className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-colors shadow-sm text-xs sm:text-sm ${
                     processingId === user.id
                       ? "bg-gray-200 text-gray-500"
                       : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -102,7 +102,7 @@ export default function UserList({
                   {processingId === user.id ? "Processing..." : "Accept"}
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full font-semibold transition-colors shadow-sm ${
+                  className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-colors shadow-sm text-xs sm:text-sm ${
                     processingId === user.id
                       ? "bg-gray-200 text-gray-500"
                       : "bg-red-100 text-red-600 hover:bg-red-200"
