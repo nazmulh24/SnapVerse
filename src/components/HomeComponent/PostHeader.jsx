@@ -23,6 +23,12 @@ const PostHeader = ({
     user &&
     (currentUser.id === user.id || currentUser.username === user.username);
 
+  // Check if current user is admin
+  const isAdmin = currentUser && currentUser.is_staff === true;
+
+  // Admin can edit any post, or user can edit their own post
+  const canEdit = isOwnPost || isAdmin;
+
   // Handle edit post
   const handleEditPost = () => {
     if (postId) {
@@ -115,26 +121,38 @@ const PostHeader = ({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-        {isOwnPost && (
-          <>
-            <button
-              onClick={handleEditPost}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
-              title="Edit post"
-            >
-              <BiEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
+        {canEdit && (
+          <button
+            onClick={handleEditPost}
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
+            title={isAdmin && !isOwnPost ? "Edit post (Admin)" : "Edit post"}
+          >
+            <BiEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Edit</span>
+            {isAdmin && !isOwnPost && (
+              <span className="text-xs bg-red-500 text-white px-1 rounded ml-1">
+                Admin
+              </span>
+            )}
+          </button>
+        )}
 
-            <button
-              onClick={onDelete}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-red-200"
-              title="Delete post"
-            >
-              <BiTrash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Delete</span>
-            </button>
-          </>
+        {canEdit && (
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-red-200"
+            title={
+              isAdmin && !isOwnPost ? "Delete post (Admin)" : "Delete post"
+            }
+          >
+            <BiTrash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Delete</span>
+            {isAdmin && !isOwnPost && (
+              <span className="text-xs bg-red-500 text-white px-1 rounded ml-1">
+                Admin
+              </span>
+            )}
+          </button>
         )}
       </div>
     </div>

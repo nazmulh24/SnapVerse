@@ -33,6 +33,8 @@ const EditPost = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
+  const [isAdminEdit, setIsAdminEdit] = useState(false);
+  const [postAuthor, setPostAuthor] = useState(null);
 
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
@@ -42,21 +44,8 @@ const EditPost = () => {
     const fetchPost = async () => {
       try {
         setLoadingPost(true);
-        console.log("Fetching post with ID:", postId);
         const response = await AuthApiClient.get(`/posts/${postId}/`);
         const postData = response.data;
-
-        console.log("Fetched post data:", postData);
-        console.log("Current user:", user);
-        console.log("Post author:", postData.author);
-        console.log("Ownership check:", {
-          postAuthorId: postData.author?.id,
-          userId: user?.id,
-          postAuthorUsername: postData.author?.username,
-          userUsername: user?.username,
-          idMatch: postData.author?.id === user?.id,
-          usernameMatch: postData.author?.username === user?.username,
-        });
 
         // Check if user owns this post - check multiple possible author field structures
         const isOwner =
@@ -69,18 +58,20 @@ const EditPost = () => {
           postData.author_id === user?.id ||
           postData.user_id === user?.id;
 
-        console.log("Final ownership result:", isOwner);
+        // Check if user is admin
+        const isAdmin = user && user.is_staff === true;
 
-        // Temporarily disable ownership check for debugging
-        // if (!isOwner) {
-        //   console.log("Permission denied - user does not own this post");
-        //   setError("You don't have permission to edit this post");
-        //   return;
-        // }
+        // Allow editing if user owns the post OR if user is admin
+        const canEdit = isOwner || isAdmin;
 
-        console.log(
-          "Proceeding with post editing (ownership check disabled for debugging)"
-        );
+        if (!canEdit) {
+          setError("You don't have permission to edit this post");
+          return;
+        }
+
+        // Set admin edit status and post author info
+        setIsAdminEdit(isAdmin && !isOwner);
+        setPostAuthor(postData.author || postData.user || postData.created_by);
 
         // Extract content from different possible field names
         const postContent =
@@ -110,10 +101,7 @@ const EditPost = () => {
           postData.photo ||
           postData.picture;
         if (imageUrl) {
-          console.log("Setting existing image:", imageUrl);
           setPreviewUrl(getImageUrl(imageUrl));
-        } else {
-          console.log("No existing image found");
         }
       } catch (err) {
         console.error("Error fetching post:", err);
@@ -276,35 +264,13 @@ const EditPost = () => {
       if (images.length > 0) {
         // New image selected
         formData.append("image", images[0]);
-        console.log("Uploading new image:", images[0].name);
       } else if (removeExistingImage) {
         // User wants to remove existing image - send an empty blob that will be treated as None
         const emptyBlob = new Blob([""], { type: "text/plain" });
         const emptyFile = new File([emptyBlob], "", { type: "text/plain" });
         formData.append("image", emptyFile);
-        console.log("Removing existing image - sending empty file");
       }
       // If neither condition, don't send image field (preserve existing)
-
-      console.log("Updating post with data:", {
-        postId,
-        caption: content, // Log as caption since that's what we're sending
-        location,
-        privacy,
-        hasNewImage: images.length > 0,
-        removeExistingImage: removeExistingImage,
-        endpoint: `/posts/${postId}/`,
-      });
-
-      // Log FormData contents for debugging
-      console.log("FormData being sent:");
-      for (let [key, value] of formData.entries()) {
-        if (key === "image") {
-          console.log(`${key}: ${value.name} (${value.size} bytes)`);
-        } else {
-          console.log(`${key}: ${value}`);
-        }
-      }
 
       // Use correct endpoint format with postId in URL
       const response = await AuthApiClient.put(`/posts/${postId}/`, formData, {
@@ -312,13 +278,6 @@ const EditPost = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      console.log("PUT Response:", response);
-      console.log("PUT Response data:", response.data);
-      console.log("Updated post caption:", response.data?.caption);
-      console.log("Updated post content:", response.data?.content);
-      console.log("Updated post image:", response.data?.image);
-      console.log("Updated post is_edited:", response.data?.is_edited);
 
       if (response.status === 200 || response.status === 201) {
         setSuccess(true);
@@ -393,11 +352,22 @@ const EditPost = () => {
                   <BiEdit className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                    Edit Post
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                      Edit Post
+                    </h1>
+                    {isAdminEdit && (
+                      <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-0">
-                    Update your content
+                    {isAdminEdit && postAuthor
+                      ? `Editing ${
+                          postAuthor.first_name || postAuthor.username || "user"
+                        }'s post`
+                      : "Update your content"}
                   </p>
                 </div>
               </div>
