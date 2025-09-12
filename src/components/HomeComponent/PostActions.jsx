@@ -37,7 +37,6 @@ const PostActions = ({
 
   // Prevent infinite loops with refs
   const previousReactionsRef = useRef();
-  const isInitializedRef = useRef(false);
 
   const { addReaction, removeReaction, loading } = useReactions();
   const isLoading = loadingReactions || loading;
@@ -124,6 +123,11 @@ const PostActions = ({
     const reactionsString = JSON.stringify(initialReactions);
     const previousString = JSON.stringify(previousReactionsRef.current);
 
+    console.log(`[PostActions] Reactions update check for post ${postId}:`, {
+      initialReactions,
+      hasChanged: reactionsString !== previousString,
+    });
+
     if (reactionsString !== previousString) {
       previousReactionsRef.current = initialReactions;
       setReactions(initialReactions);
@@ -168,15 +172,19 @@ const PostActions = ({
     return sortedReactions;
   }, [reactions]);
 
-  // Notify parent when reactions change (throttled to prevent loops)
+  // Notify parent when reactions change (send initial count immediately)
   useEffect(() => {
-    if (onReactionCountChange && isInitializedRef.current) {
+    if (onReactionCountChange) {
       const totalCount = getTotalReactionCount();
+      console.log(
+        `[PostActions] Sending count to parent for post ${postId}:`,
+        totalCount,
+        "from reactions:",
+        reactions
+      );
       onReactionCountChange(totalCount);
-    } else if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
     }
-  }, [reactions, onReactionCountChange, getTotalReactionCount]);
+  }, [reactions, onReactionCountChange, getTotalReactionCount, postId]);
 
   // Function to save reactions to localStorage
   const saveReactionsToLocalStorage = useCallback(
