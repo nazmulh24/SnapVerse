@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import useAuthContext from "../hooks/useAuthContext";
 import useApi from "../hooks/useApi";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
+import ComingSoonPage from "../components/shared/ComingSoonPage";
 import {
   MdArrowBack,
   MdEdit,
@@ -25,10 +26,6 @@ const EditProfile = () => {
   const [searchParams] = useSearchParams();
   const { user, updateUserProfile } = useAuthContext();
   const { get, put } = useApi();
-
-  // Check if admin is editing another user
-  const targetUsername = searchParams.get('user');
-  const isAdminEditing = targetUsername && user?.is_staff === true;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -56,18 +53,30 @@ const EditProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [targetUser, setTargetUser] = useState(null); // For admin editing
 
+  // Check if admin is editing another user
+  const targetUsername = searchParams.get("user");
+  const isAdminEditing = targetUsername && user?.is_staff === true;
+
   // Initialize form with user data from context or fetched user data
   useEffect(() => {
     const initializeForm = async () => {
+      // Skip initialization for admin editing (will show Coming Soon page)
+      if (isAdminEditing) {
+        setIsLoading(false);
+        return;
+      }
+
       // Permission check - only allow admin to edit other users
       if (targetUsername && !user?.is_staff) {
-        setErrors({ general: "Unauthorized: Only admins can edit other users' profiles" });
+        setErrors({
+          general: "Unauthorized: Only admins can edit other users' profiles",
+        });
         setIsLoading(false);
         return;
       }
 
       let userData = user;
-      
+
       // If admin is editing another user, fetch that user's data
       if (isAdminEditing) {
         try {
@@ -102,7 +111,8 @@ const EditProfile = () => {
           date_of_birth: userData.date_of_birth || "",
           gender: userData.gender || "",
           relationship_status: userData.relationship_status || "",
-          is_private: userData.is_private === true || userData.is_private === "true",
+          is_private:
+            userData.is_private === true || userData.is_private === "true",
         });
         setIsLoading(false);
       }
@@ -297,7 +307,7 @@ const EditProfile = () => {
       }
 
       let result;
-      
+
       if (isAdminEditing) {
         // Admin editing another user - use direct API call
         result = await put(`/auth/users/${targetUser.id}/`, formDataToSend);
@@ -311,7 +321,9 @@ const EditProfile = () => {
 
         // Show success message for 2 seconds then navigate
         setTimeout(() => {
-          const navigationUsername = isAdminEditing ? targetUsername : user.username;
+          const navigationUsername = isAdminEditing
+            ? targetUsername
+            : user.username;
           navigate(`/profile/${navigationUsername}`);
         }, 2000);
       } else {
@@ -370,6 +382,27 @@ const EditProfile = () => {
     );
   }
 
+  // Show Coming Soon page for admin editing
+  if (isAdminEditing) {
+    return (
+      <ComingSoonPage
+        icon={<MdAdminPanelSettings className="w-12 h-12 text-white" />}
+        title="Admin Profile Editing"
+        subtitle="This feature is coming soon! Admin profile editing API is currently under development."
+        emoji="⚙️"
+        progress={75}
+        bgColors={{ from: "blue-50", via: "purple-50", to: "indigo-50" }}
+        iconColors={{ from: "blue-500", to: "indigo-600" }}
+        titleColors={{ from: "indigo-600", to: "purple-600" }}
+        accentColor="indigo"
+        statusCard={{
+          icon: <MdEdit className="w-5 h-5 text-blue-500" />,
+          text: "API in Development",
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -390,7 +423,11 @@ const EditProfile = () => {
             </button>
             <div className="text-center">
               <h1 className="text-lg sm:text-xl font-bold text-gray-900">
-                {isAdminEditing ? `Edit ${targetUser?.first_name || targetUser?.username || 'User'}'s Profile` : 'Edit Profile'}
+                {isAdminEditing
+                  ? `Edit ${
+                      targetUser?.first_name || targetUser?.username || "User"
+                    }'s Profile`
+                  : "Edit Profile"}
               </h1>
               {isAdminEditing && (
                 <div className="flex items-center justify-center gap-1 mt-1">
@@ -423,9 +460,15 @@ const EditProfile = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-lg sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden">
             {/* Cover Photo Section */}
             <div className="relative h-48 sm:h-64 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800">
-              {getImagePreview(coverPhoto, getCurrentUserData()?.cover_photo) && (
+              {getImagePreview(
+                coverPhoto,
+                getCurrentUserData()?.cover_photo
+              ) && (
                 <img
-                  src={getImagePreview(coverPhoto, getCurrentUserData()?.cover_photo)}
+                  src={getImagePreview(
+                    coverPhoto,
+                    getCurrentUserData()?.cover_photo
+                  )}
                   alt="Cover"
                   className="w-full h-full object-cover"
                 />
@@ -451,7 +494,10 @@ const EditProfile = () => {
               <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-0 -mt-8 sm:-mt-12">
                 <div className="relative">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200">
-                    {getImagePreview(profilePicture, getCurrentUserData()?.profile_picture) ? (
+                    {getImagePreview(
+                      profilePicture,
+                      getCurrentUserData()?.profile_picture
+                    ) ? (
                       <img
                         src={getImagePreview(
                           profilePicture,
@@ -852,16 +898,29 @@ const EditProfile = () => {
                   {/* Privacy Status Indicator */}
                   <div className="mt-4 p-3 rounded-lg border-l-4 transition-all duration-200 bg-white/50 border-blue-400">
                     <div className="flex items-start gap-2">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${formData.is_private ? 'bg-blue-600' : 'bg-green-600'}`}></div>
+                      <div
+                        className={`w-2 h-2 rounded-full mt-2 ${
+                          formData.is_private ? "bg-blue-600" : "bg-green-600"
+                        }`}
+                      ></div>
                       <div className="flex-1">
                         <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                           {formData.is_private ? (
                             <>
-                              <strong className="text-blue-700">Private Account:</strong> Only approved followers can see your posts and profile details. Others can only see your basic info.
+                              <strong className="text-blue-700">
+                                Private Account:
+                              </strong>{" "}
+                              Only approved followers can see your posts and
+                              profile details. Others can only see your basic
+                              info.
                             </>
                           ) : (
                             <>
-                              <strong className="text-green-700">Public Account:</strong> Anyone can see your posts, followers, and profile information on SnapVerse.
+                              <strong className="text-green-700">
+                                Public Account:
+                              </strong>{" "}
+                              Anyone can see your posts, followers, and profile
+                              information on SnapVerse.
                             </>
                           )}
                         </p>
