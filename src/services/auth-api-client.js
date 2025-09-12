@@ -35,6 +35,11 @@ AuthApiClient.interceptors.request.use(
       }
     }
 
+    // If the data is FormData, remove the Content-Type header to let the browser set it
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     console.log(`[AuthAPI] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },

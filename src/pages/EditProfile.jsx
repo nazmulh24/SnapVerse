@@ -114,10 +114,45 @@ const EditProfile = () => {
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          [type === "profile" ? "profile_picture" : "cover_photo"]:
+            "Please select a valid image file (JPEG, PNG)",
+        }));
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setErrors((prev) => ({
+          ...prev,
+          [type === "profile" ? "profile_picture" : "cover_photo"]:
+            "File size must be less than 5MB",
+        }));
+        return;
+      }
+
+      // Clear any previous errors for this field
+      setErrors((prev) => ({
+        ...prev,
+        [type === "profile" ? "profile_picture" : "cover_photo"]: "",
+      }));
+
       if (type === "profile") {
         setProfilePicture(file);
+        console.log(
+          "Profile picture selected:",
+          file.name,
+          file.size,
+          file.type
+        );
       } else if (type === "cover") {
         setCoverPhoto(file);
+        console.log("Cover photo selected:", file.name, file.size, file.type);
       }
     }
   };
@@ -191,9 +226,31 @@ const EditProfile = () => {
       // Add files if selected
       if (profilePicture) {
         formDataToSend.append("profile_picture", profilePicture);
+        console.log(
+          "Adding profile picture:",
+          profilePicture.name,
+          profilePicture.size,
+          profilePicture.type
+        );
       }
       if (coverPhoto) {
         formDataToSend.append("cover_photo", coverPhoto);
+        console.log(
+          "Adding cover photo:",
+          coverPhoto.name,
+          coverPhoto.size,
+          coverPhoto.type
+        );
+      }
+
+      // Debug: Log what's being sent
+      console.log("FormData contents:");
+      for (let [key, value] of formDataToSend.entries()) {
+        if (value instanceof File) {
+          console.log(key, ":", value.name, value.size, value.type);
+        } else {
+          console.log(key, ":", value);
+        }
       }
 
       const result = await updateUserProfile(formDataToSend);
@@ -213,8 +270,15 @@ const EditProfile = () => {
       }
     } catch (error) {
       console.error("Error in profile update:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error headers:", error.response?.headers);
+
       setErrors({
-        general: "An unexpected error occurred. Please try again.",
+        general:
+          error.response?.data?.message ||
+          error.response?.data?.detail ||
+          "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsSaving(false);
