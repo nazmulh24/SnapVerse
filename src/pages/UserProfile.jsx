@@ -273,7 +273,7 @@ const UserProfile = () => {
       {/* Header */}
       <ProfileHeader fullName={fullName} onBack={handleBack} />
 
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto sm:px-0 lg:px-4">
         <div className="bg-white shadow-xl rounded-b-3xl overflow-hidden">
           {/* Cover Photo */}
           <ProfileCover coverPhotoUrl={coverPhotoUrl} />
