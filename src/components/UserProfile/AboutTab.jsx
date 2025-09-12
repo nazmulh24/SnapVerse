@@ -47,9 +47,9 @@ const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
 
   return (
     //--> About activeTab
-    <div className="px-8 py-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-6">
       <div className="max-w-3xl">
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl px-4 sm:px-2 lg:px-6 py-8 shadow-sm border border-gray-100">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <MdPerson className="w-6 h-6 text-blue-600" />
             About {isOwnProfile ? "Me" : fullName}
@@ -78,7 +78,7 @@ const AboutTab = ({ profileUser, isOwnProfile, fullName, joinDate }) => {
             )}
 
             {/* Personal Information */}
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="bg-white rounded-lg px-3 py-4 border border-gray-200">
               <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <MdPerson className="w-4 h-4 text-blue-600" />
                 Personal Information

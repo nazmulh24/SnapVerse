@@ -27,9 +27,10 @@ const MainLayout = () => {
       <RightSidebar />
 
       <div
-        className="lg:mr-80 h-screen overflow-y-auto transition-all duration-200 mt-16 sm:mt-6"
+        className="lg:mr-80 overflow-y-auto transition-all duration-200 mt-16 sm:mt-6"
         style={{
           marginLeft: isDesktop ? `${leftSidebarWidth}px` : "0px",
+          height: isDesktop ? "calc(100vh - 24px)" : "calc(100vh - 128px)", // 64px top + 64px bottom on mobile
         }}
       >
         <Outlet />

@@ -38,9 +38,11 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
 
   // Render empty state
   const renderEmptyState = () => (
-    <div className="text-center py-12">
-      <div className="text-gray-400 text-lg mb-2">No photos yet</div>
-      <p className="text-gray-500">
+    <div className="text-center py-8 sm:py-12">
+      <div className="text-gray-400 text-base sm:text-lg mb-2">
+        No photos yet
+      </div>
+      <p className="text-gray-500 text-sm sm:text-base px-4">
         {isOwnProfile
           ? "Share some photos to see them here!"
           : `${fullName} hasn't shared any photos yet.`}
@@ -50,7 +52,7 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
 
   // Render photo grid
   const renderPhotoGrid = () => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
       {postsWithImages.map((post, index) => (
         <div
           key={post.id}
@@ -115,7 +117,7 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
       >
         {/* Close button */}
         <button
-          className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 text-2xl sm:text-3xl font-bold"
           onClick={(e) => {
             e.stopPropagation();
             handleCloseModal();
@@ -128,7 +130,7 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
         {/* Previous button */}
         {hasPrevious && (
           <button
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-4xl font-bold bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+            className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl sm:text-4xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
               handlePrevious();
@@ -142,7 +144,7 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
         {/* Next button */}
         {hasNext && (
           <button
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-4xl font-bold bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+            className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl sm:text-4xl font-bold bg-black bg-opacity-50 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
               handleNext();
@@ -155,26 +157,26 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
 
         {/* Image container */}
         <div
-          className="max-w-4xl max-h-4xl mx-4 bg-white p-2 rounded"
+          className="max-w-4xl max-h-4xl mx-2 sm:mx-4 bg-white p-1 sm:p-2 rounded"
           onClick={(e) => e.stopPropagation()}
         >
           <img
             src={getImageUrl(currentPost.image)}
             alt={`Photo by ${fullName}`}
             className="max-w-full max-h-screen object-contain"
-            style={{ maxHeight: "80vh" }}
+            style={{ maxHeight: "75vh" }}
           />
 
           {/* Image info */}
           {currentPost.content && (
-            <div className="bg-gray-800 text-white p-3 mt-2 rounded">
-              <p className="text-sm">{currentPost.content}</p>
+            <div className="bg-gray-800 text-white p-2 sm:p-3 mt-1 sm:mt-2 rounded">
+              <p className="text-xs sm:text-sm">{currentPost.content}</p>
             </div>
           )}
         </div>
 
         {/* Image counter */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-lg font-bold bg-black bg-opacity-50 px-3 py-1 rounded">
+        <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm sm:text-lg font-bold bg-black bg-opacity-50 px-2 py-1 sm:px-3 sm:py-1 rounded">
           {selectedImageIndex + 1} / {postsWithImages.length}
         </div>
       </div>
@@ -183,8 +185,10 @@ const PhotosTab = ({ userImages, isOwnProfile, fullName }) => {
 
   return (
     <>
-      <div className="px-8 py-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-6">Photos</h3>
+      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 sm:mb-6">
+          Photos
+        </h3>
 
         {postsWithImages.length > 0 ? renderPhotoGrid() : renderEmptyState()}
       </div>
