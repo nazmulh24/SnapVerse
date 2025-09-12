@@ -10,10 +10,12 @@ import {
   MdImage,
   MdFavorite,
 } from "react-icons/md";
+import { useNavigate } from "react-router";
 import useApi from "../../hooks/useApi";
 
 const MobileSearchModal = ({ isOpen, onClose }) => {
   const searchRef = useRef(null);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -149,8 +151,14 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
       saveToRecentSearches(searchQuery);
     }
     onClose();
-    console.log("Clicked on post:", result);
-    // Handle post click navigation if needed
+
+    // Navigate to user profile
+    const username = result.username || "unknown";
+    if (username && username !== "unknown") {
+      navigate(`/profile/${username}`);
+    } else {
+      console.error("Cannot navigate to profile: invalid username", result);
+    }
   };
 
   const handleClearRecent = () => {
@@ -384,9 +392,9 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
 
                   return {
                     id: post.id,
-                    username: post.user || "unknown",
+                    username: post.username || "unknown", // username field
                     fullName:
-                      post.user_full_name || post.user || "Unknown User",
+                      post.user_full_name || post.user || "Unknown User", // user field contains fullName
                     avatar: fallbackAvatar,
                     caption: post.content || post.caption || "No caption",
                     mutualFriends: 0,
@@ -419,6 +427,9 @@ const MobileSearchModal = ({ isOpen, onClose }) => {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm leading-tight truncate">
                         {formattedUser.fullName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {formattedUser.username}
                       </p>
 
                       {/* Caption */}

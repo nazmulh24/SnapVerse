@@ -131,7 +131,7 @@ const PostHeader = ({
             <span className="hidden sm:inline">Edit</span>
             {isAdmin && !isOwnPost && (
               <span className="text-xs bg-red-500 text-white px-1 rounded ml-1">
-                Admin
+                A
               </span>
             )}
           </button>
@@ -149,7 +149,7 @@ const PostHeader = ({
             <span className="hidden sm:inline">Delete</span>
             {isAdmin && !isOwnPost && (
               <span className="text-xs bg-red-500 text-white px-1 rounded ml-1">
-                Admin
+                A
               </span>
             )}
           </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   MdSearch,
   MdClear,
@@ -18,6 +18,7 @@ const Logo = ({ className = "", onSearch }) => {
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
+  const navigate = useNavigate();
   const { fetchPosts } = useApi();
   const [recentSearches, setRecentSearches] = useState(() => {
     const saved = localStorage.getItem("snapverse_recent_searches");
@@ -183,10 +184,13 @@ const Logo = ({ className = "", onSearch }) => {
     setShowResults(false);
     setSearchQuery("");
 
-    // Handle post click - you can add navigation to specific post here
-    console.log("Clicked on post:", result);
-    // For example: navigate to post detail page
-    // navigate(`/post/${result.id}`);
+    // Navigate to user profile
+    const username = result.username || "unknown";
+    if (username && username !== "unknown") {
+      navigate(`/profile/${username}`);
+    } else {
+      console.error("Cannot navigate to profile: invalid username", result);
+    }
   };
 
   return (
@@ -405,9 +409,9 @@ const Logo = ({ className = "", onSearch }) => {
 
                     return {
                       id: post.id,
-                      username: post.user || "unknown",
+                      username: post.username || "unknown", // username field
                       fullName:
-                        post.user_full_name || post.user || "Unknown User",
+                        post.user_full_name || post.user || "Unknown User", // user field contains fullName
                       avatar: fallbackAvatar,
                       caption: post.content || post.caption || "No caption",
                       mutualFriends: 0,
@@ -445,7 +449,9 @@ const Logo = ({ className = "", onSearch }) => {
                         <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors duration-200">
                           {formattedUser.fullName}
                         </p>
-
+                        <p className="text-xs text-gray-500 truncate">
+                          {formattedUser.username}
+                        </p>
                         {/* Caption */}
                         <p className="text-xs text-gray-500 line-clamp-1">
                           {formattedUser.caption}
