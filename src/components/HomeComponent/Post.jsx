@@ -30,14 +30,6 @@ const Post = ({ post, onLike, onShare }) => {
     const finalCount =
       calculatedFromReactions > 0 ? calculatedFromReactions : backendCount;
 
-    console.log(`[Post ${post.id}] Initial reaction count calculation:`, {
-      reactions: reactionsObj,
-      calculatedFromReactions,
-      backendCount,
-      finalCount,
-      post_data: post,
-    });
-
     return finalCount;
   });
 
@@ -54,14 +46,6 @@ const Post = ({ post, onLike, onShare }) => {
     const backendCount = parseInt(postData.reactions_count) || 0;
     const finalCount =
       calculatedFromReactions > 0 ? calculatedFromReactions : backendCount;
-
-    console.log(`[Post ${postData.id}] useEffect reaction count update:`, {
-      reactions: reactionsObj,
-      calculatedFromReactions,
-      backendCount,
-      finalCount,
-      reactionHelpers: !!reactionHelpers,
-    });
 
     // Only update if we don't have live helpers (to avoid conflicts)
     if (!reactionHelpers) {
@@ -514,28 +498,15 @@ const Post = ({ post, onLike, onShare }) => {
                     parseInt(postData.reactions_count) || 0;
                   const fromLive = liveReactionCount;
 
-                  // Use the highest non-zero value, or show all for debugging
+                  // Use the highest non-zero value
                   const maxCount = Math.max(
                     fromReactions,
                     fromReactionsCount,
                     fromLive
                   );
 
-                  // For debugging: if all are 0, let's show a test value to ensure display works
-                  const displayValue =
-                    maxCount > 0 ? maxCount : postData.id ? 1 : 0; // Test: show 1 if we have a post ID
-
-                  console.log(
-                    `[Post] Reaction count debug for post ${postData.id}:`,
-                    {
-                      fromReactions,
-                      fromReactionsCount,
-                      fromLive,
-                      maxCount,
-                      displayValue,
-                      rawPostData: postData,
-                    }
-                  );
+                  // Only show count if there are actual reactions
+                  const displayValue = maxCount > 0 ? maxCount : 0;
 
                   return displayValue;
                 })()}{" "}

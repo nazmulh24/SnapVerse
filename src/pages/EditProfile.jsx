@@ -627,7 +627,7 @@ const EditProfile = () => {
                       value={formData.phone_number}
                       onChange={handleInputChange}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="01234567"
                     />
                   </div>
                 </div>
