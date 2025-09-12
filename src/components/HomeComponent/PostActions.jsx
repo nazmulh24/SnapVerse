@@ -330,7 +330,7 @@ const PostActions = ({
   }, []);
 
   return (
-    <div className="px-4 py-3 border-t border-gray-100">
+    <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100">
       {/* Reaction Details Modal */}
       {showReactionModal && (
         <div
@@ -421,7 +421,7 @@ const PostActions = ({
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-1 sm:gap-2">
         {/* Reaction Button */}
         <div className="relative flex-1">
           <button
@@ -437,7 +437,7 @@ const PostActions = ({
             }}
             onMouseEnter={showReactionPickerOnHover}
             disabled={isLoading}
-            className={`flex items-center justify-center space-x-2 w-full py-2 px-3 rounded-lg transition-all duration-200 ${
+            className={`flex items-center justify-center space-x-1.5 sm:space-x-2 w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 ${
               userReaction
                 ? `${reactionConfig[userReaction]?.color} ${reactionConfig[userReaction]?.bgColor} ${reactionConfig[userReaction]?.hoverBg} border border-current border-opacity-20`
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-700"
@@ -450,7 +450,7 @@ const PostActions = ({
                 <span className="text-lg">
                   {reactionConfig[userReaction]?.emoji}
                 </span>
-                <span className="text-sm font-semibold">
+                <span className="text-xs sm:text-sm font-semibold">
                   {reactionConfig[userReaction]?.label}
                 </span>
                 {isLoading && (
@@ -460,7 +460,7 @@ const PostActions = ({
             ) : (
               <>
                 <MdThumbUp className="text-xl" />
-                <span className="text-sm font-semibold">Like</span>
+                <span className="text-xs sm:text-sm font-semibold">Like</span>
                 {isLoading && (
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin ml-1"></div>
                 )}
@@ -487,7 +487,7 @@ const PostActions = ({
           className="flex items-center justify-center space-x-2 flex-1 py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           <MdChatBubbleOutline className="text-xl" />
-          <span className="text-sm font-semibold">Comment</span>
+                          <span className="text-xs sm:text-sm font-semibold">Comment</span>
         </button>
 
         {/* Share Button */}
@@ -500,7 +500,7 @@ const PostActions = ({
           className="flex items-center justify-center space-x-2 flex-1 py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           <MdShare className="text-xl" />
-          <span className="text-sm font-semibold">Share</span>
+                          <span className="text-xs sm:text-sm font-semibold">Share</span>
         </button>
       </div>
 

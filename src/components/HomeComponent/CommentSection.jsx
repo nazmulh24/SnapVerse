@@ -128,10 +128,10 @@ const CommentSection = ({
   return (
     <div className="bg-white border-t border-gray-200">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-100">
-        <div className="flex items-center space-x-2">
-          <MessageCircle className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">
+      <div className="flex items-center justify-between p-2 sm:p-3 border-b border-gray-100">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
+          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
             Comments ({commentsCount})
           </h3>
         </div>
@@ -139,35 +139,35 @@ const CommentSection = ({
           onClick={onClose}
           className="p-1 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
         </button>
       </div>
 
       {/* Comments list */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-80 sm:max-h-96 overflow-y-auto">
         {loading ? (
-          <div className="p-6 text-center">
-            <Loader2 className="w-6 h-6 text-gray-400 mx-auto mb-3 animate-spin" />
-            <p className="text-gray-500 text-sm">Loading comments...</p>
+          <div className="p-4 sm:p-6 text-center">
+            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 mx-auto mb-2 sm:mb-3 animate-spin" />
+            <p className="text-gray-500 text-xs sm:text-sm">Loading comments...</p>
           </div>
         ) : error ? (
-          <div className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-3" />
-            <p className="text-red-500 text-sm font-medium">
+          <div className="p-4 sm:p-6 text-center">
+            <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 text-red-300 mx-auto mb-2 sm:mb-3" />
+            <p className="text-red-500 text-xs sm:text-sm font-medium">
               Failed to load comments
             </p>
             <p className="text-gray-400 text-xs mt-1">{error}</p>
           </div>
         ) : comments.length === 0 ? (
-          <div className="p-6 text-center">
-            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No comments yet</p>
+          <div className="p-4 sm:p-6 text-center">
+            <MessageCircle className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-2 sm:mb-3" />
+            <p className="text-gray-500 text-xs sm:text-sm">No comments yet</p>
             <p className="text-gray-400 text-xs mt-1">
               Be the first to comment!
             </p>
           </div>
         ) : (
-          <div className="p-3">
+          <div className="p-2 sm:p-3">
             {displayedComments.map((comment, index) => {
               console.log(`🗨️ Rendering comment ${index}:`, comment);
               return (
@@ -183,19 +183,19 @@ const CommentSection = ({
 
             {/* Show more/less comments button */}
             {hasMoreComments && (
-              <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-gray-100">
                 <button
                   onClick={() => setShowAllComments(!showAllComments)}
-                  className="flex items-center space-x-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
+                  className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   {showAllComments ? (
                     <>
-                      <ChevronUp className="w-4 h-4" />
+                      <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Show fewer comments</span>
                     </>
                   ) : (
                     <>
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>View all {comments.length} comments</span>
                     </>
                   )}

@@ -54,8 +54,8 @@ const PostHeader = ({ user, timeAgo, location, isEdited, privacy, postId }) => {
 
   const privacyInfo = getPrivacyTag(privacy);
   return (
-    <div className="flex items-center justify-between p-4 bg-white">
-      <div className="flex items-center space-x-3">
+    <div className="flex items-center justify-between p-3 sm:p-4 bg-white">
+      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
         {/* Clickable Profile Picture */}
         <UserProfileLink
           username={user.username}
@@ -65,7 +65,7 @@ const PostHeader = ({ user, timeAgo, location, isEdited, privacy, postId }) => {
           <img
             src={user.avatar || "/user-profile-illustration.png"}
             alt={user.full_name || user.username}
-            className="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover ring-2 ring-gray-100"
           />
         </UserProfileLink>
 
@@ -73,45 +73,48 @@ const PostHeader = ({ user, timeAgo, location, isEdited, privacy, postId }) => {
           {/* Clickable Username */}
           <UserProfileLink
             username={user.username}
-            className="font-semibold text-gray-900 text-sm hover:text-blue-600 transition-colors duration-200 block truncate"
+            className="font-semibold text-gray-900 text-sm sm:text-base hover:text-blue-600 transition-colors duration-200 block truncate"
           >
             {user.full_name || user.username}
           </UserProfileLink>
 
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-gray-500 mt-0.5">
             <span className="font-medium">{timeAgo}</span>
             {isEdited && (
-              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
-                Edited
+              <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                <span className="hidden xs:inline">Edited</span>
+                <span className="xs:hidden">✏️</span>
               </span>
             )}
             {isOwnPost && privacy && (
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${privacyInfo.className}`}
+                className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 text-xs font-medium rounded-full ${privacyInfo.className}`}
               >
                 <privacyInfo.icon className="w-3 h-3" />
-                {privacyInfo.label}
+                <span className="hidden sm:inline">{privacyInfo.label}</span>
               </span>
             )}
           </div>
+
+          {/* Location - moved under name/time */}
+          {location && (
+            <div className="flex items-center gap-1 mt-1 px-1.5 sm:px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md w-fit">
+              <MdLocationOn className="w-3 h-3" />
+              <span className="max-w-32 sm:max-w-48 truncate">{location}</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {location && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg">
-            <MdLocationOn className="w-3.5 h-3.5" />
-            <span className="max-w-24 truncate">{location}</span>
-          </div>
-        )}
+      <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
         {isOwnPost && (
           <button
             onClick={handleEditPost}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-blue-200"
             title="Edit post"
           >
-            <BiEdit className="w-4 h-4" />
-            <span>Edit</span>
+            <BiEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Edit</span>
           </button>
         )}
       </div>

@@ -462,7 +462,7 @@ const Post = ({ post, onLike, onShare }) => {
     : "Unknown time";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
       {/* Post Header - Profile picture, full_name, time, location and edited status on right */}
       <PostHeader
         user={formattedUser}
@@ -475,8 +475,8 @@ const Post = ({ post, onLike, onShare }) => {
 
       {/* Post Caption/Content - Show before image */}
       {(postData.content || postData.caption) && (
-        <div className="px-4 pb-3">
-          <p className="text-gray-800 text-sm">
+        <div className="px-3 sm:px-4 pb-2 sm:pb-3">
+          <p className="text-gray-800 text-sm sm:text-base leading-relaxed">
             {postData.content || postData.caption}
           </p>
         </div>
@@ -492,16 +492,16 @@ const Post = ({ post, onLike, onShare }) => {
       )}
 
       {/* Like and Comment Counts - Always show */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           {/* Total Reaction count on the left - Clickable */}
           <button
             onClick={() => reactionHelpers?.fetchReactionDetails?.()}
             disabled={!reactionHelpers}
-            className="group flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600 transition-all duration-200 font-medium disabled:hover:text-gray-600 disabled:cursor-default"
+            className="group flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-600 hover:text-blue-600 transition-all duration-200 font-medium disabled:hover:text-gray-600 disabled:cursor-default"
           >
             <div className="flex items-center space-x-1">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <span className="text-white text-xs">💝</span>
               </div>
               <span className="group-hover:underline">
@@ -539,7 +539,7 @@ const Post = ({ post, onLike, onShare }) => {
 
                   return displayValue;
                 })()}{" "}
-                reactions
+                <span className="hidden xs:inline">reactions</span>
               </span>
             </div>
           </button>
@@ -547,14 +547,15 @@ const Post = ({ post, onLike, onShare }) => {
           {/* Total Comment count on the right */}
           <button
             onClick={handleCommentClick}
-            className="group flex items-center space-x-2 text-sm text-gray-600 hover:text-green-600 transition-all duration-200 font-medium"
+            className="group flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-600 hover:text-green-600 transition-all duration-200 font-medium"
           >
             <div className="flex items-center space-x-1">
-              <div className="w-5 h-5 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <span className="text-white text-xs">💬</span>
               </div>
               <span className="group-hover:underline">
-                {parseInt(postData.comments_count) || 0} comments
+                {parseInt(postData.comments_count) || 0}{" "}
+                <span className="hidden xs:inline">comments</span>
               </span>
             </div>
           </button>

@@ -22,10 +22,10 @@ const PostImage = ({ src, alt, onDoubleClick }) => {
   if (imageError || !src) {
     return (
       <div
-        className="bg-gray-200 h-80 w-full flex items-center justify-center cursor-pointer"
+        className="bg-gray-200 h-64 sm:h-80 w-full flex items-center justify-center cursor-pointer"
         onDoubleClick={handleDoubleClick}
       >
-        <p className="text-gray-500">Image not available</p>
+        <p className="text-gray-500 text-sm sm:text-base">Image not available</p>
       </div>
     );
   }
@@ -33,9 +33,9 @@ const PostImage = ({ src, alt, onDoubleClick }) => {
   return (
     <div className="relative overflow-hidden">
       {!imageLoaded && (
-        <div className="absolute inset-0 bg-gray-200 h-80 w-full flex items-center justify-center">
+        <div className="absolute inset-0 bg-gray-200 h-64 sm:h-80 w-full flex items-center justify-center">
           <div className="animate-pulse">
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full"></div>
           </div>
         </div>
       )}
@@ -43,7 +43,7 @@ const PostImage = ({ src, alt, onDoubleClick }) => {
       <img
         src={src}
         alt={alt}
-        className={`w-full h-80 object-cover cursor-pointer transition-opacity duration-300 ${
+        className={`w-full h-64 sm:h-80 object-cover cursor-pointer transition-opacity duration-300 ${
           imageLoaded ? "opacity-100" : "opacity-0"
         }`}
         onLoad={handleImageLoad}
