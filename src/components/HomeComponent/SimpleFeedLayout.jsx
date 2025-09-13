@@ -45,7 +45,7 @@ const SimpleFeedLayout = ({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-safe">
       {/* Stories Section - Always at top */}
       <StoriesSection />
 

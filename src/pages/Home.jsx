@@ -37,7 +37,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-0">
+    <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-0 min-h-full">
       <PullToRefresh onRefresh={refreshPosts} isRefreshing={isRefreshing}>
         {/* Error State */}
         {error && (

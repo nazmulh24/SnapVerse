@@ -31,7 +31,7 @@ const Sidebar = ({ onWidthChange }) => {
       />
 
       {/* Mobile Bottom Navigation */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
         <div className="flex justify-center items-center py-1">
           <div className="flex justify-around items-center w-full max-w-sm mx-auto">
             <MobileNavigation onSearchClick={handleSearchClick} />

@@ -15,7 +15,7 @@ const PullToRefresh = ({ onRefresh, isRefreshing = false, children }) => {
   // Handle touch start
   const handleTouchStart = (e) => {
     // Only allow pull-to-refresh if we're at the top of the page
-    if (window.scrollY > 5) return; // Small tolerance for scroll position
+    if (window.scrollY > 10) return; // Increased tolerance for scroll position
 
     startY.current = e.touches[0].clientY;
     setIsPulling(false);
@@ -24,7 +24,7 @@ const PullToRefresh = ({ onRefresh, isRefreshing = false, children }) => {
 
   // Handle touch move
   const handleTouchMove = (e) => {
-    if (window.scrollY > 5) return; // Small tolerance for scroll position
+    if (window.scrollY > 10) return; // Increased tolerance for scroll position
     if (startY.current === 0) return;
     if (isRefreshing) return; // Prevent pulling while already refreshing
 
@@ -32,11 +32,14 @@ const PullToRefresh = ({ onRefresh, isRefreshing = false, children }) => {
     const deltaY = currentY.current - startY.current;
 
     // Only track downward movement
-    if (deltaY > 10) {
-      // Small threshold to prevent accidental triggers
-      e.preventDefault(); // Prevent default scroll behavior
+    if (deltaY > 20) {
+      // Increased threshold to prevent accidental triggers
+      // Only prevent default if we're actually pulling to refresh
+      if (deltaY > 30) {
+        e.preventDefault(); // Prevent default scroll behavior only when actively pulling
+      }
 
-      const distance = Math.min(deltaY * 0.4, MAX_PULL_DISTANCE); // Apply more resistance
+      const distance = Math.min(deltaY * 0.3, MAX_PULL_DISTANCE); // Apply even more resistance
       setPullDistance(distance);
       setIsPulling(true);
 

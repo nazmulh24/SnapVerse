@@ -83,6 +83,29 @@ body {
   overscroll-behavior-y: contain;
 }
 
+/* Mobile scrolling optimizations */
+@media (max-width: 640px) {
+  /* Smooth scrolling for mobile */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize touch events */
+  * {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on double tap */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
 /* Ensure input fields have proper text color */
 input[type="text"],
 input[type="email"],

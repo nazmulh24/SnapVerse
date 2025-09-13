@@ -27,13 +27,18 @@ const MainLayout = () => {
       <RightSidebar />
 
       <div
-        className="lg:mr-80 overflow-y-auto transition-all duration-200 mt-16 sm:mt-0"
+        className="lg:mr-80 overflow-y-auto overflow-x-hidden transition-all duration-200 mt-16 sm:mt-0 will-change-scroll"
         style={{
           marginLeft: isDesktop ? `${leftSidebarWidth}px` : "0px",
-          height: isDesktop ? "calc(100vh)" : "calc(100vh - 128px)", // 64px top + 64px bottom on mobile
+          height: isDesktop ? "calc(100vh)" : "calc(100vh - 64px)", // Only subtract mobile bottom nav height
+          WebkitOverflowScrolling: "touch", // Enable smooth scrolling on iOS
         }}
       >
-        <Outlet />
+        <div className="pb-16 sm:pb-0">
+          {" "}
+          {/* Add bottom padding for mobile nav */}
+          <Outlet />
+        </div>
       </div>
     </div>
   );
