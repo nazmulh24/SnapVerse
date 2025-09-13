@@ -30,6 +30,8 @@ const UserProfile = () => {
     loading,
     loadingUserPosts,
     hasNextPage,
+    isFollowLoading,
+    hasRequestPending,
     handleLike,
     handleComment,
     handleShare,
@@ -298,6 +300,8 @@ const UserProfile = () => {
             followersCount={followersCount}
             isFollowing={isFollowing}
             isOwnProfile={isOwnProfile}
+            isFollowLoading={isFollowLoading}
+            hasRequestPending={hasRequestPending}
             onFollow={handleFollow}
             userPosts={userPosts}
             joinDate={joinDate}

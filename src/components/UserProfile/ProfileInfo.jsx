@@ -12,6 +12,7 @@ import {
   MdEdit,
   MdKey,
   MdAdminPanelSettings,
+  MdScheduleSend,
 } from "react-icons/md";
 import { useNavigate } from "react-router";
 import useAuthContext from "../../hooks/useAuthContext";
@@ -27,6 +28,8 @@ const ProfileInfo = ({
   followersCount,
   isFollowing,
   isOwnProfile,
+  isFollowLoading,
+  hasRequestPending,
   canViewPrivateContent,
 }) => {
   const navigate = useNavigate();
@@ -34,7 +37,7 @@ const ProfileInfo = ({
 
   // Check if current user is admin
   const isAdmin = currentUser && currentUser.is_staff === true;
-  
+
   const handleEditProfile = () => {
     navigate("/edit-profile");
   };
@@ -156,16 +159,31 @@ const ProfileInfo = ({
                 <div className="flex flex-col gap-2 sm:gap-3 sm:hidden lg:hidden">
                   <button
                     onClick={handleFollow}
+                    disabled={isFollowLoading}
                     className={`group px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base ${
-                      isFollowing
+                      isFollowLoading
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : isFollowing
                         ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        : hasRequestPending
+                        ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border-2 border-yellow-300"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
                     }`}
                   >
-                    {isFollowing ? (
+                    {isFollowLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Loading...</span>
+                      </>
+                    ) : isFollowing ? (
                       <>
                         <MdPersonRemove className="w-4 h-4" />
                         <span>Unfollow</span>
+                      </>
+                    ) : hasRequestPending ? (
+                      <>
+                        <MdScheduleSend className="w-4 h-4" />
+                        <span>Request Sent</span>
                       </>
                     ) : (
                       <>
@@ -181,7 +199,7 @@ const ProfileInfo = ({
                     <MdMessage className="w-4 h-4" />
                     <span>Message</span>
                   </button>
-                  
+
                   {/* Admin Edit Button - Mobile */}
                   {isAdmin && (
                     <button
@@ -265,16 +283,31 @@ const ProfileInfo = ({
             <div className="hidden sm:flex lg:flex flex-col gap-3 lg:mt-0 min-w-[180px]">
               <button
                 onClick={handleFollow}
+                disabled={isFollowLoading}
                 className={`group px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl ${
-                  isFollowing
+                  isFollowLoading
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : isFollowing
                     ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                    : hasRequestPending
+                    ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border-2 border-yellow-300"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
-                {isFollowing ? (
+                {isFollowLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : isFollowing ? (
                   <>
                     <MdPersonRemove className="w-4 h-4" />
                     <span>Unfollow</span>
+                  </>
+                ) : hasRequestPending ? (
+                  <>
+                    <MdScheduleSend className="w-4 h-4" />
+                    <span>Request Sent</span>
                   </>
                 ) : (
                   <>
@@ -291,7 +324,7 @@ const ProfileInfo = ({
                 <MdMessage className="w-4 h-4" />
                 <span>Message</span>
               </button>
-              
+
               {/* Admin Edit Button - Desktop */}
               {isAdmin && (
                 <button
