@@ -28,7 +28,10 @@ const UserProfile = ({ user }) => {
   return (
     <div className="p-6 border-b border-gray-100">
       <div className="flex items-center space-x-3">
-        <Link to={`/profile/${user.username}`} className="flex-1 flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+        <Link
+          to={`/profile/${user.username}`}
+          className="flex-1 flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+        >
           <img
             src={getProfileImage(user.profile_picture)}
             alt="Your Profile"
