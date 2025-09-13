@@ -32,6 +32,7 @@ const MainLayout = () => {
           marginLeft: isDesktop ? `${leftSidebarWidth}px` : "0px",
           height: isDesktop ? "calc(100vh)" : "calc(100vh - 64px)", // Only subtract mobile bottom nav height
           WebkitOverflowScrolling: "touch", // Enable smooth scrolling on iOS
+          touchAction: isDesktop ? "auto" : "pan-y", // Allow vertical scrolling on mobile
         }}
       >
         <div className="pb-16 sm:pb-0">

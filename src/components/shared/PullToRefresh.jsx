@@ -8,14 +8,24 @@ const PullToRefresh = ({ onRefresh, isRefreshing = false, children }) => {
   const containerRef = useRef(null);
   const startY = useRef(0);
   const currentY = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const PULL_THRESHOLD = 80; // Distance needed to trigger refresh
   const MAX_PULL_DISTANCE = 120; // Maximum pull distance
 
+  // Check if we're on mobile
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Handle touch start
   const handleTouchStart = (e) => {
-    // Only allow pull-to-refresh if we're at the top of the page
-    if (window.scrollY > 10) return; // Increased tolerance for scroll position
+    // On mobile, be much more strict about when to activate
+    if (isMobile && window.scrollY > 0) return;
+    if (!isMobile && window.scrollY > 10) return;
 
     startY.current = e.touches[0].clientY;
     setIsPulling(false);
@@ -24,22 +34,26 @@ const PullToRefresh = ({ onRefresh, isRefreshing = false, children }) => {
 
   // Handle touch move
   const handleTouchMove = (e) => {
-    if (window.scrollY > 10) return; // Increased tolerance for scroll position
+    // On mobile, only work if we're exactly at the top
+    if (isMobile && window.scrollY > 0) return;
+    if (!isMobile && window.scrollY > 10) return;
+
     if (startY.current === 0) return;
-    if (isRefreshing) return; // Prevent pulling while already refreshing
+    if (isRefreshing) return;
 
     currentY.current = e.touches[0].clientY;
     const deltaY = currentY.current - startY.current;
 
-    // Only track downward movement
-    if (deltaY > 20) {
-      // Increased threshold to prevent accidental triggers
-      // Only prevent default if we're actually pulling to refresh
-      if (deltaY > 30) {
-        e.preventDefault(); // Prevent default scroll behavior only when actively pulling
+    // Only handle significant downward pulls
+    if (deltaY > (isMobile ? 60 : 30)) {
+      // On mobile, only prevent default after very significant pull
+      if (isMobile && deltaY > 80) {
+        e.preventDefault();
+      } else if (!isMobile && deltaY > 40) {
+        e.preventDefault();
       }
 
-      const distance = Math.min(deltaY * 0.3, MAX_PULL_DISTANCE); // Apply even more resistance
+      const distance = Math.min(deltaY * 0.3, MAX_PULL_DISTANCE);
       setPullDistance(distance);
       setIsPulling(true);
 

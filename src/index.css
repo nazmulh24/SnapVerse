@@ -91,12 +91,17 @@ body {
     scroll-behavior: smooth;
   }
 
-  /* Optimize touch events */
+  /* Optimize touch events - allow all directions for scrolling */
   * {
-    touch-action: manipulation;
+    touch-action: pan-y;
   }
 
-  /* Prevent zoom on double tap */
+  /* Special handling for pull-to-refresh container */
+  .pull-to-refresh-container {
+    touch-action: pan-y;
+  }
+
+  /* Prevent zoom on double tap for interactive elements */
   button,
   a,
   input,
@@ -104,9 +109,22 @@ body {
   textarea {
     touch-action: manipulation;
   }
-}
 
-/* Ensure input fields have proper text color */
+  /* Ensure main content scrolls properly */
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  #root {
+    overflow-y: auto;
+    height: 100vh;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+} /* Ensure input fields have proper text color */
 input[type="text"],
 input[type="email"],
 input[type="password"],
