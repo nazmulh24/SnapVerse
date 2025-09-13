@@ -55,12 +55,12 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center px-3 sm:px-4 py-6 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-start sm:items-center justify-center px-3 sm:px-4 py-6 sm:py-12 relative overflow-hidden">
       {/* Background Decorations - Smaller on mobile */}
       <div className="absolute top-0 right-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-pink-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
 
-      <div className="w-full max-w-sm sm:max-w-md relative mb-8 sm:mb-0">
+      <div className="w-full max-w-sm sm:max-w-md relative mt-4 mb-8 sm:mt-0 sm:mb-0">
         {/* Glassmorphism Card - Responsive padding and border radius */}
         <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden">
           {/* Card Background Decoration - Smaller on mobile */}
