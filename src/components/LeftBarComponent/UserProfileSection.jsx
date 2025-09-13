@@ -1,15 +1,33 @@
 import { Link, useNavigate } from "react-router";
 import { MdLogout } from "react-icons/md";
 import useAuthContext from "../../hooks/useAuthContext";
+import { useState } from "react";
 
 const UserProfileSection = ({ user }) => {
   const { logoutUser } = useAuthContext();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
-    logoutUser(() => {
-      navigate("/login");
-    });
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      logoutUser(() => {
+        navigate("/login");
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+    }
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const getProfileImage = (profile_picture) => {
@@ -64,6 +82,43 @@ const UserProfileSection = ({ user }) => {
           <MdLogout className="text-xl" />
         </button>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 mx-4 max-w-sm w-full shadow-xl border border-gray-200">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Confirm Logout
+            </h3>
+            <p className="text-slate-600 mb-6">
+              Are you sure you want to logout? You'll need to sign in again to
+              access your account.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelLogout}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                disabled={isLoggingOut}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Logging out...
+                  </>
+                ) : (
+                  "Logout"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
