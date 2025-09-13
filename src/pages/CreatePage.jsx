@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   BiImageAdd,
   BiMap,
@@ -16,6 +17,7 @@ import useAuthContext from "../hooks/useAuthContext";
 
 const CreatePage = () => {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
   const [location, setLocation] = useState("");
@@ -202,6 +204,11 @@ const CreatePage = () => {
         setLocation("");
         // Reset privacy to default based on user's account privacy
         setPrivacy(user?.is_private ? "followers" : "public");
+
+        // Navigate to homepage after successful post creation
+        setTimeout(() => {
+          navigate("/");
+        }, 1500); // Give user time to see success message
       } else {
         setError("Failed to create post. Server returned unexpected status.");
       }
@@ -553,6 +560,7 @@ const CreatePage = () => {
                 </h4>
                 <p className="text-green-600 text-xs sm:text-sm">
                   Your post is now live and visible to your audience.
+                  Redirecting to homepage...
                 </p>
               </div>
             </div>
