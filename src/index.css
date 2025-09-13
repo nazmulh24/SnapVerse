@@ -82,3 +82,28 @@
 body {
   overscroll-behavior-y: contain;
 }
+
+/* Ensure input fields have proper text color */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  color: #111827; /* gray-900 */
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="url"]::placeholder,
+input[type="search"]::placeholder,
+input[type="number"]::placeholder,
+textarea::placeholder {
+  color: #6b7280; /* gray-500 */
+}

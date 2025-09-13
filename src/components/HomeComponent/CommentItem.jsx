@@ -266,7 +266,7 @@ const CommentItem = ({
                       safeComment.user?.username ||
                       "User"
                     }...`}
-                    className="flex-1 bg-transparent px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none"
+                    className="flex-1 bg-transparent px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none"
                     autoFocus
                     disabled={isSubmitting}
                   />

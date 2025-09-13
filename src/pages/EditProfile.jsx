@@ -575,10 +575,10 @@ const EditProfile = () => {
                         name="first_name"
                         value={formData.first_name}
                         onChange={handleInputChange}
-                        className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base ${
+                        className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 ${
                           errors.first_name
                             ? "border-red-500 bg-red-50"
-                            : "border-gray-200 bg-white/50"
+                            : "border-gray-200 bg-white"
                         }`}
                         placeholder="Enter your first name"
                       />
@@ -602,7 +602,7 @@ const EditProfile = () => {
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base text-gray-900 placeholder-gray-500"
                       placeholder="Enter your last name"
                     />
                   </div>
@@ -619,8 +619,8 @@ const EditProfile = () => {
                       className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base ${
                         errors.username
                           ? "border-red-500 bg-red-50"
-                          : "border-gray-200 bg-white/50"
-                      }`}
+                          : "border-gray-200 bg-white"
+                      } text-gray-900 placeholder-gray-500}`}
                       placeholder="@username"
                     />
                     {errors.username && (
@@ -644,10 +644,10 @@ const EditProfile = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       disabled
-                      className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 bg-gray-100 cursor-not-allowed text-sm sm:text-base ${
+                      className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 bg-gray-100 cursor-not-allowed text-sm sm:text-base text-gray-600 placeholder-gray-400 ${
                         errors.email
                           ? "border-red-500 bg-red-50"
-                          : "border-gray-300 text-gray-500"
+                          : "border-gray-300"
                       }`}
                       placeholder="Enter your email"
                     />
@@ -683,10 +683,10 @@ const EditProfile = () => {
                     value={formData.bio}
                     onChange={handleInputChange}
                     rows={4}
-                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm sm:text-base ${
+                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm sm:text-base text-gray-900 placeholder-gray-500 ${
                       errors.bio
                         ? "border-red-500 bg-red-50"
-                        : "border-gray-200 bg-white/50"
+                        : "border-gray-200 bg-white"
                     }`}
                     placeholder="Tell us about yourself..."
                   />
@@ -725,7 +725,7 @@ const EditProfile = () => {
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base text-gray-900 placeholder-gray-500"
                       placeholder="City, Country"
                     />
                   </div>
@@ -740,7 +740,7 @@ const EditProfile = () => {
                       name="phone_number"
                       value={formData.phone_number}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base text-gray-900 placeholder-gray-500"
                       placeholder="01234567"
                     />
                   </div>
@@ -769,7 +769,7 @@ const EditProfile = () => {
                       name="date_of_birth"
                       value={formData.date_of_birth}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base text-gray-900"
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
@@ -780,7 +780,7 @@ const EditProfile = () => {
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 appearance-none text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 appearance-none text-sm sm:text-base text-gray-900"
                     >
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -796,7 +796,7 @@ const EditProfile = () => {
                       name="relationship_status"
                       value={formData.relationship_status}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white/50 rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 appearance-none text-sm sm:text-base"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 bg-white rounded-lg sm:rounded-xl transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 appearance-none text-sm sm:text-base text-gray-900"
                     >
                       <option value="single">Single</option>
                       <option value="in_a_relationship">
@@ -896,7 +896,7 @@ const EditProfile = () => {
                   </div>
 
                   {/* Privacy Status Indicator */}
-                  <div className="mt-4 p-3 rounded-lg border-l-4 transition-all duration-200 bg-white/50 border-blue-400">
+                  <div className="mt-4 p-3 rounded-lg border-l-4 transition-all duration-200 bg-blue-50 border-blue-400">
                     <div className="flex items-start gap-2">
                       <div
                         className={`w-2 h-2 rounded-full mt-2 ${

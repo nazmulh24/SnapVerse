@@ -44,7 +44,9 @@ const CommentForm = ({
           src={getAvatarUrl(user, 32)}
           alt="Your avatar"
           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-          onError={(e) => handleAvatarError(e, user?.full_name || user?.username || 'U', 32)}
+          onError={(e) =>
+            handleAvatarError(e, user?.full_name || user?.username || "U", 32)
+          }
         />
 
         {/* Comment input */}
@@ -58,7 +60,7 @@ const CommentForm = ({
               placeholder={placeholder}
               autoFocus={autoFocus}
               disabled={isSubmitting}
-              className="flex-1 bg-transparent px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none"
+              className="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none"
             />
 
             {/* Send button */}

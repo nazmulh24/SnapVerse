@@ -248,7 +248,7 @@ const Logo = ({ className = "", onSearch }) => {
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 placeholder="Type to search people..."
-                className="w-full sm:pl-12 sm:pr-12 pl-10 pr-10 sm:py-3.5 py-2.5 bg-transparent sm:rounded-xl rounded-lg focus:outline-none sm:text-sm text-xs placeholder-gray-400 font-medium"
+                className="w-full sm:pl-12 sm:pr-12 pl-10 pr-10 sm:py-3.5 py-2.5 bg-transparent sm:rounded-xl rounded-lg focus:outline-none sm:text-sm text-xs text-gray-900 placeholder-gray-400 font-medium"
               />
 
               {searchQuery && (
