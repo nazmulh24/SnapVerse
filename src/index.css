@@ -11,6 +11,17 @@
   display: none; /* Safari and Chrome */
 }
 
+/* Tab navigation mobile scrolling */
+.tab-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tab-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Smooth transitions */
 .transition-all {
   transition: all 0.3s ease;
