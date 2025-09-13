@@ -39,6 +39,12 @@ const UserProfile = () => {
     loadMorePosts,
   } = useUserProfile(username);
 
+  // Handle message action
+  const handleMessage = () => {
+    // TODO: Implement messaging functionality
+    console.log("Message feature not yet implemented");
+  };
+
   // Use effect to handle privacy check completion
   useEffect(() => {
     if (!isLoadingProfile && profileUser) {
@@ -302,7 +308,8 @@ const UserProfile = () => {
             isOwnProfile={isOwnProfile}
             isFollowLoading={isFollowLoading}
             hasRequestPending={hasRequestPending}
-            onFollow={handleFollow}
+            handleFollow={handleFollow}
+            handleMessage={handleMessage}
             userPosts={userPosts}
             joinDate={joinDate}
             canViewPrivateContent={canViewPrivateContent()}

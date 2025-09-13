@@ -164,7 +164,7 @@ const ProfileInfo = ({
                       isFollowLoading
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                         : isFollowing
-                        ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        ? "bg-green-100 hover:bg-red-100 text-green-700 hover:text-red-700 border-2 border-green-300 hover:border-red-300"
                         : hasRequestPending
                         ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border-2 border-yellow-300"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -178,7 +178,10 @@ const ProfileInfo = ({
                     ) : isFollowing ? (
                       <>
                         <MdPersonRemove className="w-4 h-4" />
-                        <span>Unfollow</span>
+                        <span className="group-hover:hidden">Following</span>
+                        <span className="hidden group-hover:inline">
+                          Unfollow
+                        </span>
                       </>
                     ) : hasRequestPending ? (
                       <>
@@ -288,7 +291,7 @@ const ProfileInfo = ({
                   isFollowLoading
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : isFollowing
-                    ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                    ? "bg-green-100 hover:bg-red-100 text-green-700 hover:text-red-700 border-2 border-green-300 hover:border-red-300"
                     : hasRequestPending
                     ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border-2 border-yellow-300"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -302,7 +305,8 @@ const ProfileInfo = ({
                 ) : isFollowing ? (
                   <>
                     <MdPersonRemove className="w-4 h-4" />
-                    <span>Unfollow</span>
+                    <span className="group-hover:hidden">Following</span>
+                    <span className="hidden group-hover:inline">Unfollow</span>
                   </>
                 ) : hasRequestPending ? (
                   <>

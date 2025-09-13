@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import useAuthContext from "./useAuthContext";
 import usePosts from "./usePosts";
+import useConnectionsApi from "./useConnectionsApi";
 import AuthApiClient from "../services/auth-api-client";
 
 const useUserProfile = (username) => {
@@ -16,97 +17,98 @@ const useUserProfile = (username) => {
     loadMorePosts,
   } = usePosts();
 
+  // Use the connections API for follow/unfollow functionality
+  const connectionsApi = useConnectionsApi(currentUser);
+
   // State
   const [apiResponse, setApiResponse] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileUser, setProfileUser] = useState(null);
-  const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [userSpecificPosts, setUserSpecificPosts] = useState([]);
   const [loadingUserPosts, setLoadingUserPosts] = useState(false);
-  const [isFollowLoading, setIsFollowLoading] = useState(false);
-  const [hasRequestPending, setHasRequestPending] = useState(false);
+
+  // Local state for follow status specific to this profile
+  const [localIsFollowing, setLocalIsFollowing] = useState(false);
+  const [localRequestPending, setLocalRequestPending] = useState(false);
+  const [localIsLoading, setLocalIsLoading] = useState(false);
 
   // Check if viewing own profile - use username directly
   const isOwnProfile = currentUser?.username === username;
 
   // Check if current user is following the profile user
-  const checkFollowStatus = useCallback(async (profileUserId) => {
+  // First check ConnectionsAPI, then fall back to local state
+  const isFollowing = profileUser
+    ? connectionsApi.following.some((f) => f.id === profileUser.id) ||
+      localIsFollowing
+    : false;
+
+  // Check if there's a pending request
+  const hasRequestPending = profileUser
+    ? connectionsApi.requestSent.includes(profileUser.id) || localRequestPending
+    : false;
+
+  // Check loading state
+  const isFollowLoading =
+    connectionsApi.processingId === profileUser?.id || localIsLoading;
+
+  // Handle follow/unfollow using local state and direct API calls
+  const handleFollow = useCallback(async () => {
+    if (!profileUser || isOwnProfile || isFollowLoading) return;
+
     try {
-      console.log("🔍 Checking follow status for user ID:", profileUserId);
-      const response = await AuthApiClient.get("/follows/following/");
-      const followingList = response.data.results || [];
-      console.log(
-        "📋 Following list:",
-        followingList.map((item) => ({
-          id: item.following.id,
-          username: item.following.username,
-        }))
-      );
+      setLocalIsLoading(true);
 
-      const isUserFollowing = followingList.some(
-        (item) => item.following.id === profileUserId
-      );
-      console.log(
-        `${isUserFollowing ? "✅" : "❌"} Follow status:`,
-        isUserFollowing
-      );
-      setIsFollowing(isUserFollowing);
-      return isUserFollowing; // Return the result for immediate use
-    } catch (error) {
-      console.error("❌ Failed to check follow status:", error);
-      setIsFollowing(false);
-      return false;
-    }
-  }, []);
+      if (isFollowing) {
+        // Unfollow
+        console.log(`🔄 Unfollowing user: ${profileUser.username}`);
 
-  // Check if there's a pending follow request for private accounts
-  const checkPendingRequestStatus = useCallback(async (profileUserId) => {
-    try {
-      console.log(
-        "🔍 Checking pending request status for user ID:",
-        profileUserId
-      );
+        await AuthApiClient.post("/follows/unfollow_user/", {
+          user_id: profileUser.id,
+        });
 
-      // Check localStorage for pending requests (similar to useConnectionsApi)
-      const LS_KEY = "snapverse_follow_requests";
-      const rawMap = localStorage.getItem(LS_KEY);
-      const requestMap = rawMap ? JSON.parse(rawMap) : {};
+        setLocalIsFollowing(false);
+        setLocalRequestPending(false);
+        console.log("✅ Successfully unfollowed user");
+      } else if (hasRequestPending) {
+        // Cancel pending request
+        console.log("Cancel request not yet implemented");
+      } else {
+        // Fresh follow
+        const isPrivateAccount = profileUser.is_private;
 
-      const hasPendingRequest = Object.keys(requestMap).includes(
-        String(profileUserId)
-      );
+        console.log(`🔄 Following user:`, {
+          userId: profileUser.id,
+          username: profileUser.username,
+          isPrivate: isPrivateAccount,
+        });
 
-      if (hasPendingRequest) {
-        console.log("✅ Found pending request in localStorage");
-        setHasRequestPending(true);
-        return true;
+        await AuthApiClient.post("/follows/follow_user/", {
+          user_id: profileUser.id,
+        });
+
+        if (isPrivateAccount) {
+          setLocalRequestPending(true);
+          console.log("✅ Successfully sent follow request to private account");
+        } else {
+          setLocalIsFollowing(true);
+          console.log("✅ Successfully followed public account");
+        }
       }
-
-      // Also check server-side pending requests
-      const response = await AuthApiClient.get("/follows/pending_requests/");
-      const pendingList = response.data.results || [];
-      console.log("📋 Pending requests list:", pendingList);
-
-      const hasPendingServerRequest = pendingList.some(
-        (item) =>
-          item.following?.id === profileUserId ||
-          item.follower?.id === profileUserId
-      );
-
-      console.log(
-        `${hasPendingServerRequest ? "✅" : "❌"} Pending request status:`,
-        hasPendingServerRequest
-      );
-      setHasRequestPending(hasPendingServerRequest);
-      return hasPendingServerRequest;
     } catch (error) {
-      console.error("❌ Failed to check pending request status:", error);
-      setHasRequestPending(false);
-      return false;
+      console.error("Error in follow action:", error);
+      alert("Failed to follow user. Please try again.");
+    } finally {
+      setLocalIsLoading(false);
     }
-  }, []);
+  }, [
+    profileUser,
+    isOwnProfile,
+    isFollowLoading,
+    isFollowing,
+    hasRequestPending,
+  ]);
 
   // Function to load posts for a user with explicit follow status
   const loadPostsForUserWithStatus = useCallback(
@@ -227,8 +229,7 @@ const useUserProfile = (username) => {
       try {
         setIsLoadingProfile(true);
         setApiError(null);
-        // Reset follow status to prevent stale data
-        setIsFollowing(false);
+        // Reset user posts to prevent stale data
         setUserSpecificPosts([]);
 
         console.log(`🔍 Fetching user profile for: ${username}`);
@@ -245,8 +246,9 @@ const useUserProfile = (username) => {
           // Check follow status BEFORE setting profile data for other users
           let followStatus = false;
           if (!isOwnProfile && currentUser) {
-            followStatus = await checkFollowStatus(realUserData.id);
-            await checkPendingRequestStatus(realUserData.id);
+            // For other users, we don't need to check follow status here
+            // as it's handled by the connections API
+            followStatus = false; // Will be determined by connections API
           }
 
           setApiResponse(realUserData);
@@ -316,8 +318,6 @@ const useUserProfile = (username) => {
     isOwnProfile,
     loadMyPosts,
     loadPostsForUserWithStatus,
-    checkFollowStatus,
-    checkPendingRequestStatus,
   ]);
 
   // Return filtered posts - use userSpecificPosts if available, otherwise filter general posts
@@ -363,116 +363,6 @@ const useUserProfile = (username) => {
 
           return isUserPost && canViewPost;
         }) || [];
-
-  const handleFollow = async () => {
-    if (!profileUser || isOwnProfile || isFollowLoading) return;
-
-    const wasFollowing = isFollowing; // Store original state
-    const hadRequestPending = hasRequestPending; // Store original request state
-    const isPrivateAccount = profileUser.is_private;
-
-    setIsFollowLoading(true); // Start loading
-
-    try {
-      console.log(`🔄 ${isFollowing ? "Unfollowing" : "Following"} user:`, {
-        userId: profileUser.id,
-        username: profileUser.username,
-        currentStatus: isFollowing,
-        isPrivate: isPrivateAccount,
-        hadRequestPending,
-      });
-
-      if (isFollowing) {
-        // UNFOLLOW: Always works the same way for public/private
-        setIsFollowing(false);
-        setFollowersCount((prev) => prev - 1);
-
-        await AuthApiClient.post("/follows/unfollow_user/", {
-          user_id: profileUser.id,
-        });
-        console.log("✅ Successfully unfollowed user");
-
-        // Clear any pending request state
-        setHasRequestPending(false);
-      } else if (hasRequestPending) {
-        // CANCEL REQUEST: User wants to cancel pending follow request
-        setHasRequestPending(false);
-
-        // Remove from localStorage
-        const LS_KEY = "snapverse_follow_requests";
-        const rawMap = localStorage.getItem(LS_KEY);
-        const requestMap = rawMap ? JSON.parse(rawMap) : {};
-        delete requestMap[String(profileUser.id)];
-        localStorage.setItem(LS_KEY, JSON.stringify(requestMap));
-
-        // TODO: Add API call to cancel pending request if backend supports it
-        console.log("✅ Cancelled follow request");
-      } else {
-        // FOLLOW: Different behavior for public vs private
-        if (isPrivateAccount) {
-          // Private account: Send follow request
-          setHasRequestPending(true);
-
-          await AuthApiClient.post("/follows/follow_user/", {
-            user_id: profileUser.id,
-          });
-
-          // Store in localStorage for immediate UI feedback
-          const LS_KEY = "snapverse_follow_requests";
-          const rawMap = localStorage.getItem(LS_KEY);
-          const requestMap = rawMap ? JSON.parse(rawMap) : {};
-          requestMap[String(profileUser.id)] = Date.now();
-          localStorage.setItem(LS_KEY, JSON.stringify(requestMap));
-
-          console.log("✅ Successfully sent follow request to private account");
-        } else {
-          // Public account: Follow immediately
-          setIsFollowing(true);
-          setFollowersCount((prev) => prev + 1);
-
-          await AuthApiClient.post("/follows/follow_user/", {
-            user_id: profileUser.id,
-          });
-          console.log("✅ Successfully followed public account");
-        }
-      }
-
-      // Refresh status after operation
-      if (profileUser.id) {
-        await checkFollowStatus(profileUser.id);
-        await checkPendingRequestStatus(profileUser.id);
-
-        // Fetch updated user profile data to get accurate followers count
-        try {
-          const updatedProfileResponse = await AuthApiClient.get(
-            `/profiles/${username}/`
-          );
-          if (updatedProfileResponse.data) {
-            setFollowersCount(updatedProfileResponse.data.followers_count || 0);
-          }
-        } catch (profileError) {
-          console.warn("Failed to fetch updated profile data:", profileError);
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error following/unfollowing user:", error);
-
-      // Revert optimistic updates on error
-      setIsFollowing(wasFollowing);
-      setHasRequestPending(hadRequestPending);
-      setFollowersCount((prev) => (wasFollowing ? prev + 1 : prev - 1));
-
-      // Show error message to user
-      const action = isFollowing
-        ? "unfollow"
-        : hasRequestPending
-        ? "cancel request for"
-        : "follow";
-      alert(`Failed to ${action} user. Please try again.`);
-    } finally {
-      setIsFollowLoading(false); // End loading
-    }
-  };
 
   return {
     // Data
